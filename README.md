@@ -1,2 +1,0 @@
-# shareit
-certificates

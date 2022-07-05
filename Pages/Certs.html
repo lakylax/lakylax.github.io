@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome!!</title>
+    <link rel="icon" type="image/x-icon" href="../images/favicon-32x32.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+  
+              
+<style>
+img {
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+img:hover {opacity: 0.7;}
+
+
+.main {
+  max-width: 1000px;
+  margin: auto;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  background-color: #f1f1f1;
+  font-family: Arial;
+}
+
+img:hover {opacity: 0.7;}
+
+/* The Modal (background) */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  padding-top: 100px; /* Location of the box */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.9); /* Black w/ opacity */
+}
+
+/* Modal Content (image) */
+.modal-content {
+  margin: auto;
+  display: block;
+  width: 80%;
+  max-width: 700px;
+}
+
+/* Caption of Modal Image */
+#caption {
+  margin: auto;
+  display: block;
+  width: 80%;
+  max-width: 700px;
+  text-align: center;
+  color: #ccc;
+  padding: 10px 0;
+  height: 150px;
+}
+
+/* Add Animation */
+.modal-content, #caption {  
+  -webkit-animation-name: zoom;
+  -webkit-animation-duration: 0.6s;
+  animation-name: zoom;
+  animation-duration: 0.6s;
+}
+
+
+@-webkit-keyframes zoom {
+  from {-webkit-transform:scale(0)} 
+  to {-webkit-transform:scale(1)}
+}
+
+@keyframes zoom {
+  from {transform:scale(0)} 
+  to {transform:scale(1)}
+}
+
+/* The Close Button */
+.close {
+  position: absolute;
+  top: 15px;
+  right: 35px;
+  color: #f1f1f1;
+  font-size: 40px;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.close:hover,
+.close:focus {
+  color: #bbb;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* 100% Image Width on Smaller Screens */
+@media only screen and (max-width: 700px){
+  .modal-content {
+    width: 100%;
+  }
+}
+  .row {
+  margin: 8px -16px;
+}
+
+/* Add padding BETWEEN each column */
+.row,
+.row > .column {
+  padding: 8px;
+}
+
+/* Create four equal columns that floats next to each other */
+.column {
+  float: left;
+  width: 24%;
+  display: flex;
+}
+
+/* Clear floats after rows */ 
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Content */
+.content {
+  background-color: white;
+  padding: 10px;
+}
+
+/* Responsive layout - makes a two column-layout instead of four columns */
+@media screen and (max-width: 900px) {
+  .column {
+    width: 50%;
+  }
+}
+
+/* Responsive layout - makes the two columns stack on top of each other instead of next to each other */
+@media screen and (max-width: 600px) {
+  .column {
+    width: 100%;
+  }
+}
+
+</style>
+</head>
+<body>
+
+  <Header>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="resume.html"><img src="../images/pinterest_profile_image.png" alt="" width="100" height="100"></a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="resume.html">Home</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="./Cv.html">RESUME</a>
+              </li>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  Certs
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <li><a class="dropdown-item" href="./Certs.html">Certificates</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="pgcert.html" target="_blank">P&G Certificates</a></li>
+                </ul>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="./Aboutme.html">About ME</a>
+              </li>
+            </ul>
+            
+          </div>
+        </div>
+      </nav>   
+
+</Header>
+
+<div class="main">
+<div class="row">
+
+    <div class="column">
+      <div class="content">
+       <a href="pgcert.html" target="_blank">
+        <img src="../images/Certs/pglogo.jpeg" alt="Problem Solving" style="width:100%">
+        </a>
+        <h3>Click to view Certificates</h3>
+        <p>By Procter & Gamble (P&G)</p>
+      </div>
+    </div>
+    <div class="column">
+        <div class="content">
+          <img src="../images/Certs/html-linkedin.jpg" alt="HTML Essential Training" style="width:100%" onclick="viewcert(this);">
+          <h3>HTML Essential Training</h3>
+          <p>By Linkedin Learning</p>
+        </div>
+      </div>
+      <div class="column">
+        <div class="content">
+          <img src="../images/Certs/amazon-cybersec.jpg" alt="Cybersecurity Awareness Training" style="width:100%" onclick="viewcert(this);">
+          <h3>Cybersecurity Awareness Training</h3>
+          <p>By Amazon</p>
+        </div>
+      </div>
+      <div class="column">
+        <div class="content">
+         <a href="https://www.cloudskillsboost.google/public_profiles/0ff665ec-0c1f-43aa-a088-ee1f19a9b683" target="_blank"> 
+          <img src="../images/certs/Google-Cloud-Logo.png" alt="Google Cloud Skills" style="width:100%"></a>
+          <h3>Google Cloud Skills</h3>
+          <p>By Google</p>
+        </div>
+      </div>
+     
+</div>
+</div>
+
+
+<!-- The Modal -->
+<div id="myModal" class="modal">
+  <span class="close">&times;</span>
+  <img class="modal-content" id="img01">
+  <div id="caption"></div>
+</div>
+
+
+<script>
+       var modal = document.getElementById("myModal");
+        var modalImg = document.getElementById("img01");
+        var captionText = document.getElementById("caption");
+
+    function viewcert(imgs){
+         modal.style.display = "block";
+      modalImg.src = imgs.src;
+      captionText.innerHTML = imgs.alt;
+
+    }
+    // Get the <span> element that closes the modal
+    var span = document.getElementsByClassName("close")[0];
+    
+
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function() { 
+      modal.style.display = "none";
+    }
+    </script>
+    
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+
+
+    <footer style="position: sticky;width: 100%;height: 50px;background-color:rgb(33, 37, 41);bottom: 0;position: fixed; ">
+      <p style="color: wheat;text-align: center;">&#169; Copyright 2022<br>See You Soon &#x1F30D; &#x1F603; &#9825;</p>
+      
+    </footer>
+    </body>
+    </html> 
