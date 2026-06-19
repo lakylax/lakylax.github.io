@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Design & Implementation | Portfolio</title>
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-card-hover: #1a1a2e;
+            --primary: #00d4ff;
+            --primary-dim: rgba(0, 212, 255, 0.1);
+            --primary-glow: rgba(0, 212, 255, 0.3);
+            --secondary: #7c3aed;
+            --accent: #10b981;
+            --text: #e0e0e0;
+            --text-dim: #8892a4;
+            --border: #1e293b;
+            --code-bg: #1a1a2e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+        /* Back Navigation */
+        .back-nav {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .back-nav:hover {
+            color: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 0 20px var(--primary-dim);
+        }
+
+        .back-nav svg {
+            width: 16px;
+            height: 16px;
+            transition: transform 0.3s ease;
+        }
+
+        .back-nav:hover svg {
+            transform: translateX(-3px);
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            padding: 140px 24px 100px;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(ellipse, var(--primary-dim) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            background: var(--primary-dim);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.2rem, 5vw, 3.8rem);
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 20px;
+        }
+
+        .hero-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        .hero-meta-item span.icon {
+            font-size: 1.1rem;
+        }
+
+        /* Container */
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Section Styles */
+        section {
+            margin-bottom: 80px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-dim);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 12px;
+            font-size: 1.4rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* Content Cards */
+        .content-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .content-card:hover {
+            border-color: rgba(0, 212, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .content-card h3 {
+            font-size: 1.2rem;
+            color: #fff;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        .content-card p {
+            color: var(--text-dim);
+            margin-bottom: 16px;
+            line-height: 1.8;
+        }
+
+        /* Code Blocks */
+        .code-block {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .code-block::before {
+            content: 'SQL';
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            font-size: 0.7rem;
+            color: var(--primary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: var(--primary-dim);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .code-block code {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: #e0e0e0;
+            line-height: 1.8;
+            white-space: pre;
+        }
+
+        .code-block .keyword { color: var(--primary); font-weight: 600; }
+        .code-block .string { color: #10b981; }
+        .code-block .comment { color: var(--text-dim); font-style: italic; }
+        .code-block .function { color: #a78bfa; }
+
+        /* Image Gallery */
+        .image-container {
+            margin: 24px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .image-container:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 30px var(--primary-dim);
+            transform: translateY(-2px);
+        }
+
+        .image-container img {
+            width: 100%;
+            display: block;
+            background: #fff;
+            padding: 12px;
+        }
+
+        .image-caption {
+            padding: 12px 16px;
+            background: var(--bg-card);
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            text-align: center;
+            font-style: italic;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Normalization Steps */
+        .norm-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .norm-step {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .norm-badge {
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-dim);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 50%;
+            font-weight: 800;
+            font-size: 0.85rem;
+            color: var(--primary);
+        }
+
+        .norm-content h4 {
+            color: #fff;
+            margin-bottom: 8px;
+            font-size: 1.05rem;
+        }
+
+        .norm-content p {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        .norm-content ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 8px;
+        }
+
+        .norm-content ul li {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            padding: 4px 0 4px 20px;
+            position: relative;
+        }
+
+        .norm-content ul li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Table Styles */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.85rem;
+        }
+
+        .data-table th {
+            background: var(--primary-dim);
+            color: var(--primary);
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.75rem;
+        }
+
+        .data-table td {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-dim);
+        }
+
+        .data-table tr:hover td {
+            background: rgba(0, 212, 255, 0.03);
+        }
+
+        /* Skills Grid */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .skill-tag {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 18px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: var(--text);
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .skill-tag:hover {
+            border-color: var(--primary);
+            background: var(--primary-dim);
+        }
+
+        .skill-tag .skill-icon {
+            font-size: 1.2rem;
+        }
+
+        /* Takeaways */
+        .takeaway-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .takeaway-card {
+            padding: 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            border-left: 3px solid var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .takeaway-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .takeaway-card h4 {
+            color: #fff;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .takeaway-card p {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        /* Lightbox */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            cursor: pointer;
+        }
+
+        .lightbox.active {
+            display: flex;
+        }
+
+        .lightbox img {
+            max-width: 90%;
+            max-height: 85vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            background: #fff;
+            padding: 16px;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 24px;
+            right: 32px;
+            font-size: 2rem;
+            color: #fff;
+            cursor: pointer;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .lightbox-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* ACID Cards */
+        .acid-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .acid-card {
+            padding: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .acid-card .acid-letter {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .acid-card h4 {
+            color: #fff;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .acid-card p {
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 60px 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero { padding: 120px 16px 60px; }
+            .container { padding: 0 16px; }
+            .content-card { padding: 24px; }
+            .skills-grid { grid-template-columns: repeat(2, 1fr); }
+            .takeaway-grid { grid-template-columns: 1fr; }
+            .acid-grid { grid-template-columns: repeat(2, 1fr); }
+            .back-nav { top: 16px; left: 16px; padding: 8px 14px; font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Back Navigation -->
+    <a href="javascript:history.back()" class="back-nav">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back to Portfolio
+    </a>
+
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="hero-badge">🗄️ Database Engineering</div>
+        <h1>Database Design &<br>Implementation</h1>
+        <div class="hero-meta">
+            <div class="hero-meta-item">
+                <span class="icon">📅</span> 2020
+            </div>
+            <div class="hero-meta-item">
+                <span class="icon">📚</span> Database Systems
+            </div>
+            <div class="hero-meta-item">
+                <span class="icon">🎓</span> Bachelor's Program
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Project Overview -->
+        <section id="overview">
+            <div class="section-header">
+                <div class="section-icon">📋</div>
+                <h2>Project Overview</h2>
+            </div>
+            <div class="content-card">
+                <p>I designed and implemented a fully normalized relational database system from scratch as a semester-long project, applying core database engineering principles including entity-relationship modeling, normalization theory, and advanced SQL programming.</p>
+                <p>The system manages academic data — including authors, theses, departments, and grading — using Microsoft SQL Server accessed through Azure Data Studio. I built the complete data pipeline from conceptual design through physical implementation, incorporating stored procedures, transactions with savepoints, views, and triggers to ensure data integrity and operational efficiency.</p>
+            </div>
+        </section>
+
+        <!-- Database Design -->
+        <section id="design">
+            <div class="section-header">
+                <div class="section-icon">🏗️</div>
+                <h2>Database Design</h2>
+            </div>
+            <div class="content-card">
+                <h3>Entity-Relationship Model</h3>
+                <p>I designed the conceptual schema using an Entity-Relationship diagram to map out all entities, their attributes, and the relationships between them. The ER model captures the academic domain with entities for Authors, Theses, and Departments, establishing clear cardinality constraints and participation requirements.</p>
+                <div class="image-container" onclick="openLightbox(this)">
+                    <img src="images/image_001.png" alt="Entity Relationship Diagram">
+                    <div class="image-caption">Entity-Relationship Diagram — Conceptual database schema showing entities and relationships</div>
+                </div>
+                <p>The design captures key relationships: each author belongs to a department, authors produce theses, and departments house multiple academic programs. I used Azure Data Studio as my primary development environment for implementing and querying the database.</p>
+            </div>
+        </section>
+
+        <!-- Normalization -->
+        <section id="normalization">
+            <div class="section-header">
+                <div class="section-icon">⚙️</div>
+                <h2>Normalization Process</h2>
+            </div>
+            <div class="content-card">
+                <h3>From Unnormalized Data to 3NF</h3>
+                <p>I applied systematic normalization to eliminate data redundancy and ensure referential integrity. Starting from raw unnormalized data, I progressively decomposed relations through each normal form.</p>
+
+                <h3 style="margin-top: 24px;">Initial Dataset (Unnormalized)</h3>
+                <div class="image-container" onclick="openLightbox(this)">
+                    <img src="images/image_003.png" alt="Unnormalized Dataset">
+                    <div class="image-caption">Raw dataset before normalization — containing repeating groups and redundancies</div>
+                </div>
+
+                <div class="norm-steps">
+                    <div class="norm-step">
+                        <div class="norm-badge">1NF</div>
+                        <div class="norm-content">
+                            <h4>First Normal Form</h4>
+                            <ul>
+                                <li>Eliminated repeating groups from all tables</li>
+                                <li>Ensured atomic values in every column</li>
+                                <li>Established primary keys for unique row identification</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="norm-step">
+                        <div class="norm-badge">2NF</div>
+                        <div class="norm-content">
+                            <h4>Second Normal Form</h4>
+                            <ul>
+                                <li>Removed partial dependencies on composite keys</li>
+                                <li>Each non-key attribute fully depends on the entire primary key</li>
+                                <li>Separated department data into its own relation</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="norm-step">
+                        <div class="norm-badge">3NF</div>
+                        <div class="norm-content">
+                            <h4>Third Normal Form</h4>
+                            <ul>
+                                <li>Eliminated transitive dependencies</li>
+                                <li>All non-key attributes depend only on the primary key</li>
+                                <li>Database achieved full 3NF compliance</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 32px;">After 1NF Decomposition</h3>
+                <div class="image-container" onclick="openLightbox(this)">
+                    <img src="images/image_004.png" alt="First Normal Form Result">
+                    <div class="image-caption">Data structure after applying First Normal Form — atomic values, primary keys established</div>
+                </div>
+
+                <h3 style="margin-top: 24px;">Fully Normalized Schema (2NF/3NF)</h3>
+                <div class="image-container" onclick="openLightbox(this)">
+                    <img src="images/image_005.png" alt="Normalized Schema">
+                    <div class="image-caption">Final normalized schema — separate Department relation achieving 3NF compliance</div>
+                </div>
+
+                <h3 style="margin-top: 24px;">Department Table (Normalized)</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>department_Id</th>
+                            <th>department_name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>1</td><td>Faculty of History</td></tr>
+                        <tr><td>2</td><td>Faculty of Commerce</td></tr>
+                        <tr><td>3</td><td>Faculty of Economics</td></tr>
+                        <tr><td>4</td><td>Faculty of Education</td></tr>
+                        <tr><td>5</td><td>Faculty of Engineering</td></tr>
+                        <tr><td>6</td><td>Faculty of Graduate Studies</td></tr>
+                        <tr><td>7</td><td>Faculty of Humanities</td></tr>
+                        <tr><td>8</td><td>Faculty of Information Technology</td></tr>
+                        <tr><td>9</td><td>Faculty of Law</td></tr>
+                        <tr><td>10</td><td>Faculty of Management Studies</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Implementation -->
+        <section id="implementation">
+            <div class="section-header">
+                <div class="section-icon">💻</div>
+                <h2>Implementation</h2>
+            </div>
+
+            <!-- Stored Procedures -->
+            <div class="content-card">
+                <h3>Stored Procedures</h3>
+                <p>I implemented stored procedures to encapsulate frequently-used business logic, improving performance and maintaining a clean separation between application code and data access patterns.</p>
+
+                <div class="code-block"><code><span class="keyword">CREATE PROCEDURE</span> [dbo].[Get10top]
+<span class="keyword">AS</span>
+<span class="keyword">BEGIN</span>
+    <span class="keyword">SELECT TOP</span> 10 last_name, first_name
+    <span class="keyword">FROM</span> dbo.Author <span class="keyword">AS</span> a
+    <span class="keyword">ORDER BY</span> Average_Grade_From_Studies <span class="keyword">DESC</span>
+<span class="keyword">END</span>;</code></div>
+                <p>This procedure retrieves the top 10 highest-performing authors ranked by their academic grades — a common query pattern I optimized by encapsulating it as a reusable procedure.</p>
+
+                <div class="code-block"><code><span class="keyword">CREATE PROCEDURE</span> [dbo].[Get_Email_Address]
+<span class="keyword">AS</span>
+<span class="keyword">BEGIN</span>
+    <span class="keyword">SELECT</span> Email_address
+    <span class="keyword">FROM</span> dbo.Author <span class="keyword">AS</span> a
+<span class="keyword">END</span>;</code></div>
+                <p>I designed this procedure to provide a quick lookup of all author contact information — useful for batch operations like sending notifications or generating mailing lists.</p>
+            </div>
+
+            <!-- Transactions -->
+            <div class="content-card">
+                <h3>Transaction Management & ACID Compliance</h3>
+                <p>I implemented transactions with explicit control flow to ensure data integrity during multi-step operations. Each transaction demonstrates proper use of COMMIT, ROLLBACK, and SAVEPOINT mechanisms.</p>
+
+                <div class="acid-grid">
+                    <div class="acid-card">
+                        <div class="acid-letter">A</div>
+                        <h4>Atomicity</h4>
+                        <p>All-or-nothing execution of operations</p>
+                    </div>
+                    <div class="acid-card">
+                        <div class="acid-letter">C</div>
+                        <h4>Consistency</h4>
+                        <p>Database remains valid after each transaction</p>
+                    </div>
+                    <div class="acid-card">
+                        <div class="acid-letter">I</div>
+                        <h4>Isolation</h4>
+                        <p>Concurrent transactions don't interfere</p>
+                    </div>
+                    <div class="acid-card">
+                        <div class="acid-letter">D</div>
+                        <h4>Durability</h4>
+                        <p>Committed changes persist through failures</p>
+                    </div>
+                </div>
+
+                <div class="image-container" onclick="openLightbox(this)" style="margin-top: 24px;">
+                    <img src="images/image_002.png" alt="Transaction States Diagram">
+                    <div class="image-caption">Transaction state diagram — Active → Partially Committed → Committed / Failed → Aborted</div>
+                </div>
+
+                <h3 style="margin-top: 28px;">Transaction with COMMIT</h3>
+                <div class="code-block"><code><span class="keyword">BEGIN TRANSACTION</span>
+    <span class="keyword">DELETE FROM</span> Department
+    <span class="keyword">WHERE</span> department_Id = 0
+
+    <span class="keyword">UPDATE</span> Department
+    <span class="keyword">SET</span> department_name = <span class="string">'Faculty of History'</span>
+    <span class="keyword">WHERE</span> department_name = <span class="string">'Faculty of Classics'</span>
+<span class="keyword">COMMIT</span>
+
+<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> Department</code></div>
+                <p>I used this transaction to perform a data cleanup operation — removing invalid records and correcting department names in a single atomic unit. Both operations either succeed together or fail together.</p>
+
+                <h3 style="margin-top: 24px;">Transaction with SAVEPOINT & ROLLBACK</h3>
+                <div class="code-block"><code><span class="keyword">BEGIN TRANSACTION</span>
+    <span class="keyword">UPDATE</span> Thesis <span class="keyword">SET</span> Final_grade = <span class="string">'4'</span>
+    <span class="keyword">WHERE</span> Final_grade = <span class="string">'3'</span>
+
+    <span class="keyword">SAVE TRANSACTION</span> A  <span class="comment">-- Savepoint established</span>
+
+    <span class="keyword">DELETE</span> Thesis <span class="keyword">WHERE</span> Thesis_Id = 4
+
+    <span class="keyword">ROLLBACK TRANSACTION</span> A  <span class="comment">-- Undo delete, keep grade update</span>
+<span class="keyword">COMMIT</span>
+
+<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> Thesis</code></div>
+                <p>This demonstrates my implementation of partial rollback using savepoints — the grade update persists while the deletion is undone. This pattern is essential for complex operations where only specific steps may need reversal.</p>
+            </div>
+
+            <!-- Views -->
+            <div class="content-card">
+                <h3>Database Views</h3>
+                <p>I created views to provide simplified, secure access to specific data subsets — abstracting complex table structures into clean virtual tables for application consumption.</p>
+
+                <div class="code-block"><code><span class="keyword">CREATE VIEW</span> Only_Thesis_Titles <span class="keyword">AS</span>
+<span class="keyword">SELECT</span> Thesis_title
+<span class="keyword">FROM</span> dbo.Thesis;</code></div>
+                <p>This view exposes only thesis titles — restricting access to sensitive grading and author information while providing a clean interface for title-only lookups.</p>
+            </div>
+
+            <!-- Triggers -->
+            <div class="content-card">
+                <h3>Database Triggers</h3>
+                <p>I implemented triggers to automate referential actions — when new author records are inserted, related records in dependent tables (taxes, vacations, salaries) are automatically created, maintaining data consistency without requiring application-level logic.</p>
+            </div>
+        </section>
+
+        <!-- Queries & Results -->
+        <section id="queries">
+            <div class="section-header">
+                <div class="section-icon">🔍</div>
+                <h2>Query Architecture</h2>
+            </div>
+            <div class="content-card">
+                <h3>SQL Query Patterns Implemented</h3>
+                <p>I structured all data retrieval using standard SQL query patterns with proper clause ordering and optimization considerations:</p>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Clause</th>
+                            <th>Purpose</th>
+                            <th>My Usage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code style="color: var(--primary);">SELECT</code></td>
+                            <td>Column projection</td>
+                            <td>Targeted attribute retrieval with aliases</td>
+                        </tr>
+                        <tr>
+                            <td><code style="color: var(--primary);">FROM</code></td>
+                            <td>Table specification</td>
+                            <td>Schema-qualified references (dbo.Table)</td>
+                        </tr>
+                        <tr>
+                            <td><code style="color: var(--primary);">WHERE</code></td>
+                            <td>Row filtering</td>
+                            <td>Conditional predicates for data subsetting</td>
+                        </tr>
+                        <tr>
+                            <td><code style="color: var(--primary);">GROUP BY</code></td>
+                            <td>Aggregation</td>
+                            <td>Statistical summaries by department</td>
+                        </tr>
+                        <tr>
+                            <td><code style="color: var(--primary);">HAVING</code></td>
+                            <td>Group filtering</td>
+                            <td>Post-aggregation conditional logic</td>
+                        </tr>
+                        <tr>
+                            <td><code style="color: var(--primary);">ORDER BY</code></td>
+                            <td>Result sorting</td>
+                            <td>Ranked outputs (e.g., top performers)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Key Takeaways -->
+        <section id="takeaways">
+            <div class="section-header">
+                <div class="section-icon">💡</div>
+                <h2>Key Takeaways</h2>
+            </div>
+            <div class="takeaway-grid">
+                <div class="takeaway-card">
+                    <h4>Design Before Implementation</h4>
+                    <p>Starting with a solid ER model and normalizing before writing any SQL saved significant refactoring time and produced a cleaner schema.</p>
+                </div>
+                <div class="takeaway-card">
+                    <h4>Normalization Eliminates Anomalies</h4>
+                    <p>Achieving 3NF removed update, insertion, and deletion anomalies — the database maintains consistency without application-level guards.</p>
+                </div>
+                <div class="takeaway-card">
+                    <h4>Transactions Protect Integrity</h4>
+                    <p>Using savepoints and explicit commit/rollback patterns ensures complex multi-step operations remain atomic even when partial failures occur.</p>
+                </div>
+                <div class="takeaway-card">
+                    <h4>Stored Procedures Centralize Logic</h4>
+                    <p>Encapsulating business logic in the database layer improves performance and ensures consistent behavior across all consuming applications.</p>
+                </div>
+                <div class="takeaway-card">
+                    <h4>Views Enforce Security</h4>
+                    <p>Virtual tables provide controlled data exposure — restricting what applications can see without duplicating data or adding middleware.</p>
+                </div>
+                <div class="takeaway-card">
+                    <h4>Triggers Automate Consistency</h4>
+                    <p>Event-driven automation ensures referential integrity is maintained even when applications bypass normal data entry paths.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Skills -->
+        <section id="skills">
+            <div class="section-header">
+                <div class="section-icon">🛠️</div>
+                <h2>Skills Demonstrated</h2>
+            </div>
+            <div class="skills-grid">
+                <div class="skill-tag"><span class="skill-icon">🗄️</span> SQL Server</div>
+                <div class="skill-tag"><span class="skill-icon">📐</span> ER Modeling</div>
+                <div class="skill-tag"><span class="skill-icon">⚙️</span> Normalization (3NF)</div>
+                <div class="skill-tag"><span class="skill-icon">💾</span> Stored Procedures</div>
+                <div class="skill-tag"><span class="skill-icon">🔄</span> Transactions & ACID</div>
+                <div class="skill-tag"><span class="skill-icon">👁️</span> Views & Security</div>
+                <div class="skill-tag"><span class="skill-icon">⚡</span> Triggers</div>
+                <div class="skill-tag"><span class="skill-icon">🔧</span> Azure Data Studio</div>
+                <div class="skill-tag"><span class="skill-icon">📊</span> Data Modeling</div>
+                <div class="skill-tag"><span class="skill-icon">🏗️</span> Schema Design</div>
+                <div class="skill-tag"><span class="skill-icon">🧹</span> Data Integrity</div>
+                <div class="skill-tag"><span class="skill-icon">📝</span> DDL & DML</div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Database Design & Implementation — Project, 2020</p>
+    </footer>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+        <div class="lightbox-close">&times;</div>
+        <img id="lightbox-img" src="" alt="Enlarged view">
+    </div>
+
+    <script>
+        function openLightbox(container) {
+            const img = container.querySelector('img');
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImg = document.getElementById('lightbox-img');
+            lightboxImg.src = img.src;
+            lightboxImg.alt = img.alt;
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeLightbox();
+        });
+
+        // Smooth reveal on scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('section').forEach(section => {
+            section.style.opacity = '0';
+            section.style.transform = 'translateY(20px)';
+            section.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(section);
+        });
+    </script>
+</body>
+</html>

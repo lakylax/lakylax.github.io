@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Learning Platform Research — Nepal | Laxman Puri</title>
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-card-hover: #1a1a2e;
+            --primary: #00d4ff;
+            --primary-dim: rgba(0, 212, 255, 0.1);
+            --primary-glow: rgba(0, 212, 255, 0.3);
+            --accent: #7c3aed;
+            --accent-dim: rgba(124, 58, 237, 0.15);
+            --text: #e0e0e0;
+            --text-muted: #9ca3af;
+            --text-dim: #6b7280;
+            --border: #1f2937;
+            --border-hover: #374151;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* Back Link */
+        .back-link {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            z-index: 100;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: rgba(18, 18, 26, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 0 20px var(--primary-dim);
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 80px 24px;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse at 20% 50%, rgba(0, 212, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(124, 58, 237, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(0, 212, 255, 0.04) 0%, transparent 50%);
+        }
+
+        .hero-content {
+            position: relative;
+            max-width: 900px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            background: var(--primary-dim);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            color: var(--primary);
+            font-weight: 500;
+            margin-bottom: 32px;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.2rem, 5vw, 3.8rem);
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffffff 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .hero-meta-item .icon {
+            font-size: 1.1rem;
+        }
+
+        /* Sections */
+        .section {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 80px 24px;
+        }
+
+        .section-header {
+            margin-bottom: 48px;
+        }
+
+        .section-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .section h2 {
+            font-size: clamp(1.8rem, 3vw, 2.4rem);
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.3;
+        }
+
+        .section-divider {
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 2px;
+            margin-top: 16px;
+        }
+
+        /* Content Cards */
+        .content-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 36px;
+            margin-bottom: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .content-card:hover {
+            border-color: var(--border-hover);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .content-card h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 16px;
+        }
+
+        .content-card p {
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .content-card p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Research Questions */
+        .research-questions {
+            list-style: none;
+            padding: 0;
+        }
+
+        .research-questions li {
+            position: relative;
+            padding: 16px 16px 16px 48px;
+            margin-bottom: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        .research-questions li::before {
+            content: attr(data-num);
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 24px;
+            background: var(--primary-dim);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* Methodology Grid */
+        .method-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 32px;
+        }
+
+        .method-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 28px;
+            transition: all 0.3s ease;
+        }
+
+        .method-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 212, 255, 0.08);
+        }
+
+        .method-card .step-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: var(--primary-dim);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 14px;
+        }
+
+        .method-card h4 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .method-card p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* Findings */
+        .finding-highlight {
+            background: linear-gradient(135deg, var(--primary-dim), var(--accent-dim));
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 14px;
+            padding: 32px;
+            margin: 32px 0;
+        }
+
+        .finding-highlight .stat {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .finding-highlight .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            margin: 32px 0;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .stat-box .number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 6px;
+        }
+
+        .stat-box .label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Image Gallery */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 32px 0;
+        }
+
+        .image-item {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .image-item:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .image-item img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+        .image-item:hover img {
+            transform: scale(1.03);
+        }
+
+        .image-item .caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 16px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.85));
+            font-size: 0.8rem;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .image-full-width {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin: 24px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .image-full-width:hover {
+            border-color: var(--primary);
+            box-shadow: 0 8px 30px rgba(0, 212, 255, 0.1);
+        }
+
+        /* Comparison Table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+            font-size: 0.9rem;
+        }
+
+        .comparison-table th {
+            padding: 14px 18px;
+            text-align: left;
+            background: var(--bg-card);
+            color: var(--primary);
+            font-weight: 600;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .comparison-table td {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        .comparison-table tr:hover td {
+            background: var(--bg-card);
+        }
+
+        .check {
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .cross {
+            color: #ef4444;
+        }
+
+        /* Architecture Section */
+        .arch-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 24px;
+        }
+
+        .arch-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 28px;
+        }
+
+        .arch-card h4 {
+            color: #fff;
+            font-size: 1.05rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .arch-card p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* Skills Section */
+        .skills-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .skill-tag {
+            padding: 10px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text);
+            transition: all 0.3s ease;
+        }
+
+        .skill-tag:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-dim);
+        }
+
+        .skill-tag.highlight {
+            border-color: rgba(0, 212, 255, 0.3);
+            color: var(--primary);
+            background: var(--primary-dim);
+        }
+
+        /* Takeaways */
+        .takeaway-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .takeaway-list li {
+            display: flex;
+            gap: 16px;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .takeaway-list li:last-child {
+            border-bottom: none;
+        }
+
+        .takeaway-icon {
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            background: var(--primary-dim);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .takeaway-text h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+
+        .takeaway-text p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* Lightbox */
+        .lightbox-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            cursor: pointer;
+        }
+
+        .lightbox-overlay.active {
+            display: flex;
+        }
+
+        .lightbox-overlay img {
+            max-width: 90%;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+
+        .lightbox-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .lightbox-caption {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-align: center;
+            max-width: 600px;
+        }
+
+        /* Footer */
+        .report-footer {
+            text-align: center;
+            padding: 60px 24px;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+
+        .report-footer p {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero {
+                min-height: 80vh;
+                padding: 100px 20px 60px;
+            }
+
+            .section {
+                padding: 60px 20px;
+            }
+
+            .content-card {
+                padding: 24px;
+            }
+
+            .hero-meta {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .image-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+
+            .back-link {
+                top: 16px;
+                left: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="javascript:history.back()" class="back-link">← Back to Portfolio</a>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">🎓 Diploma Thesis — Bachelor's Program</div>
+            <h1>E-Learning Platform Research — Nepal</h1>
+            <p class="hero-subtitle">
+                Investigating virtual classroom feasibility, ICT infrastructure readiness, and designing an open-source learning platform for Nepal's education sector.
+            </p>
+            <div class="hero-meta">
+                <div class="hero-meta-item">
+                    <span class="icon">📅</span>
+                    <span>2022 (</span>
+                </div>
+                <div class="hero-meta-item">
+                    <span class="icon">🎓</span>
+                    <span>Społeczna Akademia Nauk, Poland</span>
+                </div>
+                <div class="hero-meta-item">
+                    <span class="icon">💻</span>
+                    <span>Bachelor's in Computer Science & IT</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Project Overview -->
+    <section class="section">
+        <div class="section-header">
+            <div class="section-label">01 — Context</div>
+            <h2>Project Overview</h2>
+            <div class="section-divider"></div>
+        </div>
+
+        <div class="content-card">
+            <h3>The Problem I Set Out to Solve</h3>
+            <p>
+                Nepal — a landlocked country ranking 140th in ICT development and 95th in the Global Innovation Index — faced a critical challenge. The COVID-19 pandemic exposed a massive gap: millions of students needed to continue learning, but the country's digital infrastructure and platform adoption were far behind developed nations.
+            </p>
+            <p>
+                I chose this as my diploma thesis because I saw firsthand how Nepal's education system was struggling to transition online. Virtual classrooms were already common in developed countries, but for Nepal, this was uncharted territory with real infrastructure constraints — bandwidth limitations, device accessibility gaps, and a lack of purpose-built platforms.
+            </p>
+        </div>
+
+        <div class="content-card">
+            <h3>Research Questions I Investigated</h3>
+            <ol class="research-questions">
+                <li data-num="1">Which web application is best suited for conducting virtual classrooms in Nepal's context?</li>
+                <li data-num="2">How can an open-source learning platform be effectively built and deployed?</li>
+                <li data-num="3">What are the real possibilities of implementing virtual classrooms to supplement conventional classrooms?</li>
+                <li data-num="4">What feasibility in virtual classrooms can be achieved by optimizing bandwidth usage?</li>
+            </ol>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="number">91%</div>
+                <div class="label">Nepal's population with internet access (2021)</div>
+            </div>
+            <div class="stat-box">
+                <div class="number">65%+</div>
+                <div class="label">Using mobile data for internet</div>
+            </div>
+            <div class="stat-box">
+                <div class="number">140th</div>
+                <div class="label">Nepal's ICT Development Index rank</div>
+            </div>
+        </div>
+
+        <!-- Internet usage charts -->
+        <div class="image-grid">
+            <div class="image-item" onclick="openLightbox('images/image_001.png', 'Internet usage comparison — developed countries (Japan, US, Australia) from 1990–2019')">
+                <img src="images/image_001.png" alt="Internet usage of developed countries">
+                <div class="caption">Internet usage — Developed countries (%)</div>
+            </div>
+            <div class="image-item" onclick="openLightbox('images/image_002.png', 'Internet usage comparison — developing countries (China, India, Nepal) from 1990–2019')">
+                <img src="images/image_002.png" alt="Internet usage of developing countries">
+                <div class="caption">Internet usage — Developing countries (%)</div>
+            </div>
+        </div>
+
+        <img src="images/image_003.png" alt="Internet users by world regions 2021" class="image-full-width" onclick="openLightbox('images/image_003.png', 'Global internet users by region — 2021 data showing Asia leading with highest user count')">
+    </section>
+
+    <!-- Research Methodology -->
+    <section class="section">
+        <div class="section-header">
+            <div class="section-label">02 — Approach</div>
+            <h2>Research Methodology</h2>
+            <div class="section-divider"></div>
+        </div>
+
+        <div class="content-card">
+            <p>
+                I followed an <strong>incremental build model</strong> — a structured engineering approach that allowed me to iteratively develop, test, and refine the platform. I combined technical implementation with analytical research, using the Software Usability Measurement Inventory (SUMI) framework to evaluate the platforms I studied.
+            </p>
+        </div>
+
+        <div class="method-grid">
+            <div class="method-card">
+                <div class="step-num">1</div>
+                <h4>Need Identification</h4>
+                <p>Analyzed Nepal's education landscape, identifying the gap between available ICT infrastructure and the requirements for effective virtual classrooms.</p>
+            </div>
+            <div class="method-card">
+                <div class="step-num">2</div>
+                <h4>Requirements Analysis</h4>
+                <p>Evaluated usability, interactivity, technical features, and bandwidth consumption across multiple e-learning platforms using SUMI methodology.</p>
+            </div>
+            <div class="method-card">
+                <div class="step-num">3</div>
+                <h4>Platform Comparison</h4>
+                <p>Compared Moodle, Blackboard, and Tele-Education platforms against criteria of cost, openness, bandwidth efficiency, and feature completeness.</p>
+            </div>
+            <div class="method-card">
+                <div class="step-num">4</div>
+                <h4>Design & Implementation</h4>
+                <p>Deployed a working Moodle instance locally using XAMPP (Apache + MySQL + PHP), configured courses, and validated the complete learning workflow.</p>
+            </div>
+            <div class="method-card">
+                <div class="step-num">5</div>
+                <h4>Infrastructure Assessment</h4>
+                <p>Investigated Nepal's bandwidth availability, ISP landscape, and calculated per-user bandwidth requirements for various learning scenarios.</p>
+            </div>
+            <div class="method-card">
+                <div class="step-num">6</div>
+                <h4>Testing & Validation</h4>
+                <p>Tested the platform's real-time communication features, file sharing, messaging, and course management to validate feasibility within bandwidth constraints.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Findings -->
+    <section class="section">
+        <div class="section-header">
+            <div class="section-label">03 — Findings</div>
+            <h2>Research Findings & Analysis</h2>
+            <div class="section-divider"></div>
+        </div>
+
+        <div class="content-card">
+            <h3>E-Learning Models: Synchronous vs. Asynchronous</h3>
+            <p>
+                I identified two primary delivery models relevant to Nepal's context. <strong>Synchronous learning</strong> (real-time, via Zoom/Google Meet) demands higher bandwidth but enables live interaction. <strong>Asynchronous learning</strong> (stored content via Moodle) requires minimal bandwidth and offers flexibility — critical for students with intermittent connectivity.
+            </p>
+            <p>
+                My key finding: for Nepal's infrastructure, a hybrid model works best — Moodle for asynchronous content delivery combined with WiZiQ or Zoom plugins for occasional live sessions. This minimizes constant bandwidth pressure while maintaining engagement.
+            </p>
+        </div>
+
+        <div class="content-card">
+            <h3>Virtual Classroom Architecture</h3>
+            <div class="arch-cards">
+                <div class="arch-card">
+                    <h4>🏛️ Role-Based Architecture</h4>
+                    <p>Assigns specific roles (teacher, student, admin, team leader) with controlled access to microphone, whiteboard, and content. Best for structured academic delivery where the instructor leads.</p>
+                </div>
+                <div class="arch-card">
+                    <h4>🤝 Collaborative Architecture</h4>
+                    <p>All participants have equal privileges. Suited for group discussions, brainstorming, and peer learning. Supports "break-away teams" for smaller group work within sessions.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h3>Platform Comparison: Why Moodle Won</h3>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Criteria</th>
+                        <th>Moodle</th>
+                        <th>Blackboard</th>
+                        <th>Tele-Education</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Open Source</td>
+                        <td class="check">✓ Free (GPL)</td>
+                        <td class="cross">✗ Licensed</td>
+                        <td class="cross">✗ Licensed</td>
+                    </tr>
+                    <tr>
+                        <td>Plugin Ecosystem</td>
+                        <td class="check">✓ Extensive</td>
+                        <td>Limited</td>
+                        <td>Minimal</td>
+                    </tr>
+                    <tr>
+                        <td>Bandwidth Efficient</td>
+                        <td class="check">✓ Very efficient</td>
+                        <td>Moderate</td>
+                        <td>High demand</td>
+                    </tr>
+                    <tr>
+                        <td>Multi-language</td>
+                        <td class="check">✓ 120+ languages</td>
+                        <td class="check">✓ Supported</td>
+                        <td>Limited</td>
+                    </tr>
+                    <tr>
+                        <td>SaaS Deployable</td>
+                        <td class="check">✓ Yes</td>
+                        <td class="check">✓ Yes</td>
+                        <td>Complex</td>
+                    </tr>
+                    <tr>
+                        <td>Community Support</td>
+                        <td class="check">✓ 90M+ users</td>
+                        <td>Commercial support</td>
+                        <td>Limited</td>
+                    </tr>
+                    <tr>
+                        <td>Live Class Plugin</td>
+                        <td class="check">✓ WiZiQ integration</td>
+                        <td class="check">✓ Built-in</td>
+                        <td class="check">✓ Built-in</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="finding-highlight">
+            <div class="stat">Moodle + WiZiQ</div>
+            <div class="stat-label">
+                My recommended stack — combining Moodle's bandwidth-efficient asynchronous platform with WiZiQ's live classroom plugin. Open-source, zero licensing cost, and proven at scale with 90M+ global users.
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h3>Bandwidth Analysis for Nepal</h3>
+            <p>
+                I calculated bandwidth requirements for various scenarios. Key finding: basic Moodle operation (content access, messaging, file sharing) works effectively at 200 Kbps per user. Video streaming for live sessions requires 1.5–5 Mbps depending on quality. Nepal's existing infrastructure — with 91% internet penetration and growing 4G adoption — can support asynchronous learning now, with synchronous sessions feasible in urban areas.
+            </p>
+            <p>
+                For a district with 1000 teachers at 50% peak simultaneous video usage: <strong>1000 × 50% × 756 Kbps ≈ 378 Mbps</strong> aggregate bandwidth needed. This is achievable for Nepal's urban ISPs but requires infrastructure investment in rural areas.
+            </p>
+        </div>
+
+        <img src="images/image_011.png" alt="SETDA Internet speed recommendations" class="image-full-width" onclick="openLightbox('images/image_011.png', 'SETDA recommended internet speeds for various educational activities')">
+
+        
+    </section>
+
+    <!-- Technical Design -->
+    <section class="section">
+        <div class="section-header">
+            <div class="section-label">04 — Implementation</div>
+            <h2>Technical Design & Deployment</h2>
+            <div class="section-divider"></div>
+        </div>
+
+        <div class="content-card">
+            <h3>Platform Stack</h3>
+            <p>
+                I built and deployed the e-learning platform using the LAMP/XAMPP stack — a proven, cost-free architecture that aligns with Nepal's need for zero-licensing-cost solutions. The platform runs on Apache web server, MySQL for data persistence, and PHP as the application layer, with Moodle as the learning management framework.
+            </p>
+        </div>
+
+        <div class="content-card">
+            <h3>Deployment Walkthrough</h3>
+            <p>I documented and completed the full deployment pipeline — from downloading and installing Moodle through XAMPP, configuring Apache and MySQL services, creating the database infrastructure, running the web-based installer, and finally standing up a fully operational LMS with course management capabilities.</p>
+        </div>
+
+        <div class="image-grid">
+            <div class="image-item" onclick="openLightbox('images/image_004.png', 'Moodle download page — selecting the right version for deployment')">
+                <img src="images/image_004.png" alt="Moodle download">
+                <div class="caption">Moodle package download</div>
+            </div>
+            <div class="image-item" onclick="openLightbox('images/image_005.png', 'Moodle installation process on XAMPP')">
+                <img src="images/image_005.png" alt="Moodle installation">
+                <div class="caption">Installation setup</div>
+            </div>
+        </div>
+
+        <div class="image-grid">
+            <div class="image-item" onclick="openLightbox('images/image_006.png', 'XAMPP Control Panel — Apache and MySQL services running')">
+                <img src="images/image_006.png" alt="XAMPP Control Panel">
+                <div class="caption">XAMPP Control Panel — Services running</div>
+            </div>
+            <div class="image-item" onclick="openLightbox('images/image_007.png', 'phpMyAdmin — Creating the Moodle database')">
+                <img src="images/image_007.png" alt="Database creation in phpMyAdmin">
+                <div class="caption">Database configuration via phpMyAdmin</div>
+            </div>
+        </div>
+
+        <div class="image-grid">
+            <div class="image-item" onclick="openLightbox('images/image_008.png', 'Moodle language selection during initial setup')">
+                <img src="images/image_008.png" alt="Language selection">
+                <div class="caption">Language selection — Initial setup</div>
+            </div>
+            <div class="image-item" onclick="openLightbox('images/image_009.png', 'Moodle Dashboard — fully operational LMS')">
+                <img src="images/image_009.png" alt="Moodle Dashboard">
+                <div class="caption">Moodle Dashboard — Live platform</div>
+            </div>
+        </div>
+
+        <img src="images/image_010.png" alt="Course management interface" class="image-full-width" onclick="openLightbox('images/image_010.png', 'Course management interface — creating and organizing learning modules')">
+
+        <div class="content-card" style="margin-top: 24px;">
+            <h3>Key Platform Features Configured</h3>
+            <p>I configured and validated the following capabilities within the deployed platform:</p>
+            <ul style="margin-top: 12px; padding-left: 20px; color: var(--text-muted);">
+                <li style="margin-bottom: 8px;">Course creation and category-based organization</li>
+                <li style="margin-bottom: 8px;">Real-time chat messaging with emoji, inline images, and video embedding</li>
+                <li style="margin-bottom: 8px;">Configurable notification system (email + mobile push)</li>
+                <li style="margin-bottom: 8px;">User role management (admin, teacher, student) with granular permissions</li>
+                <li style="margin-bottom: 8px;">Resource sharing — file uploads, presentations, and recorded sessions</li>
+                <li style="margin-bottom: 8px;">WiZiQ plugin integration path for live virtual classrooms</li>
+                <li style="margin-bottom: 8px;">Mobile-responsive interface for cross-device access</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Key Takeaways -->
+    <section class="section">
+        <div class="section-header">
+            <div class="section-label">05 — Conclusions</div>
+            <h2>Key Takeaways</h2>
+            <div class="section-divider"></div>
+        </div>
+
+        <ul class="takeaway-list">
+            <li>
+                <div class="takeaway-icon">🎯</div>
+                <div class="takeaway-text">
+                    <h4>Open-Source Is the Path Forward for Developing Nations</h4>
+                    <p>Moodle's zero-cost, community-driven model proved to be the only viable long-term solution for Nepal's education sector. Licensed platforms like Blackboard create unsustainable financial dependencies.</p>
+                </div>
+            </li>
+            <li>
+                <div class="takeaway-icon">📡</div>
+                <div class="takeaway-text">
+                    <h4>Bandwidth Is No Longer the Blocker It Once Was</h4>
+                    <p>With 91% internet penetration and growing 4G/5G adoption, Nepal's existing infrastructure can support asynchronous e-learning today. The real challenge has shifted from connectivity to platform adoption and digital literacy.</p>
+                </div>
+            </li>
+            <li>
+                <div class="takeaway-icon">🔄</div>
+                <div class="takeaway-text">
+                    <h4>Hybrid Models Beat Pure Synchronous Delivery</h4>
+                    <p>Combining asynchronous content (available 24/7, low bandwidth) with scheduled live sessions maximizes reach while accommodating infrastructure variability across urban and rural areas.</p>
+                </div>
+            </li>
+            <li>
+                <div class="takeaway-icon">👥</div>
+                <div class="takeaway-text">
+                    <h4>User-Centric Design Is Critically Underserved</h4>
+                    <p>My usability analysis revealed that most platforms deployed in developing countries are done without user requirement studies. This creates adoption barriers that technology alone cannot solve.</p>
+                </div>
+            </li>
+            <li>
+                <div class="takeaway-icon">☁️</div>
+                <div class="takeaway-text">
+                    <h4>SaaS Deployment Removes Operational Burden</h4>
+                    <p>Hosting Moodle as Software-as-a-Service eliminates the need for each institution to maintain its own server infrastructure — a critical advantage for resource-constrained schools.</p>
+                </div>
+            </li>
+            <li>
+                <div class="takeaway-icon">🔌</div>
+                <div class="takeaway-text">
+                    <h4>Infrastructure First: Power, Connectivity, Devices</h4>
+                    <p>Before any platform can succeed, three prerequisites must be met: reliable power supply, affordable internet access for students and teachers, and availability of devices. Policy must address these fundamentals.</p>
+                </div>
+            </li>
+        </ul>
+    </section>
+
+    <!-- Tools & Skills -->
+    <section class="section">
+        <div class="section-header">
+            <div class="section-label">06 — Toolkit</div>
+            <h2>Tools & Skills Applied</h2>
+            <div class="section-divider"></div>
+        </div>
+
+        <div class="content-card">
+            <h3>Technical Stack</h3>
+            <div class="skills-grid">
+                <span class="skill-tag highlight">Moodle LMS</span>
+                <span class="skill-tag highlight">PHP</span>
+                <span class="skill-tag highlight">MySQL</span>
+                <span class="skill-tag highlight">Apache HTTP Server</span>
+                <span class="skill-tag">XAMPP</span>
+                <span class="skill-tag">phpMyAdmin</span>
+                <span class="skill-tag">WiZiQ Integration</span>
+                <span class="skill-tag">HTML/CSS</span>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h3>Research & Analysis</h3>
+            <div class="skills-grid">
+                <span class="skill-tag highlight">ICT Infrastructure Analysis</span>
+                <span class="skill-tag highlight">Usability Evaluation (SUMI)</span>
+                <span class="skill-tag highlight">Bandwidth Optimization</span>
+                <span class="skill-tag">Comparative Platform Analysis</span>
+                <span class="skill-tag">E-Learning Architecture Design</span>
+                <span class="skill-tag">Requirements Engineering</span>
+                <span class="skill-tag">Incremental Development Model</span>
+                <span class="skill-tag">Technical Documentation</span>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h3>Domain Knowledge</h3>
+            <div class="skills-grid">
+                <span class="skill-tag">Virtual Classroom Technologies</span>
+                <span class="skill-tag">Synchronous & Asynchronous E-Learning</span>
+                <span class="skill-tag">IMS / IP Multimedia Subsystem</span>
+                <span class="skill-tag">QoS for Real-Time Communication</span>
+                <span class="skill-tag">Nepal ICT Ecosystem</span>
+                <span class="skill-tag">Open-Source Licensing (GPL)</span>
+                <span class="skill-tag">SaaS Architecture</span>
+                <span class="skill-tag">Network Bandwidth Planning</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="report-footer">
+        <p>Diploma Thesis — Społeczna Akademia Nauk, Poland · 2022</p>
+        <p style="margin-top: 8px;">Supervised by Dr. Eng. Paweł Pełczyński</p>
+    </footer>
+
+    <!-- Lightbox -->
+    <div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+        <button class="lightbox-close" onclick="closeLightbox()">×</button>
+        <img id="lightbox-img" src="" alt="">
+        <div class="lightbox-caption" id="lightbox-caption"></div>
+    </div>
+
+    <script>
+        function openLightbox(src, caption) {
+            const overlay = document.getElementById('lightbox');
+            const img = document.getElementById('lightbox-img');
+            const cap = document.getElementById('lightbox-caption');
+            img.src = src;
+            cap.textContent = caption || '';
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            const overlay = document.getElementById('lightbox');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeLightbox();
+        });
+    </script>
+</body>
+</html>

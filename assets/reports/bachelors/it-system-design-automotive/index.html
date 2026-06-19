@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IT System Design — Library Management System</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a2e;
+  --text: #e0e0e0;
+  --text-secondary: #c8c8d8;
+  --text-muted: #9898a8;
+  --primary: #00d4ff;
+  --primary-dim: rgba(0, 212, 255, 0.15);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(0, 212, 255, 0.3);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.7; min-height: 100vh; }
+.back-link { position: fixed; top: 20px; left: 20px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; z-index: 100; background: var(--bg-card); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); transition: all 0.3s ease; }
+.back-link:hover { border-color: var(--border-glow); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+.hero { padding: 80px 40px 40px; text-align: center; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 100%); }
+.hero h1 { font-size: clamp(24px, 4vw, 36px); font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -0.5px; }
+.hero .meta { color: var(--text-muted); font-size: 14px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.hero .meta span { display: flex; align-items: center; gap: 6px; }
+.container { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+h2 { font-size: 22px; font-weight: 600; color: #fff; margin-top: 48px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); display: inline-block; }
+h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-top: 28px; margin-bottom: 10px; }
+p { margin: 12px 0; font-size: 15px; color: var(--text-secondary); }
+strong { color: var(--text); }
+ul, ol { margin: 12px 0; padding-left: 24px; }
+li { margin: 6px 0; font-size: 15px; color: var(--text-secondary); }
+.screenshot { margin: 20px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.3s ease; }
+.screenshot:hover { border-color: var(--border-glow); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1); }
+.screenshot img { display: block; width: 100%; height: auto; cursor: pointer; }
+.screenshot-caption { font-size: 12px; color: var(--text-muted); padding: 10px 14px; background: var(--bg-secondary); border-top: 1px solid var(--border); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.takeaways { background: var(--bg-secondary); border-left: 3px solid var(--primary); padding: 20px 24px; border-radius: 0 10px 10px 0; margin: 24px 0; }
+.takeaways li { color: var(--text); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tag { background: var(--primary-dim); color: var(--primary); padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; border: 1px solid rgba(0, 212, 255, 0.2); }
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 4px; }
+@media (max-width: 640px) { .hero { padding: 60px 20px 30px; } .container { padding: 24px 16px 60px; } h2 { font-size: 19px; } }
+</style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-link">&#x2190; Back to Portfolio</a>
+
+<div class="hero">
+  <h1>IT System Design — Library Management System</h1>
+  <div class="meta">
+    <span>&#x1F4C5; 2021</span>
+    <span>&#x1F393; Bachelor's Program</span>
+  </div>
+</div>
+
+<div class="container">
+
+<h2>Project Overview</h2>
+<p>I designed a complete Library Management System as part of my IT System Design coursework. This project focused on applying structured systems analysis and design methodology (SSADM) — from requirements gathering through functional hierarchy decomposition to detailed Data Flow Diagrams (DFDs).</p>
+
+<p>The system converts manual library operations into an automated online application, handling three major components: <strong>stock maintenance</strong>, <strong>transaction entry</strong>, and <strong>reporting</strong>.</p>
+
+<h3>Problems Solved</h3>
+<ul>
+<li>Faster retrieval of book and member information</li>
+<li>Reduced workload for library staff through automation</li>
+<li>Eliminated manual tracking errors for issue dates, return dates, and fines</li>
+<li>Centralized book availability and member management</li>
+</ul>
+
+<hr>
+
+<h2>Phase 1: Requirements & Scope Definition</h2>
+<p>I began by identifying the system users (library staff and members) and defining the system boundary. The key functionality includes:</p>
+<ul>
+<li>Add/update member records</li>
+<li>Add/update book inventory</li>
+<li>Manage check-in/check-out transactions</li>
+<li>Calculate fines automatically based on return dates</li>
+<li>Generate reports on inventory and transactions</li>
+</ul>
+
+<p><strong>System Boundary Diagram:</strong></p>
+<div class="screenshot">
+<img src="images/image_001.png" alt="System Boundary" loading="lazy">
+<div class="screenshot-caption">System boundary identifying actors (Library Staff, Members) and system scope</div>
+</div>
+
+<hr>
+
+<h2>Phase 2: Functional Hierarchy Diagram</h2>
+<p>I decomposed the system into a functional hierarchy, breaking down the top-level system into subsystems, modules, and individual functions.</p>
+
+<div class="screenshot">
+<img src="images/image_002.png" alt="Functional Hierarchy Diagram" loading="lazy">
+<div class="screenshot-caption">Functional Hierarchy Diagram — decomposing the Library Management System into modules</div>
+</div>
+
+<hr>
+
+<h2>Phase 3: Data Flow Diagrams (DFD)</h2>
+
+<h3>Context Diagram (Level 0)</h3>
+<p>I created a context diagram showing the system as a single process with its external entities and data flows:</p>
+
+<div class="screenshot">
+<img src="images/image_003.png" alt="DFD Context Diagram" loading="lazy">
+<div class="screenshot-caption">DFD Level 0 — Context diagram showing external entities and data flows</div>
+</div>
+
+<h3>System Diagram (Level 1) & Detail Diagrams</h3>
+<p>I then expanded the context diagram into detailed DFDs showing internal processes, data stores, and data flows between components:</p>
+
+<div class="screenshot">
+<img src="images/image_004.png" alt="DFD Detail Diagram" loading="lazy">
+<div class="screenshot-caption">DFD Level 1+ — Detailed data flows between processes, entities, and data stores</div>
+</div>
+
+<h3>Level 2 DFD — Book Retrieval Process</h3>
+<p>I further decomposed the book transaction process into a Level 2 DFD, detailing how a student's book request flows through finding the book position, retrieving it from the shelf, and updating the borrowed books list:</p>
+
+
+
+<hr>
+
+<h2>Key Takeaways</h2>
+<div class="takeaways">
+<ul>
+<li>Structured analysis (SSADM) provides a clear methodology from requirements to implementation</li>
+<li>Functional hierarchy diagrams help identify module boundaries and responsibilities</li>
+<li>Data Flow Diagrams at multiple levels communicate system behavior to both technical and non-technical stakeholders</li>
+<li>Defining system boundaries early prevents scope creep during implementation</li>
+</ul>
+</div>
+
+<h3>Tools & Methodology</h3>
+<div class="tags">
+<span class="tag">SSADM</span>
+<span class="tag">Data Flow Diagrams</span>
+<span class="tag">Functional Decomposition</span>
+<span class="tag">Requirements Analysis</span>
+</div>
+
+<h3>Skills Demonstrated</h3>
+<div class="tags">
+<span class="tag">Systems Analysis</span>
+<span class="tag">System Design</span>
+<span class="tag">Process Modeling</span>
+<span class="tag">Documentation</span>
+<span class="tag">Stakeholder Communication</span>
+</div>
+
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+  <img id="lightbox-img" src="" alt="Full size">
+</div>
+
+<script>
+document.querySelectorAll('.screenshot img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox').classList.add('active');
+  });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+});
+</script>
+
+</body>
+</html>

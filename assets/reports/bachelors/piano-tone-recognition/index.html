@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Piano Tone Recognition Tool | Portfolio</title>
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-card-hover: #1a1a2e;
+            --primary: #00d4ff;
+            --primary-dim: rgba(0, 212, 255, 0.1);
+            --primary-glow: rgba(0, 212, 255, 0.3);
+            --text: #e0e0e0;
+            --text-muted: #8892a4;
+            --border: #1e2a3a;
+            --accent: #7c3aed;
+            --success: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        .back-link {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            z-index: 100;
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            border-color: var(--primary);
+            background: var(--primary-dim);
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 120px 24px 80px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 60%);
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background: var(--primary-dim);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--primary);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+        }
+
+        .hero-meta {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .hero-meta span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Container */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 24px 80px;
+        }
+
+        /* Sections */
+        .section {
+            margin-bottom: 64px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-header .icon {
+            font-size: 1.4rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .section p, .section li {
+            color: var(--text);
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+        }
+
+        .section ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .section ul li {
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .section ul li::before {
+            content: '▹';
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* Technical Cards */
+        .tech-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .tech-card:hover {
+            border-color: rgba(0, 212, 255, 0.3);
+            box-shadow: 0 4px 30px rgba(0, 212, 255, 0.05);
+        }
+
+        .tech-card h3 {
+            font-size: 1.15rem;
+            color: var(--primary);
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        .tech-card p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.8;
+        }
+
+        /* Equation / Formula styling */
+        .formula {
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px 24px;
+            margin: 16px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            color: var(--primary);
+            text-align: center;
+        }
+
+        /* Image styling */
+        .figure {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        .figure img {
+            max-width: 100%;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .figure img:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 30px var(--primary-glow);
+            transform: scale(1.02);
+        }
+
+        .figure-caption {
+            margin-top: 8px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Tags / Pills */
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .tag {
+            padding: 6px 14px;
+            background: var(--primary-dim);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .tag.accent {
+            background: rgba(124, 58, 237, 0.1);
+            border-color: rgba(124, 58, 237, 0.3);
+            color: var(--accent);
+        }
+
+        .tag.success {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.3);
+            color: var(--success);
+        }
+
+        /* Skills grid */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .skill-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 18px;
+            font-size: 0.85rem;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .skill-item::before {
+            content: '◆';
+            color: var(--primary);
+            font-size: 0.6rem;
+        }
+
+        /* Lightbox */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.92);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .lightbox.active {
+            display: flex;
+        }
+
+        .lightbox img {
+            max-width: 90%;
+            max-height: 90vh;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            background: #ffffff;
+            padding: 16px;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 24px;
+            right: 32px;
+            font-size: 2rem;
+            color: #ffffff;
+            cursor: pointer;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: background 0.3s;
+        }
+
+        .lightbox-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Results highlight */
+        .result-highlight {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            padding: 24px 32px;
+            margin: 24px 0;
+        }
+
+        .result-highlight h4 {
+            color: var(--success);
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+
+        .result-highlight p {
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .hero { padding: 80px 16px 60px; }
+            .hero-meta { flex-direction: column; gap: 8px; align-items: center; }
+            .tech-card { padding: 24px; }
+            .back-link { top: 12px; left: 12px; font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <a href="javascript:history.back()" class="back-link">← Back to Portfolio</a>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-badge">🎓 Bachelor's Program</div>
+        <h1>Piano Tone Recognition Tool</h1>
+        <div class="hero-meta">
+            <span>📅 2020</span>
+            <span>🎹 Audio / DSP</span>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="container">
+
+        <!-- Project Overview -->
+        <section class="section">
+            <div class="section-header">
+                <span class="icon">🎯</span>
+                <h2>Project Overview</h2>
+            </div>
+            <p>
+                I developed an algorithm for automatic recognition of musical notes from piano audio signals. The system digitally samples piano audio, transforms it from the time domain to the frequency domain using the Constant Q Transform, and applies template matching with statistical processing to identify individual notes with high accuracy.
+            </p>
+            <p>
+                I tested the algorithm on both electronically synthesised music and real piano performances. The system achieved <strong>perfect recognition</strong> on synthesised pieces and <strong>high accuracy</strong> on real-world piano recordings — demonstrating the robustness of the signal processing pipeline I built.
+            </p>
+            <div class="result-highlight">
+                <h4>✓ Key Achievement</h4>
+                <p>100% accuracy on synthesised input; high accuracy on live piano performances with varying dynamics and attack strengths.</p>
+            </div>
+        </section>
+
+        <!-- Phase 1: Musical Theory & Signal Representation -->
+        <section class="section">
+            <div class="section-header">
+                <span class="icon">🎵</span>
+                <h2>Phase 1 — Musical Signal Representation</h2>
+            </div>
+            <div class="tech-card">
+                <h3>Equal Tempered Scale Model</h3>
+                <p>
+                    I modeled the piano's frequency space using the Equal Tempered scale, where adjacent notes are separated by a constant ratio of 2<sup>1/12</sup>. This corresponds to a 6% frequency separation per semitone — a critical constraint that guided my choice of transform resolution.
+                </p>
+                <div class="formula">f<sub>k+1</sub> = 2<sup>(1/12)</sup> · f<sub>k</sub></div>
+                <p>
+                    Musical notes are periodic complex tones composed of a fundamental frequency and harmonics. My recognition approach is based on identifying these fundamental frequencies within the audio signal.
+                </p>
+            </div>
+        </section>
+
+        <!-- Phase 2: Constant Q Transform -->
+        <section class="section">
+            <div class="section-header">
+                <span class="icon">📐</span>
+                <h2>Phase 2 — Constant Q Transform Implementation</h2>
+            </div>
+            <div class="tech-card">
+                <h3>Theory & Mathematical Foundation</h3>
+                <p>
+                    I implemented the Constant Q Transform (CQT), a spectral analysis technique where the ratio Q = f/δf remains constant across all frequency bins. For semitone resolution, Q = 1/0.059 ≈ 17. This geometric frequency spacing is essential for music — unlike the linear spacing of a standard FFT — because piano notes span from 92.5 Hz (F#2) to 4186 Hz (C8).
+                </p>
+                <div class="figure">
+                    <img src="images/image_001.png" alt="CQT Equation 2a" onclick="openLightbox(this)">
+                    <div class="figure-caption">Constant Q Transform computation formula (Eq. 2a)</div>
+                </div>
+                <div class="figure">
+                    <img src="images/image_002.png" alt="Spectral Kernel Equation 2b" onclick="openLightbox(this)">
+                    <div class="figure-caption">Spectral kernel definition with Hamming window (Eq. 2b)</div>
+                </div>
+            </div>
+
+            <div class="tech-card">
+                <h3>Dual-Range Implementation</h3>
+                <p>
+                    I implemented a dual-range CQT system to handle the full piano frequency spectrum efficiently:
+                </p>
+                <ul>
+                    <li><strong>Low range (92.5–185 Hz):</strong> Semitone spacing with Q=17, targeting notes F#2 to F#3</li>
+                    <li><strong>High range (196–4186 Hz):</strong> Quarter-tone spacing with Q=34, covering G3 through C8 for higher resolution</li>
+                </ul>
+                <p>
+                    At a sampling rate of 22,050 Hz with 4,096-sample frames (~0.2 seconds per frame), I used overlapping analysis windows (3,072 samples overlap) to build statistical confidence in note detection.
+                </p>
+            </div>
+        </section>
+
+        <!-- Phase 3: Spectral Analysis -->
+        <section class="section">
+            <div class="section-header">
+                <span class="icon">📊</span>
+                <h2>Phase 3 — Spectral Pattern Analysis</h2>
+            </div>
+            <div class="tech-card">
+                <h3>Piano Note Spectra & Grouping</h3>
+                <p>
+                    I conducted extensive spectral analysis of piano notes across the full keyboard. I discovered that notes close in frequency share similar harmonic decay patterns, which allowed me to group the entire range into three template classes based on spectral similarity.
+                </p>
+                <div class="figure">
+                    <img src="images/image_003.png" alt="Spectra of Piano Notes C4–G4" onclick="openLightbox(this)">
+                    <div class="figure-caption">Fig. 1 — CQT spectra of piano notes C4 through G4, showing harmonic structure</div>
+                </div>
+                <p>
+                    I also validated that the principle of superposition holds for piano audio — the spectrum of simultaneously played notes closely approximates the sum of individual note spectra, enabling polyphonic detection.
+                </p>
+                <div class="figure">
+                    <img src="images/image_004.png" alt="Template Values Table" onclick="openLightbox(this)">
+                    <div class="figure-caption">Table 1 — Template vectors (5 components: fundamental + 4 harmonics) for each frequency group</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Phase 4: Recognition Algorithm -->
+        <section class="section">
+            <div class="section-header">
+                <span class="icon">🧠</span>
+                <h2>Phase 4 — Recognition Algorithm</h2>
+            </div>
+            <div class="tech-card">
+                <h3>Template Matching via Dot Product</h3>
+                <p>
+                    I designed a template matching system that computes dot products between predefined spectral templates and the CQT output for each frame. The algorithm slides the template across all frequency bins — a high dot product value at a specific bin indicates the presence of the corresponding note.
+                </p>
+                <div class="figure">
+                    <img src="images/image_005.png" alt="Dot Product Equation" onclick="openLightbox(this)">
+                    <div class="figure-caption">Template matching dot product computation</div>
+                </div>
+                <p>
+                    Each template is matched against its corresponding frequency group: T₁ for F#2–F#3, T₂ for G3–F#4, and T₃ for G4–C8.
+                </p>
+            </div>
+
+            <div class="tech-card">
+                <h3>Adaptive Thresholding</h3>
+                <p>
+                    I implemented an adaptive threshold system where the cutoff values are computed as fractions of the maximum dot product value per frame. This accounts for dynamic variation — a forte passage produces higher magnitudes than a pianissimo section, and the thresholds scale accordingly.
+                </p>
+                <div class="figure">
+                    <img src="images/image_006.png" alt="Threshold Values Table" onclick="openLightbox(this)">
+                    <div class="figure-caption">Table 2 — Experimentally determined threshold fractions by frequency range</div>
+                </div>
+            </div>
+
+            <div class="tech-card">
+                <h3>Octave Ambiguity Resolution</h3>
+                <p>
+                    I addressed a key challenge: harmonics can cause false detections one octave above the actual note. I developed a ratio-based disambiguation method — when two notes one octave apart both exceed threshold, I compute P₁/P₂ and compare against experimentally determined bounds to resolve which note(s) are truly present.
+                </p>
+                <div class="figure">
+                    <img src="images/image_007.png" alt="Confirmation Ratios Table" onclick="openLightbox(this)">
+                    <div class="figure-caption">Table 3 — Octave confirmation ratio bounds for disambiguation</div>
+                </div>
+            </div>
+
+            <div class="tech-card">
+                <h3>Statistical Filtering</h3>
+                <p>
+                    I implemented a temporal consistency filter to eliminate false positives. By analysing consecutive overlapping frames, I applied a persistence rule: only notes that appear continuously for a minimum number of frames are confirmed as valid detections. Sporadic single-frame detections are discarded as noise artifacts.
+                </p>
+                <div class="figure">
+                    <img src="images/image_008.png" alt="Statistical Parameters Table" onclick="openLightbox(this)">
+                    <div class="figure-caption">Table 4 — Required consecutive frame counts for note confirmation</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Key Takeaways -->
+        <section class="section">
+            <div class="section-header">
+                <span class="icon">💡</span>
+                <h2>Key Takeaways</h2>
+            </div>
+            <ul>
+                <li>Geometric frequency spacing (CQT) is essential for music analysis — standard FFT linear bins cannot resolve semitones uniformly across octaves</li>
+                <li>Template-based detection with adaptive thresholds handles dynamic range variations gracefully</li>
+                <li>Octave ambiguity from strong harmonics requires explicit disambiguation logic — a naive threshold approach produces false octave duplicates</li>
+                <li>Temporal statistical filtering significantly reduces false positives without sacrificing real detections</li>
+                <li>The superposition principle enables polyphonic detection — simultaneous notes can be separated when their harmonic patterns don't overlap destructively</li>
+                <li>Human performance variations (timing, attack strength) present the greatest challenge for automated recognition systems</li>
+            </ul>
+        </section>
+
+        <!-- Tools Used -->
+        <section class="section">
+            <div class="section-header">
+                <span class="icon">🛠️</span>
+                <h2>Tools & Technologies</h2>
+            </div>
+            <div class="tags">
+                <span class="tag">Scilab</span>
+                <span class="tag">Constant Q Transform</span>
+                <span class="tag">DFT / FFT</span>
+                <span class="tag">Hamming Window</span>
+                <span class="tag accent">Digital Signal Processing</span>
+                <span class="tag accent">Template Matching</span>
+                <span class="tag accent">Audio Analysis</span>
+                <span class="tag success">22.05 kHz Sampling</span>
+                <span class="tag success">Spectral Analysis</span>
+            </div>
+        </section>
+
+        <!-- Skills Demonstrated -->
+        <section class="section">
+            <div class="section-header">
+                <span class="icon">⚡</span>
+                <h2>Skills Demonstrated</h2>
+            </div>
+            <div class="skills-grid">
+                <div class="skill-item">Signal Processing</div>
+                <div class="skill-item">Frequency Domain Analysis</div>
+                <div class="skill-item">Algorithm Design</div>
+                <div class="skill-item">Pattern Recognition</div>
+                <div class="skill-item">Statistical Methods</div>
+                <div class="skill-item">Audio Engineering</div>
+                <div class="skill-item">Mathematical Modeling</div>
+                <div class="skill-item">Scientific Computing</div>
+                <div class="skill-item">Spectral Decomposition</div>
+                <div class="skill-item">Threshold Optimization</div>
+                <div class="skill-item">Polyphonic Detection</div>
+                <div class="skill-item">Technical Documentation</div>
+            </div>
+        </section>
+
+        <!-- References -->
+        <section class="section">
+            <div class="section-header">
+                <span class="icon">📖</span>
+                <h2>References</h2>
+            </div>
+            <ul>
+                <li><a href="https://link.springer.com/chapter/10.1007/978-0-387-32576-7_2" target="_blank" style="color: var(--primary);">Springer — Music Signal Processing</a></li>
+                <li><a href="https://pdfs.semanticscholar.org/7867/73ef7db698d88c48d49943adcf075aedfd4e.pdf" target="_blank" style="color: var(--primary);">Semantic Scholar — Piano Note Recognition</a></li>
+            </ul>
+        </section>
+
+    </div>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+        <div class="lightbox-close">×</div>
+        <img id="lightbox-img" src="" alt="Enlarged view">
+    </div>
+
+    <script>
+        function openLightbox(imgEl) {
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImg = document.getElementById('lightbox-img');
+            lightboxImg.src = imgEl.src;
+            lightboxImg.alt = imgEl.alt;
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            const lightbox = document.getElementById('lightbox');
+            lightbox.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeLightbox();
+        });
+    </script>
+</body>
+</html>
