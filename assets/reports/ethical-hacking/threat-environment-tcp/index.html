@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Threat Environment & TCP Port Scanning</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a2e;
+  --text: #e0e0e0;
+  --text-secondary: #c8c8d8;
+  --text-muted: #9898a8;
+  --primary: #00d4ff;
+  --primary-dim: rgba(0, 212, 255, 0.15);
+  --accent: #7c3aed;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(0, 212, 255, 0.3);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.7; min-height: 100vh; }
+.back-link { position: fixed; top: 20px; left: 20px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; z-index: 100; background: var(--bg-card); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); transition: all 0.3s ease; }
+.back-link:hover { border-color: var(--border-glow); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+.hero { padding: 80px 40px 40px; text-align: center; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 100%); }
+.hero h1 { font-size: clamp(24px, 4vw, 36px); font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -0.5px; }
+.hero .meta { color: var(--text-muted); font-size: 14px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.hero .meta span { display: flex; align-items: center; gap: 6px; }
+.container { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+h2 { font-size: 22px; font-weight: 600; color: #fff; margin-top: 48px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); display: inline-block; }
+h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-top: 28px; margin-bottom: 10px; }
+p { margin: 12px 0; font-size: 15px; color: var(--text-secondary); }
+strong { color: var(--text); }
+ul, ol { margin: 12px 0; padding-left: 24px; }
+li { margin: 6px 0; font-size: 15px; color: var(--text-secondary); }
+code { background: var(--bg-secondary); color: var(--primary); padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--border); }
+pre { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; color: var(--text); margin: 16px 0; }
+pre code { background: none; border: none; padding: 0; color: inherit; }
+.screenshot { margin: 20px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.3s ease; }
+.screenshot:hover { border-color: var(--border-glow); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1); }
+.screenshot img { display: block; width: 100%; height: auto; cursor: pointer; }
+.screenshot-caption { font-size: 12px; color: var(--text-muted); padding: 10px 14px; background: var(--bg-secondary); border-top: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+th { text-align: left; color: var(--text-muted); font-weight: 500; padding: 10px 14px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.takeaways { background: var(--bg-secondary); border-left: 3px solid var(--primary); padding: 20px 24px; border-radius: 0 10px 10px 0; margin: 24px 0; }
+.takeaways li { color: var(--text); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tag { background: var(--primary-dim); color: var(--primary); padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; border: 1px solid rgba(0, 212, 255, 0.2); }
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 4px; }
+@media (max-width: 640px) { .hero { padding: 60px 20px 30px; } .container { padding: 24px 16px 60px; } h2 { font-size: 19px; } }
+</style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-link">&#x2190; Back to Portfolio</a>
+
+<div class="hero">
+  <h1>Threat Environment & TCP Port Scanning</h1>
+  <div class="meta">
+    <span>&#x1F4C2; Ethical Hacking</span>
+    <span>&#x1F4C5; 2023</span>
+    <span>&#x1F393; MSIA Program</span>
+  </div>
+</div>
+
+<div class="container">
+<h1>Threat Environment &amp; TCP: Port Scanning &amp; Network Security Analysis</h1>
+<h2>Project Overview</h2>
+<p>In this project, I explored the threat environment by building a functional port scanner in Python and leveraging industry-standard tools like Nmap to understand network vulnerabilities. I analyzed how ports function as endpoints for network communication and investigated real-world security threats through current threat intelligence sources.</p>
+<p>The Internet Protocol Suite (TCP/IP) forms the backbone of modern networking. Every host and service communicates through a combination of an IP address and a port number. With 65,536 distinct port numbers available, understanding which ports are open and why they're exposed is critical to maintaining network security.</p>
+<h2>Key Concepts</h2>
+<p><strong>Port</strong>: A numbered endpoint through which applications communicate across a network. Ports range from 0 to 65,535, with each number reserved for specific services or applications.</p>
+<p><strong>Port Scanner</strong>: A software tool that probes servers and hosts to identify open ports. While port scanning itself is a legitimate network administration function, it's also a common reconnaissance technique used by attackers to identify running services and potential vulnerabilities.</p>
+<p><strong>Port Sweep</strong>: A scanning technique that targets multiple hosts to find a specific listening port&#x2014;often used to locate machines running a particular service across a network.</p>
+<hr />
+<h2>Part 1: Building a Custom Python Port Scanner</h2>
+<p>I developed a streamlined Python port scanner, keeping the code under 50 lines while demonstrating core networking concepts. The tool probes a target host across a range of ports and reports which ones respond.</p>
+<h3>Importing Core Modules</h3>
+<p><div class="screenshot"><img src="images/image_001.png" alt="Python imports: from socket import *, import sys time, from datetime import datetime" loading="lazy"></div></p>
+<p>I imported the socket module to access low-level networking functions, sys for command-line handling, time for delays, and datetime for timestamping the scan.</p>
+<h3>Program Configuration</h3>
+<p><div class="screenshot"><img src="images/image_002.png" alt="Python configuration: host variable, max_port=5000, min_port=1" loading="lazy"></div></p>
+<p>I defined the core settings: target host, port range (1 to 5000), and output formatting. This configuration is easily adjustable for different scanning scenarios.</p>
+<h3>User Input Handling</h3>
+<p><div class="screenshot"><img src="images/image_003.png" alt="Python code: try/except block with input() for target host address and KeyboardInterrupt handling" loading="lazy"></div></p>
+<p>The program prompts the user for a target host address, which can be a domain name or IP address. I implemented error handling to gracefully manage keyboard interrupts (Ctrl+C) without crashing.</p>
+<h3>Interrupt Handling Demonstration</h3>
+<p><div class="screenshot"><img src="images/image_004.png" alt="Terminal showing port scanner KeyboardInterrupt test with Ctrl+C" loading="lazy"></div></p>
+<p>I tested the KeyboardInterrupt handling by running the scanner and pressing Ctrl+C. The program gracefully displays &#x201C;User Requested An Interrupt&#x201D; and &#x201C;Application Shutting Down&#x201D; messages before exiting cleanly.</p>
+<h3>DNS Resolution with gethostbyname()</h3>
+<p><div class="screenshot"><img src="images/image_005.png" alt="Python code: hostip = gethostbyname(host) and print statement" loading="lazy"></div></p>
+<p>I used the <code>gethostbyname()</code> function to resolve the domain name or hostname into its numeric IP address, which is then displayed to the user.</p>
+<h3>Timestamping the Scan</h3>
+<p><div class="screenshot"><img src="images/image_006.png" alt="Python code: print scanning started time and start_time = datetime.now()" loading="lazy"></div></p>
+<p>I captured the current system time at the start of the scan using <code>datetime.now()</code> and printed a &#x201C;Scanning Started At&#x201D; message with <code>time.strftime()</code>, providing a timestamp for the security assessment.</p>
+<h3>Scanning Logic: Iterating Through Ports</h3>
+<p><div class="screenshot"><img src="images/image_007.png" alt="Python code: for loop iterating through port range calling scan_host()" loading="lazy"></div></p>
+<p>The core scanning loop iterates through each port in the specified range (1 to 5000). For each port, I call the <code>scan_host()</code> function and handle responses with try-except blocks to prevent errors from terminating the scan.</p>
+<h3>The scan_host() Function</h3>
+<p><div class="screenshot"><img src="images/image_008.png" alt="Python code: def scan_host() function using socket connect_ex()" loading="lazy"></div></p>
+<p>This function leverages Python&#x2019;s socket library to attempt a direct TCP connection to the target host on a given port. It returns 0 if the connection succeeds (open port) or 1 if it fails (closed/filtered port). The socket is properly closed after each attempt.</p>
+<ul>
+<li><strong>s</strong>: Initiates a socket object for network communication</li>
+<li><strong>code</strong>: Captures the result of the connection attempt</li>
+<li><strong>If code == 0</strong>: The port is open; I set the return code to 0</li>
+<li><strong>Exception handling</strong>: If a connection error occurs, the function continues execution and returns 1</li>
+</ul>
+<h3>Execution Results</h3>
+<p><div class="screenshot"><img src="images/image_009.png" alt="Terminal output showing port scanner identifying open ports 1-6" loading="lazy"></div>
+<div class="screenshot"><img src="images/image_010.png" alt="Terminal output showing scan results continued with open ports" loading="lazy"></div>
+<div class="screenshot"><img src="images/image_011.png" alt="Terminal output showing final scan results with ports 4994-4999 open and scan duration" loading="lazy"></div></p>
+<p>I executed the scanner against a test environment and observed open ports being identified and reported in real time. The scan covered ports 1&#x2013;4999 and completed in approximately 25.6 seconds.</p>
+<h3>Complete Scanner Implementation</h3>
+<div class="screenshot"><img src="images/image_012.png" alt="Complete port scanner Python script showing all 47 lines of code" loading="lazy"><div class="screenshot-caption">Complete Port Scanner Script &#x2014; Full Implementation (Lines 1&#x2013;47)</div></div>
+<p>Here is the full, working implementation of the port scanner combining all components: imports, configuration, the <code>scan_host()</code> function definition, user input with error handling, DNS resolution, timestamping, and the main scanning loop with duration reporting.</p>
+<hr />
+<h2>Part 2: Network Reconnaissance with Nmap</h2>
+<p>I used Nmap (Network Mapper), the industry-standard port scanning tool, to perform comprehensive network reconnaissance. Nmap provides advanced capabilities including operating system detection, service identification, and network visualization.</p>
+<h3>About Nmap</h3>
+<p>Nmap is widely used by IT security professionals to verify network security policies and identify active services. It supports graphical interfaces (Zenmap) and command-line operations across Windows, macOS, and Linux platforms.</p>
+<h3>Scanning Your Network</h3>
+<p>I configured Nmap to scan target systems on my network, analyzing the results across three key views:</p>
+<h4>Target Configuration</h4>
+<p><div class="screenshot"><img src="images/image_013.png" alt="Zenmap interface with target 192.168.1.101 configured for Regular scan" loading="lazy"></div></p>
+<p>I entered the target IP address into Nmap&#x2019;s Target field and selected a Regular Scan profile to execute a standard port discovery scan.</p>
+<h4>Scan Results</h4>
+<p><div class="screenshot"><img src="images/image_014.png" alt="Zenmap Nmap Output tab showing scan results for 192.168.1.101 with port 199 filtered" loading="lazy"></div></p>
+<p>The scan completed and displayed a summary of open, closed, and filtered ports on the target host.</p>
+<h4>Ports and Hosts Analysis</h4>
+<p><div class="screenshot"><img src="images/image_015.png" alt="Zenmap Ports/Hosts tab showing port 199 TCP filtered (smux service)" loading="lazy"></div></p>
+<p>I reviewed the detailed Ports/Hosts tab to see exactly which services were listening on which port numbers.</p>
+<h4>Host Details Examination</h4>
+<p><div class="screenshot"><img src="images/image_016.png" alt="Zenmap Host Details tab showing host status, port counts, and network addresses for 192.168.1.101" loading="lazy"></div></p>
+<p>The Host Details tab provided deeper insights into the target system, including detected operating system fingerprints and service versions.</p>
+<h4>Peer Network Analysis</h4>
+<p><div class="screenshot"><img src="images/image_017.png" alt="Zenmap scan of 192.168.56.1 showing open ports 135, 139, 445 (msrpc, netbios-ssn, microsoft-ds)" loading="lazy"></div></p>
+<p>I scanned a peer system (192.168.56.1) with permission, discovering open ports for Microsoft services (MSRPC, NetBIOS, and Microsoft-DS), demonstrating how different systems expose different port profiles.</p>
+<h4>Network Topology Visualization</h4>
+<p><div class="screenshot"><img src="images/image_018.png" alt="Zenmap Topology tab showing network map with 192.168.56.1, localhost, and 192.168.1.101" loading="lazy"></div></p>
+<p>The Topology tab in Zenmap provided a visual network map showing the relationship between scanned hosts (192.168.56.1 and 192.168.1.101) and the localhost scanner, illustrating the network layout at a glance.</p>
+<hr />
+<h2>Part 3: Threat Intelligence &amp; Current Threat Landscape</h2>
+<p>To understand the threat environment beyond technical tools, I researched current security threats and vulnerabilities through established security news sources.</p>
+<h3>Security News Research</h3>
+<p>I reviewed articles from leading security publications to stay current on emerging threats:</p>
+<h4>The Register &#x2014; Surveillance &amp; Cyber Policy</h4>
+<p><div class="screenshot"><img src="images/image_019.png" alt="The Register article: FBI boss says taking away Section 702 spying powers could be devastating" loading="lazy"></div></p>
+<p>I reviewed an article from The Register covering the FBI&#x2019;s position on Section 702 surveillance powers and their role in preventing cyberattacks, highlighting the intersection of policy and cybersecurity defense.</p>
+<h4>National Cyber Defense Exercises</h4>
+<p><div class="screenshot"><img src="images/image_020.png" alt="The Register article: Exercise Cyber Star tests Singapore response to whole-of-nation cyber attacks" loading="lazy"></div></p>
+<p>I reviewed The Register&#x2019;s coverage of Singapore&#x2019;s Exercise Cyber Star program&#x2014;a national-scale cybersecurity exercise involving DDoS, ransomware, and industrial control system attack scenarios&#x2014;demonstrating how nations prepare for coordinated cyber threats.</p>
+<h4>eWeek &#x2014; Data Protection &amp; Security Partnerships</h4>
+<p><div class="screenshot"><img src="images/image_021.png" alt="eWeek article: Cohesity and Microsoft Tag Team To Improve Data Protection" loading="lazy"></div></p>
+<p>I reviewed eWeek&#x2019;s coverage of the Cohesity and Microsoft partnership to enhance data security, threat detection, and protection against cyberattacks&#x2014;illustrating how industry collaborations strengthen enterprise defense.</p>
+<h4>The Hacker News &#x2014; Active Exploits</h4>
+<p><div class="screenshot"><img src="images/image_022.png" alt="The Hacker News article: HelloKitty Ransomware Group Exploiting Apache ActiveMQ Vulnerability" loading="lazy"></div></p>
+<p>I explored The Hacker News&#x2019; coverage of the HelloKitty ransomware group exploiting an Apache ActiveMQ vulnerability, demonstrating how threat actors leverage unpatched services&#x2014;directly connecting to the port security principles examined earlier in this project.</p>
+<h4>Global Threat Intelligence Visualization</h4>
+<p><div class="screenshot"><img src="images/image_023.png" alt="CheckPoint ThreatCloud AI live cyber threat map showing attack trends and malware type statistics for Nepal" loading="lazy"></div></p>
+<p>I analyzed real-time threat data from CheckPoint&#x2019;s ThreatCloud AI, which visualizes global cyberattacks by country. The dashboard shows malware type trends (Banking Trojans at 12.9%, Botnets at 12.2%, Cryptominers at 13.5%, Ransomware at 10.9%) and identifies top targeted countries and industries, providing actionable insight into the current threat landscape.</p>
+<hr />
+<h2>Key Findings &amp; Analysis</h2>
+<h3>Understanding Port Security</h3>
+<p>Through both custom scanning and Nmap analysis, I gained insight into port security principles:</p>
+<ul>
+<li><strong>Open Ports Present Risk</strong>: Every open port represents a potential attack surface. Only necessary ports should be exposed.</li>
+<li><strong>Service Identification</strong>: By identifying which services run on which ports, I can correlate known vulnerabilities to specific systems.</li>
+<li><strong>Port Mapping</strong>: The well-known ports (0-1023) typically host standard services (HTTP on 80, HTTPS on 443, SSH on 22, FTP on 21), while registered ports (1024-49151) host application-specific services.</li>
+</ul>
+<h3>Common Services &amp; Port Assignments</h3>
+<p>From my research and scans, I observed these standard port assignments:</p>
+<table>
+<thead>
+<tr>
+<th>Port</th>
+<th>Service</th>
+<th>Protocol</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>80</td>
+<td>HTTP</td>
+<td>Web Traffic</td>
+</tr>
+<tr>
+<td>443</td>
+<td>HTTPS</td>
+<td>Secure Web Traffic</td>
+</tr>
+<tr>
+<td>22</td>
+<td>SSH</td>
+<td>Secure Shell</td>
+</tr>
+<tr>
+<td>25</td>
+<td>SMTP</td>
+<td>Email Transmission</td>
+</tr>
+<tr>
+<td>21</td>
+<td>FTP</td>
+<td>File Transfer</td>
+</tr>
+<tr>
+<td>3389</td>
+<td>RDP</td>
+<td>Remote Desktop</td>
+</tr>
+</tbody>
+</table>
+<h3>Attack Surface &amp; Malware Vectors</h3>
+<p>Open ports can be exploited for:
+- <strong>Malware Delivery</strong>: If a service running on an open port has a known vulnerability, attackers can exploit it to execute malicious code
+- <strong>Unauthorized Access</strong>: Unpatched services can allow attackers to gain system access
+- <strong>Lateral Movement</strong>: Once inside, attackers can use open ports to move between systems</p>
+<h3>Port Hardening Strategies</h3>
+<p>To secure systems, I learned to:
+1. Identify which ports are actively in use using scanning tools
+2. Disable or stop services that are not required
+3. Implement firewall rules to restrict traffic to only necessary ports
+4. Maintain regular patching and updates to close vulnerabilities
+5. Monitor for suspicious connection attempts</p>
+<h3>Why Current Threat Intelligence Matters</h3>
+<p>Reviewing security news provides:
+- <strong>Threat Awareness</strong>: Understanding emerging attack techniques and common vulnerabilities
+- <strong>Vulnerability Prioritization</strong>: Learning about zero-days and actively exploited CVEs to prioritize patching
+- <strong>Incident Response Readiness</strong>: Studying current threats informs my defensive strategies
+- <strong>Best Practice Integration</strong>: Security publications share proven mitigation techniques
+- <strong>Regulatory Alignment</strong>: Understanding compliance requirements and industry standards</p>
+<hr />
+<h2>Tools &amp; Technologies Used</h2>
+<ul>
+<li><strong>Python 3</strong>: Custom socket programming for network communication</li>
+<li><strong>Socket Library</strong>: Low-level TCP/IP functionality</li>
+<li><strong>Nmap / Zenmap</strong>: Professional-grade port scanning and network reconnaissance</li>
+<li><strong>CheckPoint ThreatCloud</strong>: Global threat intelligence visualization</li>
+<li><strong>Security News Sources</strong>: The Register, eWeek, The Hacker News, ThreatCloud</li>
+</ul>
+<hr />
+<h2>Skills Demonstrated</h2>
+<ul>
+<li><strong>Network Programming</strong>: Socket-level TCP connections in Python</li>
+<li><strong>Threat Reconnaissance</strong>: Identifying open ports and associated vulnerabilities</li>
+<li><strong>Security Tools Proficiency</strong>: Nmap operational expertise</li>
+<li><strong>Threat Intelligence Analysis</strong>: Synthesizing current news with technical findings</li>
+<li><strong>Network Security</strong>: Understanding port management and attack surface reduction</li>
+<li><strong>Vulnerability Assessment</strong>: Correlating services to known security risks</li>
+<li><strong>Security Research</strong>: Staying current with threat landscape through industry sources</li>
+</ul>
+<hr />
+<h2>Conclusion</h2>
+<p>This project solidified my understanding of network fundamentals and threat assessment. Port scanning is a foundational skill in cybersecurity&#x2014;both for defensive network hardening and offensive security assessment. By combining hands-on tool experience with current threat intelligence, I developed a practical understanding of how the threat environment evolves and how to proactively identify and mitigate network risks.</p>
+<p>The ability to identify open ports, understand the services running on them, and correlate those services to known vulnerabilities is essential for any security professional responsible for network defense.</p>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+  <img id="lightbox-img" src="" alt="Full size">
+</div>
+
+<script>
+document.querySelectorAll('.screenshot img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox').classList.add('active');
+  });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+});
+</script>
+
+</body>
+</html>

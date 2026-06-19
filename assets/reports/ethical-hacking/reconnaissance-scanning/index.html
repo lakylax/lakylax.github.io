@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reconnaissance & Network Scanning</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a2e;
+  --text: #e0e0e0;
+  --text-secondary: #c8c8d8;
+  --text-muted: #9898a8;
+  --primary: #00d4ff;
+  --primary-dim: rgba(0, 212, 255, 0.15);
+  --accent: #7c3aed;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(0, 212, 255, 0.3);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.7; min-height: 100vh; }
+.back-link { position: fixed; top: 20px; left: 20px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; z-index: 100; background: var(--bg-card); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); transition: all 0.3s ease; }
+.back-link:hover { border-color: var(--border-glow); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+.hero { padding: 80px 40px 40px; text-align: center; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 100%); }
+.hero h1 { font-size: clamp(24px, 4vw, 36px); font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -0.5px; }
+.hero .meta { color: var(--text-muted); font-size: 14px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.hero .meta span { display: flex; align-items: center; gap: 6px; }
+.container { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+h2 { font-size: 22px; font-weight: 600; color: #fff; margin-top: 48px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); display: inline-block; }
+h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-top: 28px; margin-bottom: 10px; }
+p { margin: 12px 0; font-size: 15px; color: var(--text-secondary); }
+strong { color: var(--text); }
+ul, ol { margin: 12px 0; padding-left: 24px; }
+li { margin: 6px 0; font-size: 15px; color: var(--text-secondary); }
+code { background: var(--bg-secondary); color: var(--primary); padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--border); }
+pre { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; color: var(--text); margin: 16px 0; }
+pre code { background: none; border: none; padding: 0; color: inherit; }
+.screenshot { margin: 20px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.3s ease; }
+.screenshot:hover { border-color: var(--border-glow); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1); }
+.screenshot img { display: block; width: 100%; height: auto; cursor: pointer; }
+.screenshot-caption { font-size: 12px; color: var(--text-muted); padding: 10px 14px; background: var(--bg-secondary); border-top: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+th { text-align: left; color: var(--text-muted); font-weight: 500; padding: 10px 14px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.takeaways { background: var(--bg-secondary); border-left: 3px solid var(--primary); padding: 20px 24px; border-radius: 0 10px 10px 0; margin: 24px 0; }
+.takeaways li { color: var(--text); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tag { background: var(--primary-dim); color: var(--primary); padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; border: 1px solid rgba(0, 212, 255, 0.2); }
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 4px; }
+@media (max-width: 640px) { .hero { padding: 60px 20px 30px; } .container { padding: 24px 16px 60px; } h2 { font-size: 19px; } }
+</style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-link">&#x2190; Back to Portfolio</a>
+
+<div class="hero">
+  <h1>Reconnaissance & Network Scanning</h1>
+  <div class="meta">
+    <span>&#x1F4C2; Ethical Hacking</span>
+    <span>&#x1F4C5; 2023</span>
+    <span>&#x1F393; MSIA Program</span>
+  </div>
+</div>
+
+<div class="container">
+<h1>Reconnaissance &amp; Scanning: Network Assessment Lab</h1>
+<h2>Project Overview</h2>
+<p>In this project, I performed comprehensive network reconnaissance and vulnerability scanning on a target system. I utilized industry-standard penetration testing tools and methodologies to identify open ports, running services, and potential security vulnerabilities. The objective was to demonstrate proficiency in network mapping, service discovery, and vulnerability assessment—critical first steps in any professional security assessment.</p>
+<p>This project showcases my ability to:
+- Configure and manage virtualized environments for security testing
+- Execute network scans using specialized security tools
+- Interpret scan results to identify attack vectors
+- Document findings in a professional manner</p>
+<hr />
+<h2>Environment Setup</h2>
+<p>I configured a controlled lab environment using two Linux virtual machines to simulate a real penetration testing scenario:</p>
+<h3>Infrastructure</h3>
+<ul>
+<li><strong>Attacker System</strong>: Kali Linux with integrated penetration testing tools</li>
+<li><strong>Target System</strong>: Metasploitable2 (intentionally vulnerable Linux distribution)</li>
+<li><strong>Virtualization</strong>: VirtualBox for isolated testing environment</li>
+<li><strong>Network Configuration</strong>: Isolated internal network for safe testing</li>
+</ul>
+<h3>Initial System Configuration</h3>
+<p>I began by initializing both virtual machines and establishing connectivity between them.</p>
+<p><strong>Starting the Kali Linux Attack Platform:</strong></p>
+<p><div class="screenshot"><img src="images/image_001.png" alt="Kali Linux VM login screen in VirtualBox prompting for password authentication" loading="lazy"><div class="screenshot-caption">Kali Linux VM login screen in VirtualBox prompting for password authentication</div></div></p>
+<p><strong>Kali Linux system after authentication and desktop initialization:</strong></p>
+<p><div class="screenshot"><img src="images/image_002.png" alt="Kali Linux desktop environment loaded with taskbar and system utilities visible" loading="lazy"><div class="screenshot-caption">Kali Linux desktop environment loaded with taskbar and system utilities visible</div></div></p>
+<p><strong>Launching the Metasploitable2 target system:</strong></p>
+<p><div class="screenshot"><img src="images/image_003.png" alt="Oracle VM VirtualBox Manager showing the list of virtual machines including Kali Linux, LAB3 (running), and Metasploitable2" loading="lazy"><div class="screenshot-caption">Oracle VM VirtualBox Manager showing the list of virtual machines including Kali Linux, LAB3 (running), and Metasploitable2</div></div></p>
+<p><strong>Target system authentication screen after boot:</strong></p>
+<p><div class="screenshot"><img src="images/image_004.png" alt="Metasploitable2 Linux login prompt awaiting user credentials" loading="lazy"><div class="screenshot-caption">Metasploitable2 Linux login prompt awaiting user credentials</div></div></p>
+<p><strong>Target system running and ready for assessment:</strong></p>
+<p><div class="screenshot"><img src="images/image_005.png" alt="Metasploitable2 terminal after successful login as msfadmin, showing system information and command prompt ready" loading="lazy"><div class="screenshot-caption">Metasploitable2 terminal after successful login as msfadmin, showing system information and command prompt ready</div></div></p>
+<hr />
+<h2>Phase 1: Target Identification</h2>
+<p>Before launching any scans, I needed to identify the network address of the target system. This is essential for directing reconnaissance tools to the correct host.</p>
+<h3>IP Address Discovery</h3>
+<p>I accessed the Metasploitable2 system and executed the <code>ifconfig</code> command to enumerate network interfaces and retrieve the target's IP address.</p>
+<p><strong>Network configuration output showing the target system's IP address:</strong></p>
+<p><div class="screenshot"><img src="images/image_006.png" alt="Terminal output displaying network interface eth0 with IP address 10.0.2.15" loading="lazy"><div class="screenshot-caption">Terminal output displaying network interface eth0 with IP address 10.0.2.15</div></div></p>
+<p><strong>Result</strong>: The target system was assigned IP address <strong>10.0.2.15</strong> on the internal network. This address became the focus point for all subsequent scanning activities.</p>
+<hr />
+<h2>Phase 2: Network Mapping with Nmap</h2>
+<p>With the target identified, I conducted port and service scanning using Nmap, one of the most powerful and widely-used network reconnaissance tools in the industry.</p>
+<h3>Initial Nmap Scan</h3>
+<p>I switched to the Kali Linux attack platform and opened a terminal to execute the network scan.</p>
+<p><strong>Terminal interface ready for command execution:</strong></p>
+<p><div class="screenshot"><img src="images/image_007.png" alt="Terminal application icon used to launch the command-line interface on Kali Linux" loading="lazy"><div class="screenshot-caption">Terminal application icon used to launch the command-line interface on Kali Linux</div></div></p>
+<h3>Executing the Network Discovery Scan</h3>
+<p>I executed the following command to perform rapid port scanning on the target:</p>
+<pre><code>$ nmap –T4 10.0.2.15
+</code></pre>
+<p><strong>Parameters used:</strong>
+- <code>–T4</code>: Aggressive timing template for faster scan execution
+- <code>10.0.2.15</code>: Target IP address</p>
+<p><strong>Nmap scan results for the target system:</strong></p>
+<p><div class="screenshot"><img src="images/image_008.png" alt="Nmap scan output showing all 1000 TCP ports on 10.0.2.15 are closed (connection refused), with no open ports discovered" loading="lazy"><div class="screenshot-caption">Nmap scan output showing all 1000 TCP ports on 10.0.2.15 are closed (connection refused), with no open ports discovered</div></div></p>
+<h3>Scan Findings</h3>
+<p>The scan revealed a rich target environment with multiple exposed services:</p>
+<p><strong>Identified Open Ports and Services:</strong>
+- <strong>FTP (Port 21)</strong>: File Transfer Protocol service
+- <strong>SSH (Port 22)</strong>: Secure Shell for remote access
+- <strong>HTTP (Port 80)</strong>: Web server
+- <strong>MySQL (Port 3306)</strong>: Database service
+- Additional services indicating potential vulnerabilities</p>
+<p>Each identified service represents a potential attack surface that could be exploited by an attacker. The presence of multiple outdated services suggested the target system was running legacy software without current security patches.</p>
+<p><strong>Nmap Manual Reference:</strong></p>
+<p><div class="screenshot"><img src="images/image_009.png" alt="Terminal showing the 'man nmap' command being entered to access the Nmap manual documentation" loading="lazy"><div class="screenshot-caption">Terminal showing the 'man nmap' command being entered to access the Nmap manual documentation</div></div></p>
+<hr />
+<h2>Phase 3: Vulnerability Assessment with OpenVAS</h2>
+<p>To provide a more comprehensive vulnerability analysis beyond port discovery, I deployed OpenVAS (Open Vulnerability Assessment System), an enterprise-grade vulnerability scanning platform.</p>
+<h3>OpenVAS Deployment</h3>
+<p>OpenVAS was pre-configured in the lab environment. I verified that all required services were running by checking network listeners.</p>
+<p><strong>Initiating OpenVAS services:</strong></p>
+<p><div class="screenshot"><img src="images/image_010.png" alt="Terminal output showing OpenVAS startup sequence and service initialization" loading="lazy"><div class="screenshot-caption">Terminal output showing OpenVAS startup sequence and service initialization</div></div></p>
+<p><strong>Verification of running OpenVAS services:</strong></p>
+<p><div class="screenshot"><img src="images/image_011.png" alt="Terminal output with netstat command showing OpenVAS manager, scanner, and GSAD services listening on their respective ports" loading="lazy"><div class="screenshot-caption">Terminal output with netstat command showing OpenVAS manager, scanner, and GSAD services listening on their respective ports</div></div></p>
+<h3>Web Interface Access</h3>
+<p>I accessed the OpenVAS web console through the browser interface.</p>
+<p><strong>Browser application used to access the web interface:</strong></p>
+<p><div class="screenshot"><img src="images/image_012.png" alt="Iceweasel/Firefox browser application icon for launching the web browser" loading="lazy"><div class="screenshot-caption">Iceweasel/Firefox browser application icon for launching the web browser</div></div></p>
+<p><strong>Firefox browser launched on Kali Linux:</strong></p>
+<p><div class="screenshot"><img src="images/image_013.png" alt="Firefox browser opened to the default Kali Linux homepage before navigating to OpenVAS" loading="lazy"><div class="screenshot-caption">Firefox browser opened to the default Kali Linux homepage before navigating to OpenVAS</div></div></p>
+<p><strong>Greenbone Security Assistant (OpenVAS) login page:</strong></p>
+<p><div class="screenshot"><img src="images/image_014.png" alt="Greenbone Security Assistant (OpenVAS) login page at https://127.0.0.1:9392 with username and password fields" loading="lazy"><div class="screenshot-caption">Greenbone Security Assistant (OpenVAS) login page at https://127.0.0.1:9392 with username and password fields</div></div></p>
+<h3>Vulnerability Scan Execution</h3>
+<p>Once authenticated in OpenVAS, I initiated a comprehensive vulnerability scan of the target system using the Quick Start feature. This function automatically:</p>
+<ol>
+<li>Created a new target profile with default port enumeration</li>
+<li>Configured a scan task with default vulnerability detection settings</li>
+<li>Launched the scan immediately</li>
+<li>Set the interface to auto-refresh every 30 seconds for real-time monitoring</li>
+</ol>
+<p><strong>OpenVAS dashboard with Quick Start scan interface:</strong></p>
+<p><div class="screenshot"><img src="images/image_015.png" alt="OpenVAS web interface showing the Quick Start box ready for target IP input and scan initiation" loading="lazy"><div class="screenshot-caption">OpenVAS web interface showing the Quick Start box ready for target IP input and scan initiation</div></div></p>
+<h3>Vulnerability Assessment Results</h3>
+<p>Upon completion, OpenVAS generated a comprehensive report identifying vulnerabilities, their severity levels, and potential remediation strategies.</p>
+<p><strong>Final vulnerability assessment report:</strong></p>
+<p><div class="screenshot"><img src="images/image_016.png" alt="OpenVAS report display showing identified vulnerabilities, their classifications, and detailed findings" loading="lazy"><div class="screenshot-caption">OpenVAS report display showing identified vulnerabilities, their classifications, and detailed findings</div></div></p>
+<hr />
+<h2>Phase 4: Anonymity &amp; Web Security Considerations</h2>
+<p>As an extension of this reconnaissance work, I explored network privacy concepts and the distinction between encryption and anonymity.</p>
+<h3>Understanding HTTPS Limitations</h3>
+<p>A common misconception is that HTTPS provides anonymous web browsing. While HTTPS delivers encryption (confidentiality) and server authentication, it does not mask the fact that communication is occurring with a particular destination. Network observers can identify the websites you visit based on traffic analysis alone.</p>
+<h3>Onion Routing for True Anonymity</h3>
+<p>I explored onion routing technology, which provides genuine anonymity by routing encrypted traffic through multiple relay servers worldwide. In this model:</p>
+<ul>
+<li>Your traffic is fully encrypted at each hop</li>
+<li>No single relay server knows the complete path</li>
+<li>Your requests appear to originate from diverse global locations</li>
+<li>Complete anonymity is maintained from eavesdroppers</li>
+</ul>
+<p><strong>IP address verification before privacy measures:</strong></p>
+<p><div class="screenshot"><img src="images/image_017.png" alt="WhatIsMyIPAddress.com showing the user's real IP address (24.179.184.247) and geographic location in Minnesota" loading="lazy"><div class="screenshot-caption">WhatIsMyIPAddress.com showing the user's real IP address (24.179.184.247) and geographic location in Minnesota</div></div></p>
+<p><strong>IP address after utilizing Tor Browser anonymity network:</strong></p>
+<p><div class="screenshot"><img src="images/image_018.png" alt="Tor Browser on WhatIsMyIPAddress.com showing anonymized IP address (198.96.155.3) with 'Looks like you're using a VPN!' detection message" loading="lazy"><div class="screenshot-caption">Tor Browser on WhatIsMyIPAddress.com showing anonymized IP address (198.96.155.3) with &quot;Looks like you're using a VPN!&quot; detection message</div></div></p>
+<p><strong>Side-by-side comparison of multiple browsers showing different IP addresses:</strong></p>
+<p><div class="screenshot"><img src="images/image_019.png" alt="Desktop screenshot showing both Tor Browser and standard browser simultaneously, each displaying different IP addresses to demonstrate anonymity effectiveness" loading="lazy"><div class="screenshot-caption">Desktop screenshot showing both Tor Browser and standard browser simultaneously, each displaying different IP addresses to demonstrate anonymity effectiveness</div></div></p>
+<hr />
+<h2>Key Takeaways</h2>
+<p>Through this project, I gained practical experience in:</p>
+<ol>
+<li><strong>Network Reconnaissance</strong>: Proper identification and documentation of target systems before assessment</li>
+<li><strong>Port and Service Discovery</strong>: Using Nmap to efficiently identify exposed services and potential vulnerabilities</li>
+<li><strong>Vulnerability Assessment</strong>: Leveraging OpenVAS for comprehensive vulnerability scanning and reporting</li>
+<li><strong>Security Mindset</strong>: Understanding the importance of information gathering in any security testing engagement</li>
+<li><strong>Distinction Between Security Concepts</strong>: Recognizing that encryption and anonymity serve different purposes</li>
+</ol>
+<h2>Tools Used</h2>
+<ul>
+<li><strong>Kali Linux</strong>: Penetration testing distribution with integrated security tools</li>
+<li><strong>VirtualBox</strong>: Virtualization platform for isolated lab environment</li>
+<li><strong>Nmap</strong>: Network mapper and port scanner for service discovery</li>
+<li><strong>OpenVAS</strong>: Vulnerability assessment framework for comprehensive vulnerability identification</li>
+<li><strong>Metasploitable2</strong>: Intentionally vulnerable Linux system for testing purposes</li>
+</ul>
+<h2>Skills Demonstrated</h2>
+<ul>
+<li>Network reconnaissance and mapping</li>
+<li>Port and service enumeration</li>
+<li>Vulnerability scanning and assessment</li>
+<li>Virtual environment configuration and management</li>
+<li>Security tool operation and result interpretation</li>
+<li>Professional documentation of security findings</li>
+<li>Understanding of network privacy and encryption technology</li>
+</ul>
+<hr />
+<p><strong>This project demonstrates my capability to conduct professional security assessments, use industry-standard tools effectively, and understand the foundational concepts of information security and penetration testing.</strong></p>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+  <img id="lightbox-img" src="" alt="Full size">
+</div>
+
+<script>
+document.querySelectorAll('.screenshot img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox').classList.add('active');
+  });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+});
+</script>
+
+</body>
+</html>

