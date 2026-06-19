@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Metasploit Framework & Host Hardening</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a2e;
+  --text: #e0e0e0;
+  --text-secondary: #c8c8d8;
+  --text-muted: #9898a8;
+  --primary: #00d4ff;
+  --primary-dim: rgba(0, 212, 255, 0.15);
+  --accent: #7c3aed;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(0, 212, 255, 0.3);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.7; min-height: 100vh; }
+.back-link { position: fixed; top: 20px; left: 20px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; z-index: 100; background: var(--bg-card); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); transition: all 0.3s ease; }
+.back-link:hover { border-color: var(--border-glow); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+.hero { padding: 80px 40px 40px; text-align: center; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 100%); }
+.hero h1 { font-size: clamp(24px, 4vw, 36px); font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -0.5px; }
+.hero .meta { color: var(--text-muted); font-size: 14px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.hero .meta span { display: flex; align-items: center; gap: 6px; }
+.container { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+h2 { font-size: 22px; font-weight: 600; color: #fff; margin-top: 48px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); display: inline-block; }
+h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-top: 28px; margin-bottom: 10px; }
+p { margin: 12px 0; font-size: 15px; color: var(--text-secondary); }
+strong { color: var(--text); }
+ul, ol { margin: 12px 0; padding-left: 24px; }
+li { margin: 6px 0; font-size: 15px; color: var(--text-secondary); }
+code { background: var(--bg-secondary); color: var(--primary); padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--border); }
+pre { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; color: var(--text); margin: 16px 0; }
+pre code { background: none; border: none; padding: 0; color: inherit; }
+.screenshot { margin: 20px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.3s ease; }
+.screenshot:hover { border-color: var(--border-glow); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1); }
+.screenshot img { display: block; width: 100%; height: auto; cursor: pointer; }
+.screenshot-caption { font-size: 12px; color: var(--text-muted); padding: 10px 14px; background: var(--bg-secondary); border-top: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+th { text-align: left; color: var(--text-muted); font-weight: 500; padding: 10px 14px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.takeaways { background: var(--bg-secondary); border-left: 3px solid var(--primary); padding: 20px 24px; border-radius: 0 10px 10px 0; margin: 24px 0; }
+.takeaways li { color: var(--text); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tag { background: var(--primary-dim); color: var(--primary); padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; border: 1px solid rgba(0, 212, 255, 0.2); }
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 4px; }
+@media (max-width: 640px) { .hero { padding: 60px 20px 30px; } .container { padding: 24px 16px 60px; } h2 { font-size: 19px; } }
+</style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-link">&#x2190; Back to Portfolio</a>
+
+<div class="hero">
+  <h1>Metasploit Framework & Host Hardening</h1>
+  <div class="meta">
+    <span>&#x1F4C2; Ethical Hacking</span>
+    <span>&#x1F4C5; 2023</span>
+    <span>&#x1F393; MSIA Program</span>
+  </div>
+</div>
+
+<div class="container">
+<h1>Metasploit Framework &amp; Host Hardening Lab</h1>
+<h2>Project Overview</h2>
+<p>In this comprehensive penetration testing project, I demonstrated proficiency with the Metasploit Framework (MSF)—a professional-grade exploitation platform used by security teams worldwide. The objective was to understand practical attack methodologies against vulnerable systems and then apply defensive hardening techniques to detect and prevent intrusions.</p>
+<p>The Metasploit Framework is an extensible platform that consolidates proven exploits, payloads, and support infrastructure. Rather than building custom exploits from scratch, MSF allows penetration testers to focus on reconnaissance, targeting, and analysis. I utilized two Linux virtual machines for this exercise: Kali Linux (equipped with Metasploit) as the attacking platform, and Metasploitable2 as the intentionally vulnerable target system.</p>
+<hr />
+<h2>Environment Setup</h2>
+<h3>Infrastructure Components</h3>
+<p>I configured the following lab environment:</p>
+<ul>
+<li><strong>Kali Linux</strong>: A security-focused Linux distribution pre-loaded with penetration testing tools including the Metasploit Framework</li>
+<li><strong>Metasploitable2</strong>: An intentionally vulnerable Linux platform designed for training and authorized security testing</li>
+<li><strong>VirtualBox</strong>: Hypervisor software for running virtual machines</li>
+<li><strong>PostgreSQL</strong>: Database backend for Metasploit to store reconnaissance data and session information</li>
+</ul>
+<h3>Initial Machine Configuration</h3>
+<p>Starting the Kali Linux virtual machine:</p>
+<p><div class="screenshot"><img src="images/image_001.png" alt="Kali Linux login screen with password prompt" loading="lazy"><div class="screenshot-caption">Kali Linux login screen with username and password fields</div></div></p>
+<p><div class="screenshot"><img src="images/image_002.png" alt="Kali Linux desktop after successful login" loading="lazy"><div class="screenshot-caption">Kali Linux desktop environment after successful login</div></div></p>
+
+<p>I used Oracle VirtualBox to manage the lab virtual machines. Here the Metasploitable2 VM is shown running alongside the Kali instance:</p>
+<p><div class="screenshot"><img src="images/image_003.png" alt="Oracle VirtualBox Manager showing Metasploitable2 running" loading="lazy"><div class="screenshot-caption">Oracle VirtualBox Manager showing Metasploitable2 and Kali Linux VMs</div></div></p>
+<p>The Metasploitable2 VM boot sequence and login prompt:</p>
+<p><div class="screenshot"><img src="images/image_004.png" alt="Metasploitable2 boot sequence and login prompt" loading="lazy"><div class="screenshot-caption">Metasploitable2 boot sequence with login prompt</div></div></p>
+<p>Successfully logged into Metasploitable2 with default credentials (msfadmin/msfadmin):</p>
+<p><div class="screenshot"><img src="images/image_005.png" alt="Metasploitable2 authenticated session showing msfadmin shell" loading="lazy"><div class="screenshot-caption">Metasploitable2 authenticated session as msfadmin user</div></div></p>
+<h3>Metasploit Database Setup</h3>
+<p>To leverage Metasploit's full capabilities, I initialized the database infrastructure on Kali Linux. Opening a terminal:</p>
+<p><div class="screenshot"><img src="images/image_006.png" alt="Terminal emulator icon" loading="lazy"><div class="screenshot-caption">Terminal emulator icon used to open command-line interface</div></div></p>
+
+<p><div class="screenshot"><img src="images/image_007.png" alt="Terminal access on Kali Linux" loading="lazy"><div class="screenshot-caption">Terminal access on Kali Linux</div></div></p>
+<p>I executed the following sequence to prepare the environment:</p>
+<pre><code>$ service postgresql start
+$ service postgresql status
+$ msfdb init
+</code></pre>
+<p>Database initialization completed successfully:</p>
+<p><div class="screenshot"><img src="images/image_008.png" alt="PostgreSQL initialization and msfdb setup" loading="lazy"><div class="screenshot-caption">PostgreSQL initialization and msfdb setup</div></div></p>
+<hr />
+<h2>Phase 1: Metasploit Console Deployment</h2>
+<h3>Launching MSFConsole</h3>
+<p>I started the Metasploit console, which serves as the primary interface for exploit delivery and session management:</p>
+<p><div class="screenshot"><img src="images/image_009.png" alt="Metasploit Framework icon" loading="lazy"><div class="screenshot-caption">Metasploit Framework icon used to launch msfconsole</div></div></p>
+
+<pre><code>$ msfconsole
+</code></pre>
+<p><div class="screenshot"><img src="images/image_010.png" alt="Metasploit Console startup" loading="lazy"><div class="screenshot-caption">Metasploit Console startup</div></div></p>
+<p>Verified successful database connectivity within the console:</p>
+<p><div class="screenshot"><img src="images/image_011.png" alt="MSF console with confirmed database connection" loading="lazy"><div class="screenshot-caption">MSF console with confirmed database connection</div></div></p>
+<p>Reviewed available commands through the built-in help system:</p>
+<p><div class="screenshot"><img src="images/image_012.png" alt="MSF help menu displaying core commands" loading="lazy"><div class="screenshot-caption">MSF help menu displaying core commands</div></div></p>
+<h3>Target Identification</h3>
+<p>Before launching any attacks, I identified the target system's IP address using ifconfig on the vulnerable machine:</p>
+<pre><code>$ ifconfig
+</code></pre>
+<p><div class="screenshot"><img src="images/image_013.png" alt="Network interface configuration showing eth0 with IP 10.0.2.15" loading="lazy"><div class="screenshot-caption">Network interface configuration showing eth0 with IP 10.0.2.15</div></div></p>
+<p>This IP address (10.0.2.15) became the RHOST (remote host) parameter for all subsequent exploitation attempts.</p>
+<hr />
+<h2>Phase 2: Exploitation Using Metasploit Console</h2>
+<h3>UnrealIRCD Backdoor Exploitation</h3>
+<p>I identified that Metasploitable2 runs UnrealIRCD (Internet Relay Chat daemon) on port 6667. This version contains a known backdoor vulnerability that can be triggered by sending specific command sequences. Metasploit includes a dedicated exploitation module for this flaw.</p>
+<p>I executed the following commands in msfconsole:</p>
+<pre><code>msf &gt; use exploit/unix/irc/unreal_ircd_3281_backdoor
+msf exploit(unreal_ircd_3281_backdoor) &gt; set RHOST 10.0.2.15
+msf exploit(unreal_ircd_3281_backdoor) &gt; exploit
+</code></pre>
+<p>Successful exploitation resulted in direct shell access:</p>
+<p><div class="screenshot"><img src="images/image_014.png" alt="Successful UnrealIRCD exploitation with active shell session" loading="lazy"><div class="screenshot-caption">Successful UnrealIRCD exploitation with active shell session</div></div></p>
+<p>From the remote shell, I verified my access level and system information:</p>
+<pre><code>$ whoami
+$ uname -a
+</code></pre>
+<p>The output confirmed I had gained unprivileged shell access to the target machine from my attacking platform.</p>
+<h3>Vsftpd v2.3.4 Backdoor Exploitation</h3>
+<p>Next, I exploited a second vulnerability in the very-secure FTP daemon (vsftpd). This version contains a backdoor that was inadvertently introduced into the official source distribution between June 30-July 1, 2011. Metasploit includes a module designed specifically for this vulnerability.</p>
+<p>I executed:</p>
+<pre><code>$ msfconsole
+msf &gt; use exploit/unix/ftp/vsftpd_234_backdoor
+msf exploit(vsftpd_234_backdoor) &gt; set RHOST 172.16.108.172
+msf exploit(vsftpd_234_backdoor) &gt; set payload cmd/unix/interact
+msf exploit(vsftpd_234_backdoor) &gt; exploit
+</code></pre>
+<p>Verification commands in the resulting shell:</p>
+<pre><code>$ whoami
+$ uname -a
+</code></pre>
+<p><div class="screenshot"><img src="images/image_015.png" alt="Vsftpd backdoor exploitation with command execution" loading="lazy"><div class="screenshot-caption">Vsftpd backdoor exploitation with command execution</div></div></p>
+<p>Both attacks successfully demonstrated remote code execution—I could execute arbitrary system commands on the vulnerable target from my attacking machine.</p>
+<hr />
+<h2>Phase 3: GUI-Based Exploitation with Armitage</h2>
+<h3>Armitage Interface Setup</h3>
+<p>For users less comfortable with command-line interfaces, Metasploit provides Armitage—a graphical attack management tool. I launched Armitage:</p>
+<p><div class="screenshot"><img src="images/image_016.jpeg" alt="Armitage application launcher icon" loading="lazy"><div class="screenshot-caption">Application launcher icon for Armitage in Kali Linux</div></div></p>
+
+<pre><code>$ armitage
+</code></pre>
+<p><div class="screenshot"><img src="images/image_017.png" alt="Armitage installation via apt on Kali Linux" loading="lazy"><div class="screenshot-caption">Installing Armitage and dependencies via apt on Kali Linux</div></div></p>
+<p>Established database connectivity through the connection dialog:</p>
+<p><div class="screenshot"><img src="images/image_018.png" alt="Armitage connection settings dialog" loading="lazy"><div class="screenshot-caption">Armitage connection settings dialog (Host, Port, User, Pass)</div></div></p>
+<p><div class="screenshot"><img src="images/image_019.png" alt="Start Metasploit RPC server prompt" loading="lazy"><div class="screenshot-caption">Prompt to start Metasploit RPC server for Armitage</div></div></p>
+<p><div class="screenshot"><img src="images/image_020.png" alt="Armitage connection progress to MSF RPC server" loading="lazy"><div class="screenshot-caption">Armitage connection progress dialog connecting to MSF RPC server</div></div></p>
+<p>Successfully accessed the Armitage graphical interface:</p>
+<p><div class="screenshot"><img src="images/image_021.png" alt="Armitage main interface with module browser and console" loading="lazy"><div class="screenshot-caption">Armitage main interface with module browser and console panel</div></div></p>
+<h3>Target Host Registration</h3>
+<p>I added the vulnerable system to the Armitage host inventory. Using the Hosts menu, I selected "Add Hosts" and entered the target IP:</p>
+<p><div class="screenshot"><img src="images/image_022.png" alt="Armitage Add Hosts dialog with target IP 192.168.1.123" loading="lazy"><div class="screenshot-caption">Armitage Add Hosts dialog with target IP 192.168.1.123 entered</div></div></p>
+<h3>Vulnerability Scanning</h3>
+<p>After adding the target, I initiated a vulnerability scan by right-clicking the host and selecting "Scan":</p>
+<p><div class="screenshot"><img src="images/image_023.png" alt="Right-click context menu on host with Scan option" loading="lazy"><div class="screenshot-caption">Right-click context menu on target host showing Services, Scan, and Host options</div></div></p>
+<p>This scan identified active services and known vulnerabilities on the target system.</p>
+<h3>Attack Selection and Deployment</h3>
+<p>Armitage simplifies exploit selection through its "Find Attacks" function under the Attacks menu, which generates a customized attack menu based on the target's identified services and vulnerabilities:</p>
+<p><div class="screenshot"><img src="images/image_024.png" alt="Attacks menu showing Find Attacks option with scan results" loading="lazy"><div class="screenshot-caption">Attacks menu with Find Attacks and Hail Mary options, port scan results in console</div></div></p>
+<p><div class="screenshot"><img src="images/image_025.png" alt="Attack Analysis Complete notification dialog" loading="lazy"><div class="screenshot-caption">Attack Analysis Complete dialog confirming attack menu is ready</div></div></p>
+<p>I selected the Vsftpd v2.3.4 backdoor exploit by navigating the module tree: unix → ftp → vsftpd_234_backdoor:</p>
+<p><div class="screenshot"><img src="images/image_026.png" alt="Vsftpd_234_backdoor selected in Armitage exploit tree" loading="lazy"><div class="screenshot-caption">Vsftpd_234_backdoor exploit selected in module tree with successful execution in console</div></div></p>
+<p>Configured the attack to use a reverse connection (where the target initiates the connection back to my attacker machine) and launched the exploit:</p>
+<p><div class="screenshot"><img src="images/image_027.png" alt="VSFTPD exploit configuration dialog with Launch button" loading="lazy"><div class="screenshot-caption">VSFTPD v2.3.4 Backdoor exploit configuration dialog with LHOST, RHOST, and reverse connection option</div></div></p>
+<p>The Armitage console displayed successful exploitation:</p>
+<p><div class="screenshot"><img src="images/image_028.png" alt="Armitage console showing successful vsftpd exploitation" loading="lazy"><div class="screenshot-caption">Armitage console output showing Found shell and Command shell session opened</div></div></p>
+<p><div class="screenshot"><img src="images/image_029.png" alt="Zoomed view of successful exploitation in Armitage console" loading="lazy"><div class="screenshot-caption">Detailed console output confirming successful vsftpd backdoor exploitation</div></div></p>
+<h3>Interactive Shell Access</h3>
+<p>I obtained an interactive shell session by right-clicking the target host and selecting Shell 1 → Interact:</p>
+<p><div class="screenshot"><img src="images/image_031.png" alt="Armitage context menu showing Shell 1 Interact option" loading="lazy"><div class="screenshot-caption">Right-click context menu on compromised host with Shell 1 → Interact selected</div></div></p>
+<p>A new shell tab opened in Armitage. I verified successful code execution:</p>
+<pre><code>$ whoami
+$ uname -a
+</code></pre>
+<p><div class="screenshot"><img src="images/image_030.png" alt="Armitage Shell 1 tab showing whoami and uname output" loading="lazy"><div class="screenshot-caption">Interactive shell in Armitage confirming root access on Metasploitable2</div></div></p>
+<hr />
+<h2>Phase 4: Host Integrity Verification</h2>
+<h3>File Integrity Monitoring</h3>
+<p>After demonstrating offensive techniques, I implemented a defensive security control: file integrity monitoring. This process creates cryptographic hashes of system files and regularly verifies them to detect unauthorized modifications—a critical technique for detecting post-exploitation persistence mechanisms.</p>
+<p>I initially attempted FileVerifier++, but encountered compatibility issues with modern Windows operating systems (this tool is no longer actively maintained). I pivoted to HashMyFile, a more current alternative that provides equivalent functionality.</p>
+<p><div class="screenshot"><img src="images/image_032.png" alt="FileVerifier++ adding files with CRC16 hash algorithm" loading="lazy"><div class="screenshot-caption">FileVerifier++ interface showing files added from Downloads directory with CRC16 hashes computed</div></div></p>
+
+<p><div class="screenshot"><img src="images/image_033.png" alt="FileVerifier++ verification results showing all files valid" loading="lazy"><div class="screenshot-caption">FileVerifier++ verification results confirming all files passed integrity check</div></div></p>
+
+<h3>Initial Integrity Baseline</h3>
+<p>I generated a baseline hash of my Downloads directory and all contained files:</p>
+<p><div class="screenshot"><img src="images/image_034.png" alt="HashMyFiles baseline showing MD5 hashes for Downloads directory" loading="lazy"><div class="screenshot-caption">HashMyFiles baseline with MD5 hashes for original Downloads directory contents</div></div></p>
+<h3>Detection of File Changes</h3>
+<p>I then added a new file (Laxman_Puri.txt) to the Downloads directory and regenerated the hashes:</p>
+<p><div class="screenshot"><img src="images/image_035.png" alt="HashMyFiles showing new Laxman_Puri.txt file added to directory" loading="lazy"><div class="screenshot-caption">HashMyFiles showing new file (Laxman_Puri.txt) added to Downloads directory with its MD5 hash</div></div></p>
+<p>The hash value changed significantly, demonstrating that file integrity verification would successfully detect unauthorized file modifications or additions. This is a practical technique used by system administrators to detect compromised systems following an intrusion.</p>
+<p><div class="screenshot"><img src="images/image_036.png" alt="Microsoft support note about Local Security Policy unavailability on Windows Home edition" loading="lazy"><div class="screenshot-caption">Microsoft support documentation confirming Local Security Policy is unavailable on Windows Home edition</div></div></p>
+
+<hr />
+<h2>Phase 5: Advanced Exploitation Challenge</h2>
+<h3>Third Vulnerability Exploitation</h3>
+<p>To demonstrate comprehensive Metasploit proficiency, I identified and exploited a third vulnerability beyond the initial two. I documented the exploitation using both msfconsole and Armitage, creating proof files on the remote target:</p>
+<p><strong>Using Metasploit Console:</strong></p>
+<p><div class="screenshot"><img src="images/image_037.png" alt="Third vulnerability exploitation via msfconsole with file creation" loading="lazy"><div class="screenshot-caption">Third vulnerability exploitation via msfconsole with file creation</div></div></p>
+<p><strong>Using Armitage Interface:</strong></p>
+<p><div class="screenshot"><img src="images/image_038.png" alt="Third vulnerability exploitation via Armitage GUI interface" loading="lazy"><div class="screenshot-caption">Third vulnerability exploitation via Armitage GUI interface</div></div></p>
+<p>Both methods successfully placed a proof file on the remote system using the <code>touch &lt;name&gt;</code> command, confirming arbitrary file system access on the target platform.</p>
+<hr />
+<h2>Key Takeaways</h2>
+<ol>
+<li>
+<p><strong>Metasploit as an Enabler</strong>: The Metasploit Framework dramatically accelerates the penetration testing process by consolidating exploit development, payload delivery, and post-exploitation features into a unified platform.</p>
+</li>
+<li>
+<p><strong>Multiple Attack Vectors</strong>: A single target system often contains multiple exploitable vulnerabilities. Successful penetration testers must identify and chain together various attack vectors.</p>
+</li>
+<li>
+<p><strong>Dual Interface Paradigm</strong>: Both command-line (msfconsole) and graphical (Armitage) interfaces serve different user preferences while maintaining equivalent functionality. In professional environments, command-line tools often provide superior flexibility and scriptability.</p>
+</li>
+<li>
+<p><strong>Defense Detection</strong>: File integrity monitoring represents a fundamental defensive layer that catches post-exploitation artifacts. By regularly verifying cryptographic hashes of critical files, defenders can identify when systems have been compromised.</p>
+</li>
+<li>
+<p><strong>Verification and Proof</strong>: Each successful exploitation must be verified with concrete evidence—executing commands that prove code execution, creating unique files, or capturing system information uniquely attributable to the target system.</p>
+</li>
+</ol>
+<hr />
+<h2>Tools Used</h2>
+<ul>
+<li><strong>Kali Linux</strong> – Penetration testing operating system</li>
+<li><strong>Metasploit Framework (MSFConsole)</strong> – Command-line exploitation framework</li>
+<li><strong>Armitage</strong> – Graphical exploitation interface for Metasploit</li>
+<li><strong>PostgreSQL</strong> – Database backend for Metasploit</li>
+<li><strong>HashMyFile</strong> – File integrity monitoring and hash calculation</li>
+<li><strong>VirtualBox</strong> – Hypervisor for virtual machine infrastructure</li>
+</ul>
+<hr />
+<h2>Skills Demonstrated</h2>
+<ul>
+<li><strong>Penetration Testing</strong>: Executed multiple remote exploitations against intentionally vulnerable systems</li>
+<li><strong>Exploit Development and Delivery</strong>: Selected, configured, and deployed pre-built exploits using Metasploit modules</li>
+<li><strong>Post-Exploitation Validation</strong>: Verified successful compromise through command execution and file system access</li>
+<li><strong>Defensive Monitoring</strong>: Implemented and validated file integrity monitoring as a security control</li>
+<li><strong>Tool Proficiency</strong>: Demonstrated competency with both CLI and GUI-based attack frameworks</li>
+<li><strong>Network Reconnaissance</strong>: Identified target systems and mapped network services</li>
+<li><strong>Payload Configuration</strong>: Customized reverse shells and interactive connections for different attack scenarios</li>
+</ul>
+<hr />
+<p><strong>Project completed as a comprehensive lab exercise in practical penetration testing methodology.</strong></p>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+  <img id="lightbox-img" src="" alt="Full size">
+</div>
+
+<script>
+document.querySelectorAll('.screenshot img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox').classList.add('active');
+  });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+});
+</script>
+
+</body>
+</html>

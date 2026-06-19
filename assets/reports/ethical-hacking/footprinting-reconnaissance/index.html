@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Footprinting & Reconnaissance</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a2e;
+  --text: #e0e0e0;
+  --text-secondary: #c8c8d8;
+  --text-muted: #9898a8;
+  --primary: #00d4ff;
+  --primary-dim: rgba(0, 212, 255, 0.15);
+  --accent: #7c3aed;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(0, 212, 255, 0.3);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.7; min-height: 100vh; }
+.back-link { position: fixed; top: 20px; left: 20px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; z-index: 100; background: var(--bg-card); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); transition: all 0.3s ease; }
+.back-link:hover { border-color: var(--border-glow); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+.hero { padding: 80px 40px 40px; text-align: center; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 100%); }
+.hero h1 { font-size: clamp(24px, 4vw, 36px); font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -0.5px; }
+.hero .meta { color: var(--text-muted); font-size: 14px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.hero .meta span { display: flex; align-items: center; gap: 6px; }
+.container { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+h2 { font-size: 22px; font-weight: 600; color: #fff; margin-top: 48px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); display: inline-block; }
+h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-top: 28px; margin-bottom: 10px; }
+p { margin: 12px 0; font-size: 15px; color: var(--text-secondary); }
+strong { color: var(--text); }
+ul, ol { margin: 12px 0; padding-left: 24px; }
+li { margin: 6px 0; font-size: 15px; color: var(--text-secondary); }
+code { background: var(--bg-secondary); color: var(--primary); padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--border); }
+pre { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; color: var(--text); margin: 16px 0; }
+pre code { background: none; border: none; padding: 0; color: inherit; }
+.screenshot { margin: 20px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.3s ease; }
+.screenshot:hover { border-color: var(--border-glow); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1); }
+.screenshot img { display: block; width: 100%; height: auto; cursor: pointer; }
+.screenshot-caption { font-size: 12px; color: var(--text-muted); padding: 10px 14px; background: var(--bg-secondary); border-top: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+th { text-align: left; color: var(--text-muted); font-weight: 500; padding: 10px 14px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.takeaways { background: var(--bg-secondary); border-left: 3px solid var(--primary); padding: 20px 24px; border-radius: 0 10px 10px 0; margin: 24px 0; }
+.takeaways li { color: var(--text); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tag { background: var(--primary-dim); color: var(--primary); padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; border: 1px solid rgba(0, 212, 255, 0.2); }
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 4px; }
+@media (max-width: 640px) { .hero { padding: 60px 20px 30px; } .container { padding: 24px 16px 60px; } h2 { font-size: 19px; } }
+</style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-link">&#x2190; Back to Portfolio</a>
+
+<div class="hero">
+  <h1>Footprinting & Reconnaissance</h1>
+  <div class="meta">
+    <span>&#x1F4C2; Ethical Hacking</span>
+    <span>&#x1F4C5; 2023</span>
+    <span>&#x1F393; MSIA Program</span>
+  </div>
+</div>
+
+<div class="container">
+<h1>Footprinting &amp; Reconnaissance: Network Intelligence Gathering</h1>
+<h2>Project Overview</h2>
+<p>In this comprehensive security project, I conducted hands-on reconnaissance and footprinting exercises to gather intelligence about target systems and networks. Footprinting—the systematic collection of information about a target network or system—is a critical first phase of security assessments. I practiced both passive techniques (reviewing publicly available information) and active methods (direct probing and social engineering techniques).</p>
+<p>This foundational work demonstrates the reconnaissance phase that precedes any security engagement, illustrating how attackers or authorized penetration testers identify entry points and vulnerabilities before attempting exploitation.</p>
+<h2>Environment Setup</h2>
+<p>I used <strong>Kali Linux</strong> for all command-line operations, leveraging built-in tools designed for network reconnaissance and security analysis. The environment required:
+- Kali Linux system with internet connectivity
+- Outbound TCP port 43 access (for WHOIS queries)
+- Terminal access to execute network diagnostics</p>
+<hr />
+<h2>Phase 1: WHOIS Information Gathering</h2>
+<h3>Understanding Domain Registries</h3>
+<p>I began by learning the hierarchical structure of domain registration through WHOIS lookups. My first step was to identify the authoritative registry for a specific top-level domain (TLD).</p>
+<p><strong>Initial WHOIS Query for TLD Authority:</strong>
+I executed a query targeting the .net TLD registry:</p>
+<pre><code class="language-bash">whois net -h whois.iana.org
+</code></pre>
+<p><div class="screenshot"><img src="images/image_001.png" alt="WHOIS query to IANA for .net registry authority - showing command execution" loading="lazy"><div class="screenshot-caption">WHOIS query to IANA for .net registry authority - showing command execution</div></div></p>
+<p><div class="screenshot"><img src="images/image_002.png" alt="WHOIS response listing VeriSign as the authoritative registry and whois.verisign-grs.com as the registry server" loading="lazy"><div class="screenshot-caption">WHOIS response listing VeriSign as the authoritative registry and whois.verisign-grs.com as the registry server</div></div></p>
+<p><strong>Finding:</strong> VeriSign Global Registry Services manages the .net TLD, with their authoritative WHOIS server at <strong>whois.verisign-grs.com</strong>.</p>
+<h3>Domain Registrar Identification</h3>
+<p>Next, I located the specific registrar for the target domain (intermedia.net):</p>
+<pre><code class="language-bash">whois intermedia.net -h whois.verisign-grs.com
+</code></pre>
+<p><div class="screenshot"><img src="images/image_003.png" alt="WHOIS query to VeriSign registry for intermedia.net registrar information" loading="lazy"><div class="screenshot-caption">WHOIS query to VeriSign registry for intermedia.net registrar information</div></div></p>
+<p><div class="screenshot"><img src="images/image_004.png" alt="WHOIS response showing GoDaddy as the registrar for intermedia.net" loading="lazy"><div class="screenshot-caption">WHOIS response showing GoDaddy as the registrar for intermedia.net</div></div></p>
+<p><strong>Findings:</strong>
+- <strong>Registrar:</strong> GoDaddy.com, LLC
+- <strong>Registrar WHOIS Server:</strong> whois.godaddy.com
+- <strong>Nameservers Identified:</strong>
+  - NS2.INTERMEDIA.NET
+  - NS3.INTERMEDIA.NET
+  - NS4.INTERMEDIA.NET
+  - NS5.INTERMEDIA.NET</p>
+<h3>Target Organization Intelligence</h3>
+<p>Using the registrar's WHOIS server, I gathered detailed contact and address information:</p>
+<pre><code class="language-bash">whois intermedia.net -h whois.godaddy.com
+</code></pre>
+<p><div class="screenshot"><img src="images/image_005.png" alt="WHOIS query to GoDaddy registrar server for intermedia.net domain details" loading="lazy"><div class="screenshot-caption">WHOIS query to GoDaddy registrar server for intermedia.net domain details</div></div></p>
+<p><strong>Organizational Information Gathered:</strong>
+- <strong>Address:</strong> 2155 E Warner Rd, Tempe, Arizona 85284, US
+- <strong>Phone:</strong> +1.480-624-2599
+- <strong>Administrative &amp; Technical Contacts:</strong> Accessible via GoDaddy's domain holder portal</p>
+<hr />
+<h2>Phase 2: DNS Zone Transfer Testing</h2>
+<h3>DNS Infrastructure Reconnaissance</h3>
+<p>I investigated the domain's DNS infrastructure using the <code>dig</code> command to enumerate nameservers:</p>
+<pre><code class="language-bash">dig ns zonetransfer.me
+</code></pre>
+<p><div class="screenshot"><img src="images/image_006.png" alt="Executing dig ns zonetransfer.me command to query nameservers for the test domain" loading="lazy"><div class="screenshot-caption">Executing dig ns zonetransfer.me command to query nameservers for the test domain</div></div></p>
+<p><div class="screenshot"><img src="images/image_007.png" alt="Detailed DNS response listing nameserver records" loading="lazy"><div class="screenshot-caption">Detailed DNS response listing nameserver records</div></div></p>
+<h3>Zone Transfer Exploitation</h3>
+<p>I attempted a full zone transfer (AXFR) from the domain's nameserver:</p>
+<pre><code class="language-bash">dig axfr zonetransfer.me @nsztm2.digi.ninja
+</code></pre>
+<p><div class="screenshot"><img src="images/image_008.png" alt="Executing dig axfr zone transfer command against nsztm2.digi.ninja nameserver" loading="lazy"><div class="screenshot-caption">Executing dig axfr zone transfer command against nsztm2.digi.ninja nameserver</div></div></p>
+<p><div class="screenshot"><img src="images/image_009.png" alt="Complete zone file dump showing all DNS records due to misconfigured permissions" loading="lazy"><div class="screenshot-caption">Complete zone file dump showing all DNS records due to misconfigured permissions</div></div></p>
+<p><strong>Key Finding:</strong> The DNS server was misconfigured to allow unrestricted zone transfers, exposing the entire forward zone file including all name-to-IP mappings, mail servers (MX records), and nameserver (NS records) information. This demonstrates a critical vulnerability that could provide attackers with a complete map of the target organization's network infrastructure.</p>
+<hr />
+<h2>Phase 3: Network Path Analysis</h2>
+<h3>Tracing Network Routes</h3>
+<p>I used traceroute to identify the network path from my system to the target:</p>
+<pre><code class="language-bash">traceroute www.intermedia.net
+</code></pre>
+<p><div class="screenshot"><img src="images/image_010.png" alt="Traceroute output to www.intermedia.net showing 30 hops with most responses timing out" loading="lazy"><div class="screenshot-caption">Traceroute output to www.intermedia.net showing 30 hops with most responses timing out</div></div></p>
+<p><strong>Analysis:</strong> This reconnaissance technique reveals intermediate routers and potential network entry points. The traceroute shows that most intermediate hops are filtered (showing * * *), indicating firewalls or routers configured to drop ICMP packets — a common defensive measure that limits network topology exposure.</p>
+<hr />
+<h2>Phase 4: Network Scanning with Nmap</h2>
+<h3>Host Discovery</h3>
+<p>I configured my Kali Linux system and executed network reconnaissance scans:</p>
+<p><strong>System Configuration:</strong></p>
+<pre><code class="language-bash">ifconfig eth0
+</code></pre>
+<p><div class="screenshot"><img src="images/image_011.png" alt="Executing ifconfig eth0 command to view network interface configuration" loading="lazy"><div class="screenshot-caption">Executing ifconfig eth0 command to view network interface configuration</div></div></p>
+<p><div class="screenshot"><img src="images/image_012.png" alt="ifconfig eth0 output showing IP address 10.0.2.15 and network configuration details" loading="lazy"><div class="screenshot-caption">ifconfig eth0 output showing IP address 10.0.2.15 and network configuration details</div></div></p>
+<h3>Ping Sweep for Host Discovery</h3>
+<p>I performed a network-wide ping sweep to identify active hosts on the target network subnet:</p>
+<pre><code class="language-bash">nmap -sn 10.0.2.15/24
+</code></pre>
+<p><div class="screenshot"><img src="images/image_013.png" alt="Nmap ping sweep command targeting Class C network with /24 CIDR notation" loading="lazy"><div class="screenshot-caption">Nmap ping sweep command targeting Class C network with /24 CIDR notation</div></div></p>
+<p><div class="screenshot"><img src="images/image_014.png" alt="Nmap results showing discovered active hosts on the network" loading="lazy"><div class="screenshot-caption">Nmap results showing discovered active hosts on the network</div></div></p>
+<p><strong>Technique Explanation:</strong>
+- <code>-sn</code> flag performs ICMP ping sweep without port scanning
+- <code>10.0.2.15/24</code> targets the entire /24 subnet (254 possible hosts)
+- Results identify which hosts are actively responding to network probes</p>
+<hr />
+<h2>Phase 5: Security Framework &amp; Policy Review</h2>
+<h3>SANS Security Controls Research</h3>
+<p>I researched industry-leading security frameworks through the SANS Institute's resources:</p>
+<p><div class="screenshot"><img src="images/image_015.png" alt="SANS whitepaper on Critical Security Controls: Software Designed Inventory, Configuration, and Governance" loading="lazy"><div class="screenshot-caption">SANS whitepaper on Critical Security Controls: Software Designed Inventory, Configuration, and Governance</div></div></p>
+<h3>Security Research &amp; White Papers</h3>
+<p>I explored the SANS Information Security White Papers repository to review current security research:</p>
+<p><div class="screenshot"><img src="images/image_016.png" alt="SANS Information Security White Papers listing page with latest publications and filter options" loading="lazy"><div class="screenshot-caption">SANS Information Security White Papers listing page with latest publications and filter options</div></div></p>
+<h3>Security Policy Development</h3>
+<p>I examined and customized security policy templates to understand organizational security documentation:</p>
+<p><div class="screenshot"><img src="images/image_017.png" alt="Customized email security policy with organization-specific information inserted" loading="lazy"><div class="screenshot-caption">Customized email security policy with organization-specific information inserted</div></div></p>
+<p><strong>Outcome:</strong> I gained practical experience with security policy frameworks and learned how organizations standardize security practices.</p>
+<hr />
+<h2>Phase 6: Network Monitoring &amp; Filtering Technology</h2>
+<h3>Untangle Security Appliance Research</h3>
+<p>I researched Untangle, an open-source network security and monitoring solution, to understand enterprise security infrastructure:</p>
+<p><strong>Case Study Analysis:</strong></p>
+<p><div class="screenshot"><img src="images/image_018.png" alt="YouTube video: Untangle Case Study - CTR Data, demonstrating real-world network security deployment" loading="lazy"><div class="screenshot-caption">YouTube video: Untangle Case Study - CTR Data, demonstrating real-world network security deployment</div></div></p>
+<p><strong>Introduction to Untangle Platform:</strong></p>
+<p><div class="screenshot"><img src="images/image_019.png" alt="YouTube video: Untangle 101 - Intro to Untangle NG Firewall, showing product overview and SMB features" loading="lazy"><div class="screenshot-caption">YouTube video: Untangle 101 - Intro to Untangle NG Firewall, showing product overview and SMB features</div></div></p>
+<p><strong>BYOD Management &amp; Captive Portal:</strong></p>
+<p><div class="screenshot"><img src="images/image_020.png" alt="YouTube video: Untangle 101 - Managing BYOD with Captive Portal, showing webinar interface" loading="lazy"><div class="screenshot-caption">YouTube video: Untangle 101 - Managing BYOD with Captive Portal, showing webinar interface</div></div></p>
+<hr />
+<h2>Key Findings &amp; Insights</h2>
+<h3>Reconnaissance Effectiveness</h3>
+<p>Through this project, I demonstrated how comprehensive an attacker's reconnaissance can be using publicly available tools and legitimate domain queries. The combination of WHOIS lookups, DNS enumeration, and network scanning creates a complete organizational profile before any exploitation attempts.</p>
+<h3>Security Implications</h3>
+<ul>
+<li><strong>WHOIS Data Exposure:</strong> Public domain registration information provides direct contact details for social engineering</li>
+<li><strong>DNS Zone Transfer Vulnerability:</strong> Misconfigured nameservers expose complete network topology</li>
+<li><strong>Network Topology Mapping:</strong> Traceroute and ping sweeps identify network structure and potential entry points</li>
+<li><strong>Host Discovery:</strong> Nmap's ping sweep quickly identifies active infrastructure</li>
+</ul>
+<h3>Defensive Measures Identified</h3>
+<ol>
+<li><strong>WHOIS Privacy:</strong> Organizations should use WHOIS privacy services to mask contact information</li>
+<li><strong>DNS Security:</strong> Configure nameservers to restrict zone transfers to authorized secondaries only</li>
+<li><strong>Firewall Configuration:</strong> Block ICMP traffic to prevent ping sweeps and traceroute probing</li>
+<li><strong>Network Monitoring:</strong> Implement solutions like Untangle to detect and respond to reconnaissance probes</li>
+</ol>
+<hr />
+<h2>Tools Used</h2>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Purpose</th>
+<th>Key Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>whois</strong></td>
+<td>Domain registration lookup</td>
+<td>Gather registrar and registrant information</td>
+</tr>
+<tr>
+<td><strong>dig</strong></td>
+<td>DNS query tool</td>
+<td>Enumerate nameservers and perform zone transfers</td>
+</tr>
+<tr>
+<td><strong>traceroute</strong></td>
+<td>Network path analysis</td>
+<td>Map network hops to target</td>
+</tr>
+<tr>
+<td><strong>nmap</strong></td>
+<td>Network reconnaissance</td>
+<td>Discover active hosts and scan networks</td>
+</tr>
+<tr>
+<td><strong>Untangle</strong></td>
+<td>Network monitoring</td>
+<td>Monitor and filter network traffic</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Skills Demonstrated</h2>
+<ul>
+<li><strong>WHOIS Domain Reconnaissance:</strong> Successfully navigated hierarchical WHOIS servers to gather organizational intelligence</li>
+<li><strong>DNS Enumeration:</strong> Used dig commands to extract DNS infrastructure information and identify misconfigurations</li>
+<li><strong>Network Topology Mapping:</strong> Applied traceroute to identify network paths and entry points</li>
+<li><strong>Host Discovery:</strong> Conducted network scans to identify active systems</li>
+<li><strong>Security Policy Analysis:</strong> Reviewed and understood industry-standard security frameworks (SANS, Untangle)</li>
+<li><strong>Network Security Fundamentals:</strong> Demonstrated understanding of network defense mechanisms and monitoring solutions</li>
+<li><strong>Command-Line Linux Administration:</strong> Executed advanced Kali Linux commands for security assessment tasks</li>
+</ul>
+<hr />
+<h2>Conclusion</h2>
+<p>This project provided hands-on experience with the reconnaissance and footprinting phase of security assessments. I demonstrated the practical techniques used to gather intelligence about target systems, understand their infrastructure, and identify potential vulnerabilities. The exercise reinforced the critical importance of implementing defensive measures to detect and prevent reconnaissance activities before they lead to exploitation attempts.</p>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+  <img id="lightbox-img" src="" alt="Full size">
+</div>
+
+<script>
+document.querySelectorAll('.screenshot img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox').classList.add('active');
+  });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+});
+</script>
+
+</body>
+</html>

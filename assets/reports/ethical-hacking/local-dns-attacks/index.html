@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Local DNS Cache Poisoning & Spoofing</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a2e;
+  --text: #e0e0e0;
+  --text-secondary: #c8c8d8;
+  --text-muted: #9898a8;
+  --primary: #00d4ff;
+  --primary-dim: rgba(0, 212, 255, 0.15);
+  --accent: #7c3aed;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(0, 212, 255, 0.3);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.7; min-height: 100vh; }
+.back-link { position: fixed; top: 20px; left: 20px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; z-index: 100; background: var(--bg-card); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); transition: all 0.3s ease; }
+.back-link:hover { border-color: var(--border-glow); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+.hero { padding: 80px 40px 40px; text-align: center; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 100%); }
+.hero h1 { font-size: clamp(24px, 4vw, 36px); font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -0.5px; }
+.hero .meta { color: var(--text-muted); font-size: 14px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.hero .meta span { display: flex; align-items: center; gap: 6px; }
+.container { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+h2 { font-size: 22px; font-weight: 600; color: #fff; margin-top: 48px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); display: inline-block; }
+h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-top: 28px; margin-bottom: 10px; }
+p { margin: 12px 0; font-size: 15px; color: var(--text-secondary); }
+strong { color: var(--text); }
+ul, ol { margin: 12px 0; padding-left: 24px; }
+li { margin: 6px 0; font-size: 15px; color: var(--text-secondary); }
+code { background: var(--bg-secondary); color: var(--primary); padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--border); }
+pre { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; color: var(--text); margin: 16px 0; }
+pre code { background: none; border: none; padding: 0; color: inherit; }
+.screenshot { margin: 20px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.3s ease; }
+.screenshot:hover { border-color: var(--border-glow); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1); }
+.screenshot img { display: block; width: 100%; height: auto; cursor: pointer; }
+.screenshot-caption { font-size: 12px; color: var(--text-muted); padding: 10px 14px; background: var(--bg-secondary); border-top: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+th { text-align: left; color: var(--text-muted); font-weight: 500; padding: 10px 14px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.takeaways { background: var(--bg-secondary); border-left: 3px solid var(--primary); padding: 20px 24px; border-radius: 0 10px 10px 0; margin: 24px 0; }
+.takeaways li { color: var(--text); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tag { background: var(--primary-dim); color: var(--primary); padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; border: 1px solid rgba(0, 212, 255, 0.2); }
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 4px; }
+@media (max-width: 640px) { .hero { padding: 60px 20px 30px; } .container { padding: 24px 16px 60px; } h2 { font-size: 19px; } }
+</style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-link">&#x2190; Back to Portfolio</a>
+
+<div class="hero">
+  <h1>Local DNS Cache Poisoning & Spoofing</h1>
+  <div class="meta">
+    <span>&#x1F4C2; Ethical Hacking</span>
+    <span>&#x1F4C5; 2023</span>
+    <span>&#x1F393; MSIA Program</span>
+  </div>
+</div>
+
+<div class="container">
+<h1>Local DNS Attacks: A Security Analysis Project</h1>
+<h2>Project Overview</h2>
+<p>In this project, I executed a comprehensive security analysis of DNS vulnerabilities by setting up a controlled laboratory environment to demonstrate various DNS attack vectors. My objective was to understand how attackers compromise DNS infrastructure and how these attacks impact end users. Through a series of hands-on exercises, I successfully implemented a local DNS server, hosted custom zones, and executed multiple attack techniques to evaluate system vulnerabilities.</p>
+<p>This project involved three virtual machines configured across a network: a user machine, a dedicated DNS server, and an attacker machine. By simulating real-world attack scenarios, I demonstrated the critical importance of DNS security and validated defense mechanisms.</p>
+<hr />
+<h2>Environment Setup</h2>
+<h3>Network Architecture</h3>
+<p>I configured a network environment consisting of three virtual machines:
+- <strong>DNS Server</strong>: 10.0.2.4 (initial setup) / 10.0.2.6 (after reconfiguration)
+- <strong>User Machine</strong>: 10.0.2.6 (initial) / 10.0.2.8 (after reconfiguration)
+- <strong>Attacker Machine</strong>: 10.0.2.5 (initial) / 10.0.2.7 (after reconfiguration)</p>
+<p>During the lab, I encountered issues requiring a fresh Ubuntu installation, which resulted in IP address changes. I managed these transitions and continued the exercises seamlessly with the new network configuration.</p>
+<h3>User Machine Configuration</h3>
+<p>I began by configuring the user machine to use the local DNS server. I modified the resolver configuration file to point DNS queries to the local DNS server at 10.0.2.4.</p>
+<p><strong>DNS resolver configuration applied to the user machine:</strong></p>
+<p><div class="screenshot"><img src="images/image_001.png" alt="" loading="lazy"></div></p>
+<p>After updating the configuration, I executed the necessary system command to activate the changes.</p>
+<p><div class="screenshot"><img src="images/image_002.png" alt="" loading="lazy"></div></p>
+<p><strong>Verification of DNS server connectivity:</strong></p>
+<p>To verify that the configuration was working correctly, I used the <code>dig</code> command to query google.com. The response confirmed that the nameserver at 10.0.2.4 was handling the request.</p>
+<p><div class="screenshot"><img src="images/image_003.png" alt="" loading="lazy"></div></p>
+<p>The query response showed the server IP as 10.0.2.4, confirming successful setup of the user machine's DNS routing.</p>
+<hr />
+<h2>Phase 1: Local DNS Server Implementation</h2>
+<h3>Task 1: DNS Server Initialization</h3>
+<p>I logged into the DNS server and configured the BIND DNS service. I added a dump file entry to the named.conf.options file to enable caching analysis and debugging.</p>
+<p><strong>BIND configuration with dump file entry:</strong></p>
+<p><div class="screenshot"><img src="images/image_004.png" alt="" loading="lazy"></div></p>
+<p>I then executed commands to dump the DNS cache contents to a file and clear the cache for testing purposes.</p>
+<p><div class="screenshot"><img src="images/image_005.png" alt="" loading="lazy"></div></p>
+<p><strong>DNSSEC Configuration:</strong></p>
+<p>I verified that DNSSEC was disabled in the DNS server configuration, as required for this lab.</p>
+<p><div class="screenshot"><img src="images/image_006.png" alt="" loading="lazy"></div></p>
+<h3>Task 2: Starting the DNS Server</h3>
+<p>I started the BIND DNS server on the server machine.</p>
+<p><strong>DNS server startup process:</strong></p>
+<p><div class="screenshot"><img src="images/image_007.png" alt="" loading="lazy"></div></p>
+<h3>Task 3: Validating DNS Resolution</h3>
+<p>After starting the DNS server, I logged back into the user machine and tested DNS resolution for various domains.</p>
+<p><strong>Testing DNS resolution for google.com:</strong></p>
+<p><div class="screenshot"><img src="images/image_008.png" alt="" loading="lazy"></div></p>
+<p><strong>Wireshark capture of DNS query for www.google.com:</strong></p>
+<p>This capture demonstrated that DNS queries were successfully routing from the user machine (10.0.2.6) through the local DNS server (10.0.2.4) to resolve external domains.</p>
+<p><div class="screenshot"><img src="images/image_009.png" alt="" loading="lazy"></div></p>
+<p><strong>Wireshark capture of DNS response for facebook.com:</strong></p>
+<p><div class="screenshot"><img src="images/image_010.png" alt="" loading="lazy"></div></p>
+<p>These Wireshark captures confirmed that DNS queries originating from the user machine (10.0.2.6) were successfully routing through the local DNS server (10.0.2.4) to resolve external domains. The packet-level analysis clearly shows the DNS query and response exchange, verifying the full resolution chain.</p>
+<hr />
+<h2>Phase 2: Local Zone Hosting</h2>
+<h3>Task 4: Creating Custom DNS Zones</h3>
+<p>I configured the local DNS server to host a custom zone for example.com. I logged into the DNS server and created zone entries in the BIND configuration file.</p>
+<p><strong>Zone configuration entries created in named.conf:</strong></p>
+<p><div class="screenshot"><img src="images/image_011.png" alt="" loading="lazy"></div></p>
+<h3>Task 5: Forward Zone Database</h3>
+<p>I created the forward lookup zone file (example.com.db) in the /etc/bind directory to define the DNS records for the custom domain.</p>
+<p><strong>Forward zone database file configuration:</strong></p>
+<p><div class="screenshot"><img src="images/image_012.png" alt="" loading="lazy"></div></p>
+<h3>Task 6: Reverse Zone Database</h3>
+<p>I set up reverse lookup functionality by creating a reverse zone file (10.0.2.db) in the /etc/bind directory.</p>
+<p><strong>Reverse zone database configuration:</strong></p>
+<p><div class="screenshot"><img src="images/image_013.png" alt="" loading="lazy"></div></p>
+<h3>Task 7: DNS Service Restart and Verification</h3>
+<p>I restarted the BIND DNS service to apply the zone configurations.</p>
+<p><strong>BIND service restart:</strong></p>
+<p><div class="screenshot"><img src="images/image_014.png" alt="" loading="lazy"></div></p>
+<p>I then tested the zone from the user machine by querying example.com using the <code>dig</code> command.</p>
+<p><strong>Successful zone query result:</strong></p>
+<p><div class="screenshot"><img src="images/image_015.png" alt="" loading="lazy"></div></p>
+<p>The query response confirmed that example.com resolved to IP address 10.0.2.101, validating that the custom zones were correctly configured on the local DNS server.</p>
+<hr />
+<h2>Phase 3: DNS Attack Demonstrations</h2>
+<h3>Attack 1: Hosts File Modification</h3>
+<p>In the first attack scenario, I demonstrated a local compromise where an attacker modifies the hosts file on the target machine to redirect traffic.</p>
+<p><strong>Initial ping to www.bank32.com (before attack):</strong></p>
+<p><div class="screenshot"><img src="images/image_016.png" alt="" loading="lazy"></div></p>
+<p>I then modified the /etc/hosts file on the user machine to redirect www.bank32.com to a malicious IP address (in this case, the attacker machine's IP).</p>
+<p><strong>Hosts file modification to redirect www.bank32.com:</strong></p>
+<p><div class="screenshot"><img src="images/image_017.png" alt="" loading="lazy"></div></p>
+<p><strong>Verification of the attack (post-modification):</strong></p>
+<p><div class="screenshot"><img src="images/image_018.png" alt="" loading="lazy"></div></p>
+<p>This attack demonstrates that if an attacker gains access to a user's system, they can redirect users to malicious websites by poisoning the local hosts file. This bypass occurs before DNS queries are even sent, making it effective even when the DNS infrastructure is secure.</p>
+<h3>Attack 2: Direct DNS Response Spoofing</h3>
+<p>In this scenario, I attacked the user machine directly by spoofing DNS responses. I used the <code>netwox</code> tool on the attacker machine to craft malicious DNS responses.</p>
+<p><strong>Attacker machine executing DNS spoofing attack:</strong></p>
+<p>I executed the following <code>netwox</code> command:</p>
+<pre><code>sudo netwox 105 --hostname &quot;www.example.net&quot; --hostnameip 10.0.2.7 --authns &quot;ns.example.net&quot; --authnsip 10.0.2.25 --filter &quot;src host 10.0.2.8&quot; --ttl 19000 --spoofip raw
+</code></pre>
+<p><div class="screenshot"><img src="images/image_019.png" alt="" loading="lazy"></div></p>
+<p><strong>Spoofed DNS response received by user machine:</strong></p>
+<p>While the attack was running on the attacker machine, I issued a <code>dig</code> query from the user machine.</p>
+<p><div class="screenshot"><img src="images/image_020.png" alt="" loading="lazy"></div></p>
+<p>The query result showed that www.example.net resolved to the spoofed IP 10.0.2.7 (the attacker's machine), with a forged authority section pointing to ns.example.net at 10.0.2.25. This confirmed the attack was successful—the attacker intercepted and modified the DNS response before it reached the user.</p>
+<h3>Attack 3: DNS Cache Poisoning</h3>
+<p>In this advanced attack, I targeted the DNS server itself rather than the user machine. By poisoning the DNS server's cache, I could affect all users querying that server.</p>
+<p><strong>Attacker command targeting the DNS server:</strong></p>
+<p>I executed the following <code>netwox</code> command with the source filter set to the DNS server:</p>
+<pre><code>sudo netwox 105 --hostname &quot;www.google.com&quot; --hostnameip 10.0.2.7 --authns &quot;ns.example.net&quot; --authnsip 10.0.2.25 --filter &quot;src host 10.0.2.6&quot; --ttl 19000 --spoofip raw
+</code></pre>
+<p><strong>Poisoned cache result from user perspective:</strong></p>
+<p><div class="screenshot"><img src="images/image_021.png" alt="" loading="lazy"></div></p>
+<p>The query results showed that www.google.com now resolved to 10.0.2.7 (the attacker's machine), confirming successful cache poisoning.</p>
+<p><strong>Impact of the poisoned cache:</strong></p>
+<p><div class="screenshot"><img src="images/image_022.png" alt="" loading="lazy"></div></p>
+<p>Users attempting to access www.google.com in Firefox received an "Unable to connect" error because the poisoned DNS cache directed the browser to the attacker's IP (10.0.2.7), which had no web server running. In a real attack, the attacker would host a phishing page at that address. This demonstrates how critical DNS infrastructure is—a compromised DNS server affects all its clients.</p>
+<hr />
+<h2>Key Takeaways</h2>
+<ol>
+<li>
+<p><strong>DNS is a Critical Infrastructure Component</strong>: DNS resolution is fundamental to internet functionality. Any compromise at the DNS level has widespread impact.</p>
+</li>
+<li>
+<p><strong>Multiple Attack Vectors Exist</strong>: I demonstrated three distinct attack methods—local file manipulation, direct response spoofing, and cache poisoning. Each requires different preconditions and impacts.</p>
+</li>
+<li>
+<p><strong>Layered Defense is Essential</strong>: Relying on a single security measure is insufficient. DNS DNSSEC, TSIG authentication, firewall rules, and endpoint security all play crucial roles.</p>
+</li>
+<li>
+<p><strong>Local Compromise Bypasses Network Security</strong>: Even with secure DNS infrastructure, compromised local systems can be redirected through hosts file manipulation.</p>
+</li>
+<li>
+<p><strong>DNS Cache Poisoning is Particularly Dangerous</strong>: Poisoning the DNS cache affects all clients, making it a high-impact attack requiring robust mitigation strategies.</p>
+</li>
+</ol>
+<hr />
+<h2>Skills Demonstrated</h2>
+<ul>
+<li><strong>Linux System Administration</strong>: DNS server configuration, file modification, system troubleshooting</li>
+<li><strong>DNS Protocols</strong>: Zone configuration, reverse lookups, DNS query analysis</li>
+<li><strong>Network Security</strong>: Attack simulation, vulnerability assessment, traffic analysis</li>
+<li><strong>Penetration Testing</strong>: DNS spoofing techniques, cache poisoning methodologies</li>
+<li><strong>Cybersecurity Analysis</strong>: Attack impact evaluation, defense mechanism validation</li>
+<li><strong>Troubleshooting</strong>: Managed IP address changes and system reconfigurations during lab</li>
+</ul>
+<hr />
+<h2>Tools Used</h2>
+<ul>
+<li><strong>BIND (Berkeley Internet Name Domain)</strong>: DNS server software for hosting zones and caching</li>
+<li><strong>dig (Domain Information Groper)</strong>: DNS query tool for testing resolution and cache analysis</li>
+<li><strong>netwox</strong>: Packet crafting tool for simulating spoofed DNS responses</li>
+<li><strong>Wireshark</strong>: Network protocol analyzer for capturing and inspecting DNS traffic at the packet level</li>
+<li><strong>ping</strong>: Network testing utility for connectivity verification</li>
+<li><strong>Linux /etc/hosts</strong>: Local hostname resolution file for system-level domain mapping</li>
+<li><strong>Linux /etc/resolv.conf</strong>: DNS resolver configuration file</li>
+<li><strong>Ubuntu Linux</strong>: Virtual machine operating system for all environments</li>
+</ul>
+<hr />
+<h2>Conclusion</h2>
+<p>Through this lab exercise, I gained comprehensive hands-on experience with DNS architecture, attack methodologies, and security implications. I successfully demonstrated that DNS vulnerabilities can be exploited at multiple levels—from local system compromise to network-wide cache poisoning. This project reinforced the importance of implementing comprehensive DNS security measures including DNSSEC, response rate limiting, and careful cache timeout management. The ability to execute and analyze DNS attacks has provided me with valuable insight into building more resilient network infrastructure.</p>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+  <img id="lightbox-img" src="" alt="Full size">
+</div>
+
+<script>
+document.querySelectorAll('.screenshot img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox').classList.add('active');
+  });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+});
+</script>
+
+</body>
+</html>
