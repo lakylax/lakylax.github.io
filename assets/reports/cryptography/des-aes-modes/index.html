@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DES & AES Block Cipher Modes</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a2e;
+  --text: #e0e0e0;
+  --text-secondary: #c8c8d8;
+  --text-muted: #9898a8;
+  --primary: #00d4ff;
+  --primary-dim: rgba(0, 212, 255, 0.15);
+  --accent: #7c3aed;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(0, 212, 255, 0.3);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.7; min-height: 100vh; }
+.back-link { position: fixed; top: 20px; left: 20px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; z-index: 100; background: var(--bg-card); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); transition: all 0.3s ease; }
+.back-link:hover { border-color: var(--border-glow); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+.hero { padding: 80px 40px 40px; text-align: center; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 100%); }
+.hero h1 { font-size: clamp(24px, 4vw, 36px); font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -0.5px; }
+.hero .meta { color: var(--text-muted); font-size: 14px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.hero .meta span { display: flex; align-items: center; gap: 6px; }
+.container { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+h2 { font-size: 22px; font-weight: 600; color: #fff; margin-top: 48px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); display: inline-block; }
+h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-top: 28px; margin-bottom: 10px; }
+p { margin: 12px 0; font-size: 15px; color: var(--text-secondary); }
+strong { color: var(--text); }
+ul, ol { margin: 12px 0; padding-left: 24px; }
+li { margin: 6px 0; font-size: 15px; color: var(--text-secondary); }
+code { background: var(--bg-secondary); color: var(--primary); padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--border); }
+pre { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; color: var(--text); margin: 16px 0; }
+pre code { background: none; border: none; padding: 0; color: inherit; }
+.screenshot { margin: 20px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.3s ease; }
+.screenshot:hover { border-color: var(--border-glow); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1); }
+.screenshot img { display: block; width: 100%; height: auto; cursor: pointer; }
+.screenshot-caption { font-size: 12px; color: var(--text-muted); padding: 10px 14px; background: var(--bg-secondary); border-top: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+th { text-align: left; color: var(--text-muted); font-weight: 500; padding: 10px 14px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.takeaways { background: var(--bg-secondary); border-left: 3px solid var(--primary); padding: 20px 24px; border-radius: 0 10px 10px 0; margin: 24px 0; }
+.takeaways li { color: var(--text); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tag { background: var(--primary-dim); color: var(--primary); padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; border: 1px solid rgba(0, 212, 255, 0.2); }
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 4px; }
+@media (max-width: 640px) { .hero { padding: 60px 20px 30px; } .container { padding: 24px 16px 60px; } h2 { font-size: 19px; } }
+</style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-link">&#x2190; Back to Portfolio</a>
+
+<div class="hero">
+  <h1>DES & AES Block Cipher Modes</h1>
+  <div class="meta">
+    <span>&#x1F4C2; Cryptography</span>
+    <span>&#x1F4C5; 2024</span>
+    <span>&#x1F393; MSIA Program</span>
+  </div>
+</div>
+
+<div class="container">
+<h1>DES &amp; AES Encryption Modes: Pattern Preservation and Error Propagation</h1>
+<h2>Project Overview</h2>
+<p>In this project, I investigated symmetric key cryptography by implementing encryption applications and analyzing the behavior of different cipher modes. I explored how Electronic Codebook (ECB), Cipher-Block Chaining (CBC), Cipher Feedback (CFB), Output Feedback (OFB), and Counter Mode (CTR) each handle data encryption differently.</p>
+<p>The core objective was to examine two critical properties of encryption modes:</p>
+<ul>
+<li><strong>Pattern Preservation</strong>: Understanding when identical plaintext blocks produce identical ciphertext blocks, which could reveal information to attackers</li>
+<li><strong>Error Propagation</strong>: Analyzing how a single-bit error in transmitted ciphertext affects the decrypted plaintext and subsequent blocks</li>
+</ul>
+<p><div class="screenshot"><img src="images/image_001.png" alt="" loading="lazy"></div>
+<em>Figure 1: Visual representation of symmetric cipher modes of operation</em></p>
+<hr />
+<h2>Phase 1: Programming Implementation (DES and AES Ciphers)</h2>
+<h3>Application Development</h3>
+<p>I created a Java application that implements encryption and decryption using both DES and AES algorithms across all five operation modes. The application leverages the Java Cryptography Extension (JCE) integrated within the Java 2 SE SDK, which provides mature cryptographic support with flexible mode selection.</p>
+<h3>Core Implementation Strategy</h3>
+<p>My implementation focused on:</p>
+<ol>
+<li><strong>Key Generation</strong>: Creating secure DES (56-bit) and AES (128-bit) keys using Java's KeyGenerator class</li>
+<li><strong>Mode Testing</strong>: Systematically testing each cipher mode (ECB, CBC, CFB, OFB, CTR) for both algorithms</li>
+<li><strong>IV Handling</strong>: Properly managing initialization vectors for modes that require them</li>
+<li><strong>Encryption/Decryption Cycle</strong>: Implementing full cycles to verify correct round-trip transformations</li>
+</ol>
+<h3>Source Code</h3>
+<pre><code class="language-java">package com.kumar;
+
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+
+public class Example {
+
+    public static void main(String[] args) throws Exception {
+        String pText = &quot;Group 10&quot;;
+        byte[] desKeyBytes = generateDESKey();
+        byte[] aesKeyBytes = generateAESKey();
+
+        testEncryptionModes(&quot;DES&quot;, desKeyBytes, pText.getBytes());
+        testEncryptionModes(&quot;AES&quot;, aesKeyBytes, pText.getBytes());
+    }
+
+    public static byte[] generateDESKey() throws NoSuchAlgorithmException {
+        KeyGenerator generator = KeyGenerator.getInstance(&quot;DES&quot;);
+        generator.init(56); // DES key size is 56 bits
+        SecretKey secretKey = generator.generateKey();
+        return secretKey.getEncoded();
+    }
+
+    public static byte[] generateAESKey() throws NoSuchAlgorithmException {
+        KeyGenerator generator = KeyGenerator.getInstance(&quot;AES&quot;);
+        generator.init(128); // AES key size is 128 bits
+        SecretKey secretKey = generator.generateKey();
+        return secretKey.getEncoded();
+    }
+
+    public static void testEncryptionModes(String algorithm, byte[] keyBytes, byte[] plaintext) throws Exception {
+        String[] modes = {&quot;ECB&quot;, &quot;CBC&quot;, &quot;CFB&quot;, &quot;OFB&quot;, &quot;CTR&quot;};
+
+        for (String mode : modes) {
+            System.out.println(&quot;opmode: &quot; + mode);
+            System.out.println(&quot;input : &quot; + &quot;00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 00 01 02 03 04 05 06 07&quot;);
+
+            Cipher cipher = Cipher.getInstance(algorithm + &quot;/&quot; + mode + &quot;/PKCS5Padding&quot;);
+            byte[] iv = null;
+
+            if (!mode.equals(&quot;ECB&quot;)) {
+                iv = generateIV(cipher.getBlockSize());
+            }
+
+            // Encryption
+            if (!mode.equals(&quot;ECB&quot;)) {
+                if (mode.equals(&quot;CTR&quot;)) {
+                    IvParameterSpec ivSpec = new IvParameterSpec(iv);
+                    cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(keyBytes, algorithm), ivSpec);
+                } else {
+                    cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(keyBytes, algorithm), new IvParameterSpec(iv));
+                }
+            } else {
+                cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(keyBytes, algorithm));
+            }
+
+            byte[] ciphertext = cipher.doFinal(plaintext);
+            System.out.println(&quot;cipher: &quot; + bytesToHex(ciphertext));
+
+            // Decryption
+            if (!mode.equals(&quot;ECB&quot;)) {
+                if (mode.equals(&quot;CTR&quot;)) {
+                    IvParameterSpec ivSpec = new IvParameterSpec(iv);
+                    cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(keyBytes, algorithm), ivSpec);
+                } else {
+                    cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(keyBytes, algorithm), new IvParameterSpec(iv));
+                }
+            } else {
+                cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(keyBytes, algorithm));
+            }
+
+            byte[] decrypted = cipher.doFinal(ciphertext);
+            System.out.println();
+        }
+    }
+
+    public static byte[] generateIV(int blockSize) {
+        byte[] iv = new byte[blockSize];
+        new SecureRandom().nextBytes(iv);
+        return iv;
+    }
+
+    public static String bytesToHex(byte[] bytes) {
+        StringBuilder result = new StringBuilder();
+        for (byte b : bytes) {
+            result.append(String.format(&quot;%02X &quot;, b));
+        }
+        return result.toString().trim();
+    }
+}
+</code></pre>
+<hr />
+<h2>Phase 2: Mode Analysis and Testing Results</h2>
+<h3>Pattern Preservation Testing</h3>
+<p>To test pattern preservation, I encrypted plaintext containing repeated byte patterns and examined whether the resulting ciphertext exhibited the same patterns. This revealed which modes leak information about the plaintext structure.</p>
+<p>Below are screenshots of the complete Java implementation used for testing:</p>
+<p><div class="screenshot"><img src="images/image_002.png" alt="" loading="lazy"></div>
+<em>Java source code in IntelliJ IDE showing the main method with DES and AES key generation and encryption mode testing</em></p>
+<p><div class="screenshot"><img src="images/image_003.png" alt="" loading="lazy"></div>
+<em>Source code showing the generateDESKey(), generateAESKey(), and testEncryptionModes() method implementations</em></p>
+<p><div class="screenshot"><img src="images/image_004.png" alt="" loading="lazy"></div>
+<em>Source code showing cipher initialization and encryption logic with mode-specific IV handling</em></p>
+<p><div class="screenshot"><img src="images/image_005.png" alt="" loading="lazy"></div>
+<em>Source code showing the decryption logic, generateIV(), and bytesToHex() utility methods</em></p>
+<p><div class="screenshot"><img src="images/image_006.png" alt="" loading="lazy"></div>
+<em>End of the Java source file showing the generateIV() and bytesToHex() helper methods</em></p>
+<h3>Error Propagation Testing</h3>
+<p>To test error propagation, I modified a single byte in the ciphertext and then decrypted it to observe how this corruption affected the resulting plaintext. This demonstrated which modes localize errors and which modes propagate them to subsequent blocks.</p>
+<h3>Results Summary</h3>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th style="text-align: center;">Pattern Preservation</th>
+<th style="text-align: center;">Error Propagation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ECB</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">No</td>
+</tr>
+<tr>
+<td>CBC</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>CFB</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">No</td>
+</tr>
+<tr>
+<td>OFB</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">No</td>
+</tr>
+<tr>
+<td>CTR</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">No</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Findings:</strong></p>
+<ul>
+<li><strong>ECB mode</strong> does not hide patterns and provides minimal error propagation, making it unsuitable for security-critical applications</li>
+<li><strong>CBC mode</strong> fully prevents pattern leakage but does propagate errors to subsequent blocks</li>
+<li><strong>CFB, OFB, and CTR modes</strong> all prevent pattern leakage and limit error propagation to only the affected block, making them more robust</li>
+</ul>
+<hr />
+<h2>Phase 3: Triple DES Analysis Using CrypTool</h2>
+<h3>Frequency Analysis and Pattern Visibility</h3>
+<p>I used CrypTool to analyze the frequency distribution of plaintext before and after encryption. The original document exhibited characteristic frequency patterns of English text.</p>
+<p><div class="screenshot"><img src="images/image_007.png" alt="" loading="lazy"></div>
+<em>Histogram showing character frequency distribution in the plaintext document</em></p>
+<h3>Triple DES Encryption with CBC Mode</h3>
+<p>I encrypted the document using Triple DES in CBC mode with the key <strong>12 34 AB CD</strong>.</p>
+<p><div class="screenshot"><img src="images/image_008.png" alt="" loading="lazy"></div>
+<em>CrypTool interface showing Triple DES encryption mode selection</em></p>
+<p><div class="screenshot"><img src="images/image_009.png" alt="" loading="lazy"></div>
+<em>Key input interface for Triple DES encryption</em></p>
+<p><div class="screenshot"><img src="images/image_010.png" alt="" loading="lazy"></div>
+<em>Triple DES (CBC) encrypted ciphertext output showing the hex dump of the encrypted document</em></p>
+<h3>Encrypted Content Analysis</h3>
+<p>After encryption, the ciphertext was completely transformed, showing no correlation to the original plaintext.</p>
+<p><div class="screenshot"><img src="images/image_011.png" alt="" loading="lazy"></div>
+<em>Histogram of encrypted document showing uniform distribution (no frequency patterns)</em></p>
+<p><div class="screenshot"><img src="images/image_012.png" alt="" loading="lazy"></div>
+<em>Autocorrelation analysis of encrypted text showing no detectable patterns</em></p>
+<h3>Brute-Force Key Recovery</h3>
+<p>I performed a brute-force attack on the encrypted document to recover the original key. I used a partial key pattern and allowed the tool to search for the correct key: <strong>?? ?? AB CD 00 00 00 00 00 00 00 00 00 00 00 00</strong></p>
+<p><div class="screenshot"><img src="images/image_013.png" alt="" loading="lazy"></div>
+<em>Brute-force attack configuration with partial key pattern</em></p>
+<p><div class="screenshot"><img src="images/image_014.png" alt="" loading="lazy"></div>
+<em>Brute-force analysis results showing decryption candidates ranked by entropy, with the correct key identified</em></p>
+<p><div class="screenshot"><img src="images/image_015.png" alt="" loading="lazy"></div>
+<em>Successful recovery of the plaintext after finding the correct key</em></p>
+<hr />
+<h2>Phase 4: Weak DES Keys Investigation</h2>
+<h3>Exploring Weak Key Vulnerability</h3>
+<p>DES contains certain weak keys that reduce its security properties. I tested one such weak key (01 01 01 01 01 01 01 01) in ECB mode to demonstrate this vulnerability.</p>
+<p><div class="screenshot"><img src="images/image_016.png" alt="" loading="lazy"></div>
+<em>DES encryption configuration using a weak key</em></p>
+<p><div class="screenshot"><img src="images/image_017.png" alt="" loading="lazy"></div>
+<em>DES (ECB) encrypted ciphertext output produced using the weak key (01 01 01 01 01 01 01 01)</em></p>
+<h3>Observing Weak Key Behavior</h3>
+<p>When re-encrypting the same plaintext with the same weak key and ECB mode, I observed that encryption and decryption produced unusual patterns, confirming the weak key vulnerability.</p>
+<p><div class="screenshot"><img src="images/image_018.png" alt="" loading="lazy"></div>
+<em>Results showing the effect of weak key encryption in ECB mode</em></p>
+<hr />
+<h2>Key Takeaways</h2>
+<h3>Security Implications</h3>
+<ol>
+<li>
+<p><strong>Mode Selection Matters</strong>: Not all cipher modes are created equal. ECB mode should never be used for production systems due to pattern leakage.</p>
+</li>
+<li>
+<p><strong>Error Propagation as Security Feature</strong>: While error propagation seems negative, modes like CBC use it as part of their security design to ensure changes in ciphertext affect decryption.</p>
+</li>
+<li>
+<p><strong>Pattern Concealment</strong>: Stream-oriented modes (CFB, OFB, CTR) effectively hide patterns while limiting error propagation, making them suitable for many applications.</p>
+</li>
+<li>
+<p><strong>Weak Keys Remain a Concern</strong>: Even with modern encryption, implementation details matter—understanding weak keys helps avoid accidental security vulnerabilities.</p>
+</li>
+</ol>
+<h3>Cryptographic Understanding</h3>
+<p>Through this project, I deepened my understanding of:
+- How different cipher modes operate at a fundamental level
+- The trade-offs between pattern concealment and error propagation
+- The importance of proper IV handling in stream-based and feedback modes
+- Real-world cryptanalysis techniques using automated tools</p>
+<hr />
+<h2>Tools Used</h2>
+<ul>
+<li><strong>Java 2 SE SDK</strong> with Java Cryptography Extension (JCE)</li>
+<li><strong>CrypTool-1</strong> for visual cryptanalysis and attack demonstrations</li>
+<li>DES and AES encryption algorithms</li>
+<li>Hex analysis and frequency distribution tools</li>
+</ul>
+<h2>Skills Demonstrated</h2>
+<ul>
+<li>Symmetric key cryptography implementation</li>
+<li>Cipher mode analysis and comparison</li>
+<li>Cryptanalysis using brute-force techniques</li>
+<li>Pattern recognition in encrypted data</li>
+<li>Frequency analysis and statistical testing</li>
+<li>Security vulnerability identification</li>
+<li>Java cryptographic library usage</li>
+<li>Command-line tool proficiency</li>
+</ul>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+  <img id="lightbox-img" src="" alt="Full size">
+</div>
+
+<script>
+document.querySelectorAll('.screenshot img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox').classList.add('active');
+  });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+});
+</script>
+
+</body>
+</html>

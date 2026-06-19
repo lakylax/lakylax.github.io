@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Classical Encryption Techniques</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a2e;
+  --text: #e0e0e0;
+  --text-secondary: #c8c8d8;
+  --text-muted: #9898a8;
+  --primary: #00d4ff;
+  --primary-dim: rgba(0, 212, 255, 0.15);
+  --accent: #7c3aed;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(0, 212, 255, 0.3);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.7; min-height: 100vh; }
+.back-link { position: fixed; top: 20px; left: 20px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; z-index: 100; background: var(--bg-card); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); transition: all 0.3s ease; }
+.back-link:hover { border-color: var(--border-glow); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+.hero { padding: 80px 40px 40px; text-align: center; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 100%); }
+.hero h1 { font-size: clamp(24px, 4vw, 36px); font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -0.5px; }
+.hero .meta { color: var(--text-muted); font-size: 14px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.hero .meta span { display: flex; align-items: center; gap: 6px; }
+.container { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+h2 { font-size: 22px; font-weight: 600; color: #fff; margin-top: 48px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); display: inline-block; }
+h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-top: 28px; margin-bottom: 10px; }
+p { margin: 12px 0; font-size: 15px; color: var(--text-secondary); }
+strong { color: var(--text); }
+ul, ol { margin: 12px 0; padding-left: 24px; }
+li { margin: 6px 0; font-size: 15px; color: var(--text-secondary); }
+code { background: var(--bg-secondary); color: var(--primary); padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--border); }
+pre { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; color: var(--text); margin: 16px 0; }
+pre code { background: none; border: none; padding: 0; color: inherit; }
+.screenshot { margin: 20px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.3s ease; }
+.screenshot:hover { border-color: var(--border-glow); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1); }
+.screenshot img { display: block; width: 100%; height: auto; cursor: pointer; }
+.screenshot-caption { font-size: 12px; color: var(--text-muted); padding: 10px 14px; background: var(--bg-secondary); border-top: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+th { text-align: left; color: var(--text-muted); font-weight: 500; padding: 10px 14px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.takeaways { background: var(--bg-secondary); border-left: 3px solid var(--primary); padding: 20px 24px; border-radius: 0 10px 10px 0; margin: 24px 0; }
+.takeaways li { color: var(--text); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tag { background: var(--primary-dim); color: var(--primary); padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; border: 1px solid rgba(0, 212, 255, 0.2); }
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 4px; }
+@media (max-width: 640px) { .hero { padding: 60px 20px 30px; } .container { padding: 24px 16px 60px; } h2 { font-size: 19px; } }
+</style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-link">&#x2190; Back to Portfolio</a>
+
+<div class="hero">
+  <h1>Classical Encryption Techniques</h1>
+  <div class="meta">
+    <span>&#x1F4C2; Cryptography</span>
+    <span>&#x1F4C5; 2024</span>
+    <span>&#x1F393; MSIA Program</span>
+  </div>
+</div>
+
+<div class="container">
+<h1>Classical Encryption Techniques: Implementation &amp; Analysis</h1>
+<h2>Project Overview</h2>
+<p>In this project, I implemented and analyzed three fundamental classical encryption techniques that form the foundation of modern cryptography. I focused on both programmatic approaches and practical cryptanalysis using industry-standard tools. The goal was to understand the strengths and weaknesses of these encryption methods and how they can be compromised through frequency analysis and cryptographic attacks.</p>
+<p>The three encryption methods I explored were:
+1. <strong>Playfair Cipher</strong> – a digraph substitution cipher
+2. <strong>Byte Addition Encryption</strong> – a simple modular arithmetic approach
+3. <strong>Exclusive-OR (XOR) Encryption</strong> – a bitwise operation technique</p>
+<hr />
+<h2>Phase 1: Playfair Cipher Implementation</h2>
+<h3>Understanding the Algorithm</h3>
+<p>The Playfair Cipher is a classical digraph substitution cipher that treats pairs of letters as single units. I learned that this cipher was invented by British scientist Sir Charles Wheatstone in 1854, though it bears the name of Baron Playfair, who championed it at the British foreign office.</p>
+<p>The cipher relies on a 5×5 matrix constructed from a keyword. For example, using "monarchy" as the keyword:</p>
+<table>
+<thead>
+<tr>
+<th>M</th>
+<th>O</th>
+<th>N</th>
+<th>A</th>
+<th>R</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C</td>
+<td>H</td>
+<td>Y</td>
+<td>B</td>
+<td>D</td>
+</tr>
+<tr>
+<td>E</td>
+<td>F</td>
+<td>G</td>
+<td>I/J</td>
+<td>K</td>
+</tr>
+<tr>
+<td>L</td>
+<td>P</td>
+<td>Q</td>
+<td>S</td>
+<td>T</td>
+</tr>
+<tr>
+<td>U</td>
+<td>V</td>
+<td>W</td>
+<td>X</td>
+<td>Z</td>
+</tr>
+</tbody>
+</table>
+<p>The matrix is built by placing the keyword's letters (without duplicates) in reading order, then filling the remaining positions with the alphabet in order. The letters I and J are treated as a single position.</p>
+<h3>Encryption Rules</h3>
+<p>I implemented the following encryption rules:</p>
+<ol>
+<li>
+<p><strong>Repeated Letters</strong>: When plaintext letters would form a pair in the same position, I separate them with a filler letter (x). For example, "balloon" becomes "ba lx lo on"</p>
+</li>
+<li>
+<p><strong>Same Row</strong>: Letters in the same row are each replaced by the letter to their right, wrapping around circularly. For instance, "ar" encrypts to "RM"</p>
+</li>
+<li>
+<p><strong>Same Column</strong>: Letters in the same column are each replaced by the letter below them, wrapping from bottom to top. As an example, "mu" encrypts to "CM"</p>
+</li>
+<li>
+<p><strong>Rectangle</strong>: For letters that fall in different rows and columns, each letter is replaced by the letter in its row and the column of the other plaintext letter. Thus "hs" becomes "BP" and "ea" becomes "IM"</p>
+</li>
+</ol>
+<hr />
+<h2>Phase 2: Byte Addition Encryption Analysis</h2>
+<h3>Understanding Byte Addition</h3>
+<p>In this phase, I performed a detailed cryptanalysis of byte addition encryption using CrypTool-1. This method adds a key character-by-character (byte-by-byte) to plaintext using modulo 256 arithmetic, where carries are ignored. The key is applied cyclically, restarting once all characters are consumed.</p>
+<h3>Step 1: Histogram Analysis of Plaintext</h3>
+<p>First, I opened the example file (CrypTool-en.txt) and analyzed its character frequency distribution to establish baseline statistics.</p>
+<p><div class="screenshot"><img src="images/image_001.png" alt="CrypTool plaintext file (startingexample-en) opened for analysis" loading="lazy"><div class="screenshot-caption">CrypTool plaintext file (startingexample-en) opened for analysis</div></div></p>
+<p><em>Opening the example plaintext file in CrypTool to establish baseline character statistics.</em></p>
+<p><div class="screenshot"><img src="images/image_002.png" alt="Navigating to Analysis > Tools for Analysis > Histogram in CrypTool" loading="lazy"><div class="screenshot-caption">Navigating to Analysis > Tools for Analysis > Histogram in CrypTool</div></div></p>
+<p><em>Selecting the Histogram tool from the Analysis menu to generate a frequency distribution.</em></p>
+<p><div class="screenshot"><img src="images/image_003.png" alt="ASCII Histogram of startingexample-en showing character frequency percentages" loading="lazy"><div class="screenshot-caption">ASCII Histogram of startingexample-en showing character frequency percentages</div></div></p>
+<p><em>The analysis confirmed that the letter 'E' appears most frequently in the English text, a critical insight for frequency-based attacks.</em></p>
+<h3>Step 2: Encrypting with Byte Addition</h3>
+<p>I encrypted the plaintext using the key <strong>12 34 AB CD</strong>. This demonstrates how the encryption algorithm applies the key cyclically across the entire message.</p>
+<p><div class="screenshot"><img src="images/image_004.png" alt="Encryption dialog for byte addition cipher" loading="lazy"><div class="screenshot-caption">Encryption dialog for byte addition cipher</div></div></p>
+<p><em>Setting up the byte addition encryption with the specified key.</em></p>
+<p><div class="screenshot"><img src="images/image_005.png" alt="Encrypted ciphertext displayed after encryption" loading="lazy"><div class="screenshot-caption">Encrypted ciphertext displayed after encryption</div></div></p>
+<p><em>The resulting ciphertext after applying byte addition encryption.</em></p>
+<h3>Step 3: Ciphertext-Only Attack</h3>
+<p>I then performed a ciphertext-only attack, which is a critical vulnerability assessment for this cipher. I used only the encrypted text and statistical analysis to recover the key and plaintext.</p>
+<p><div class="screenshot"><img src="images/image_006.png" alt="Autocorrelation of ADD-encrypted ciphertext with Byte-by-byte Addition Analysis dialog showing derived key length 4" loading="lazy"><div class="screenshot-caption">Autocorrelation of ADD-encrypted ciphertext with Byte-by-byte Addition Analysis dialog showing derived key length 4</div></div></p>
+<p><em>The autocorrelation analysis identified the key length as 4 and prompted for the expected most common character (hex 20, representing a space).</em></p>
+<p>The analysis calculated the key length and identified the most common character. Since I knew the most frequent plaintext character was 'e' (hexadecimal 65) and the most frequent ciphertext character was 'E' (hexadecimal 45), I calculated the difference: 65 - 45 = 20 (hex). I entered this value into the analysis tool.</p>
+<p><div class="screenshot"><img src="images/image_007.png" alt="Byte-by-byte Addition Analysis showing recovered key: 12 34 AB CD" loading="lazy"><div class="screenshot-caption">Byte-by-byte Addition Analysis showing recovered key: 12 34 AB CD</div></div></p>
+<p><em>CrypTool successfully recovered the original key (12 34 AB CD) through statistical analysis, demonstrating the cipher's vulnerability.</em></p>
+<p>The tool successfully recovered the original key <strong>12 34 AB CD</strong>, revealing the plaintext:</p>
+<p><div class="screenshot"><img src="images/image_008.png" alt="Decrypted plaintext recovered from ciphertext" loading="lazy"><div class="screenshot-caption">Decrypted plaintext recovered from ciphertext</div></div></p>
+<p><em>The plaintext successfully recovered using only the ciphertext and frequency analysis.</em></p>
+<h3>Step 4: The Impact of Compression on Security</h3>
+<p>I then tested a critical security principle: how compression affects encryption. I compressed the original plaintext using ZIP compression.</p>
+<p><div class="screenshot"><img src="images/image_009.png" alt="CrypTool showing compression result: Rate of compression 51%" loading="lazy"><div class="screenshot-caption">CrypTool showing compression result: Rate of compression 51%</div></div></p>
+<p><em>The ZIP compression achieved a 51% compression rate on the plaintext file.</em></p>
+<p><div class="screenshot"><img src="images/image_010.png" alt="ZIP-compressed data displayed in hex view" loading="lazy"><div class="screenshot-caption">ZIP-compressed data displayed in hex view</div></div></p>
+<p><em>The compressed file contents shown in hex view, ready for histogram analysis.</em></p>
+<p>I analyzed the histogram of the compressed data to observe how compression changes character distribution:</p>
+<p><div class="screenshot"><img src="images/image_011.png" alt="Histogram of compressed data showing flattened distribution" loading="lazy"><div class="screenshot-caption">Histogram of compressed data showing flattened distribution</div></div></p>
+<p><em>The compressed data shows a dramatically different character frequency distribution—characters are much more evenly distributed, eliminating the distinctive 'E' frequency peak.</em></p>
+<h3>Step 5: Encrypting Compressed Data</h3>
+<p>I then encrypted the compressed file using the same key (<strong>12 34 AB CD</strong>):</p>
+<p><div class="screenshot"><img src="images/image_012.png" alt="Key Entry dialog for byte addition encryption of compressed data with key 12 34 AB CD" loading="lazy"><div class="screenshot-caption">Key Entry dialog for byte addition encryption of compressed data with key 12 34 AB CD</div></div></p>
+<p><em>Encrypting the compressed data using the same byte addition key (12 34 AB CD).</em></p>
+<p><div class="screenshot"><img src="images/image_013.png" alt="ADD encryption of ZIP-compressed data shown in hex view" loading="lazy"><div class="screenshot-caption">ADD encryption of ZIP-compressed data shown in hex view</div></div></p>
+<p><em>The resulting ciphertext from encrypting the compressed data, displayed in hex view.</em></p>
+<h3>Step 6: Attack on Compressed-Then-Encrypted Data</h3>
+<p>When I performed the ciphertext-only attack on the compressed-encrypted data, the results were dramatically different:</p>
+<p><div class="screenshot"><img src="images/image_014.png" alt="Autocorrelation of compressed-then-encrypted data showing no periodic pattern" loading="lazy"><div class="screenshot-caption">Autocorrelation of compressed-then-encrypted data showing no periodic pattern</div></div></p>
+<p><em>The autocorrelation chart shows no clear periodic peaks, indicating the analysis cannot reliably determine the key length.</em></p>
+<p>The tool returned an incorrect key length of 1 (versus the correct length of 4), and it was impossible to recover the correct key:</p>
+<p><div class="screenshot"><img src="images/image_015.png" alt="Byte-by-byte Addition Analysis showing incorrect derived key length of 1" loading="lazy"><div class="screenshot-caption">Byte-by-byte Addition Analysis showing incorrect derived key length of 1</div></div></p>
+<p><em>The attack failed — the tool derived an incorrect key length of 1 (instead of 4) because compression eliminated the frequency patterns that make this cipher vulnerable.</em></p>
+<h3>Step 7: Decryption and Verification</h3>
+<p>Despite the attack's failure, with knowledge of the original key, I was able to successfully decrypt and decompress the data:</p>
+<p><div class="screenshot"><img src="images/image_016.png" alt="Entering the known key (12 34 AB CD) to decrypt the compressed ciphertext" loading="lazy"><div class="screenshot-caption">Entering the known key (12 34 AB CD) to decrypt the compressed ciphertext</div></div></p>
+<p><em>Entering the original key to decrypt the compressed-then-encrypted data.</em></p>
+<p><div class="screenshot"><img src="images/image_017.png" alt="Decrypted compressed data shown in hex view after ADD decryption with key 12 34 AB CD" loading="lazy"><div class="screenshot-caption">Decrypted compressed data shown in hex view after ADD decryption with key 12 34 AB CD</div></div></p>
+<p><em>The decrypted output (still in compressed form) displayed in hex view, confirming successful decryption with the known key.</em></p>
+<p><div class="screenshot"><img src="images/image_018.png" alt="Decompression recovering original plaintext" loading="lazy"><div class="screenshot-caption">Decompression recovering original plaintext</div></div></p>
+<p><em>Using decompression to recover the original plaintext from the decrypted file.</em></p>
+<hr />
+<h2>Phase 3: Exclusive-OR (XOR) Encryption Analysis</h2>
+<h3>Understanding XOR Encryption</h3>
+<p>In this final phase, I analyzed XOR encryption, which applies bitwise XOR operations between plaintext and key. Like byte addition, XOR applies the key cyclically and is vulnerable to frequency-based cryptanalysis.</p>
+<h3>Step 1: Loading and Analyzing the Sample File</h3>
+<p>I opened CrypTool.bmp (a binary file) to examine how the encryption technique handles binary data:</p>
+<p><div class="screenshot"><img src="images/image_019.png" alt="Opening the CrypTool bitmap file" loading="lazy"><div class="screenshot-caption">Opening the CrypTool bitmap file</div></div></p>
+<p><em>Loading the binary test file for XOR encryption analysis.</em></p>
+<p>I analyzed the character frequency distribution of the original bitmap file:</p>
+<p><div class="screenshot"><img src="images/image_020.png" alt="Histogram of original bitmap showing byte distribution" loading="lazy"><div class="screenshot-caption">Histogram of original bitmap showing byte distribution</div></div></p>
+<p><em>The histogram reveals that byte value 255 (FF in hexadecimal) is the most common character in the bitmap file. This insight is crucial for the subsequent cryptanalysis attack.</em></p>
+<h3>Step 2: XOR Encryption</h3>
+<p>I encrypted the file using the key <strong>12 34 56 78</strong>:</p>
+<p><div class="screenshot"><img src="images/image_021.png" alt="Key Entry dialog for byte by byte XOR with key 12 34 56 78" loading="lazy"><div class="screenshot-caption">Key Entry dialog for byte by byte XOR with key 12 34 56 78</div></div></p>
+<p><em>Entering the XOR encryption key (12 34 56 78) in the key entry dialog.</em></p>
+<p><div class="screenshot"><img src="images/image_022.png" alt="XOR encryption with the specified key" loading="lazy"><div class="screenshot-caption">XOR encryption with the specified key</div></div></p>
+<p><em>Encrypting the bitmap file using XOR with the 4-byte key.</em></p>
+<h3>Step 3: Ciphertext-Only Attack on XOR</h3>
+<p>I performed a ciphertext-only attack to recover the XOR key. First, the analysis tool calculated the autocorrelation of the ciphertext:</p>
+<p><div class="screenshot"><img src="images/image_023.png" alt="Autocorrelation of XOR-encrypted bitmap with XOR Analysis dialog showing derived key length 4" loading="lazy"><div class="screenshot-caption">Autocorrelation of XOR-encrypted bitmap with XOR Analysis dialog showing derived key length 4</div></div></p>
+<p><em>CrypTool's autocorrelation correctly identified the key length as 4, and prompts for the expected most common character value.</em></p>
+<p>The tool correctly identified the key length as 4. I entered the most common byte value (FF) that I observed in the histogram:</p>
+<p><div class="screenshot"><img src="images/image_024.png" alt="XOR attack parameters with expected common character" loading="lazy"><div class="screenshot-caption">XOR attack parameters with expected common character</div></div></p>
+<p><em>Setting the expected most common character (FF) in the XOR analysis tool.</em></p>
+<h3>Step 4: Key Recovery and Decryption</h3>
+<p>I clicked Continue, and CrypTool successfully recovered the key:</p>
+<p><div class="screenshot"><img src="images/image_025.png" alt="XOR key successfully recovered" loading="lazy"><div class="screenshot-caption">XOR key successfully recovered</div></div></p>
+<p><em>The key recovery was successful, demonstrating the vulnerability of XOR to frequency analysis.</em></p>
+<p>I then decrypted the file:</p>
+<p><div class="screenshot"><img src="images/image_026.png" alt="Automatic XOR Analysis result showing recovered original bitmap data" loading="lazy"><div class="screenshot-caption">Automatic XOR Analysis result showing recovered original bitmap data</div></div></p>
+<p><em>The decrypted bitmap data matches the original file, confirming successful key recovery and decryption.</em></p>
+<h3>Step 5: Testing with Compression</h3>
+<p>I compressed the original bitmap file using ZIP compression:</p>
+<p><div class="screenshot"><img src="images/image_027.png" alt="CrypTool showing bitmap compression result: Rate of compression 94%" loading="lazy"><div class="screenshot-caption">CrypTool showing bitmap compression result: Rate of compression 94%</div></div></p>
+<p><em>ZIP compression achieved a 94% compression rate on the bitmap file due to its highly repetitive byte patterns.</em></p>
+<p>When I analyzed the histogram of the compressed bitmap, the character frequency distribution changed dramatically:</p>
+<p><div class="screenshot"><img src="images/image_028.png" alt="Histogram of compressed bitmap showing uniform distribution" loading="lazy"><div class="screenshot-caption">Histogram of compressed bitmap showing uniform distribution</div></div></p>
+<p><em>The compressed data shows a uniform distribution, eliminating the distinctive peak at byte value 255.</em></p>
+<p>I encrypted the compressed file using the same key (<strong>12 34 56 78</strong>) and performed the analysis:</p>
+<p><div class="screenshot"><img src="images/image_029.png" alt="XOR analysis on compressed-then-encrypted data showing incorrect derived key length of 8" loading="lazy"><div class="screenshot-caption">XOR analysis on compressed-then-encrypted data showing incorrect derived key length of 8</div></div></p>
+<p><em>The attack on compressed-then-encrypted data derived an incorrect key length of 8 (instead of 4), demonstrating that compression defeats the autocorrelation-based attack.</em></p>
+<hr />
+<h2>Key Takeaways</h2>
+<p>Through this project, I gained critical insights into classical encryption and cryptanalysis:</p>
+<ol>
+<li>
+<p><strong>Frequency Analysis is Powerful</strong>: Both byte addition and XOR encryption are vulnerable to frequency-based attacks when the plaintext has recognizable character distributions. This was especially evident when analyzing English text and bitmap files.</p>
+</li>
+<li>
+<p><strong>Compression as a Countermeasure</strong>: Compressing data before encryption significantly strengthens security by flattening character frequency distributions. This demonstrates how simple preprocessing can defeat frequency-based attacks.</p>
+</li>
+<li>
+<p><strong>Digraph vs. Character-Level Encryption</strong>: The Playfair cipher's digraph approach provides better security than simple character-by-character substitution, though it remains vulnerable to statistical analysis with sufficient ciphertext.</p>
+</li>
+<li>
+<p><strong>Modular Arithmetic in Cryptography</strong>: Understanding how modulo arithmetic works in encryption (modulo 256 for byte addition) is fundamental to both implementing and attacking cryptographic systems.</p>
+</li>
+<li>
+<p><strong>The Importance of Key Length</strong>: Longer, non-repeating keys are essential. Cyclic key application (as seen in both byte addition and XOR) allows frequency patterns to emerge if the key repeats often relative to the message length.</p>
+</li>
+</ol>
+<hr />
+<h2>Tools Used</h2>
+<ul>
+<li><strong>CrypTool-1</strong>: A comprehensive cryptography and cryptanalysis educational platform used for encryption, decryption, and statistical attacks</li>
+<li><strong>Frequency Analysis</strong>: Histogram generation and character distribution analysis</li>
+<li><strong>Autocorrelation Analysis</strong>: For determining key length in XOR attacks</li>
+<li><strong>File Compression</strong>: ZIP compression to test encryption robustness</li>
+</ul>
+<hr />
+<h2>Skills Demonstrated</h2>
+<ul>
+<li><strong>Cryptographic Algorithm Implementation</strong>: Understanding and applying Playfair cipher rules</li>
+<li><strong>Cryptanalysis</strong>: Performing ciphertext-only attacks using frequency analysis and statistical methods</li>
+<li><strong>Security Analysis</strong>: Evaluating encryption strength and identifying vulnerabilities</li>
+<li><strong>Data Preprocessing</strong>: Understanding the role of compression in security</li>
+<li><strong>Binary Data Handling</strong>: Working with bitmap files and raw bytes</li>
+<li><strong>Statistical Analysis</strong>: Interpreting histograms and character frequency distributions</li>
+<li><strong>Problem-Solving</strong>: Applying key recovery techniques when attack parameters are known</li>
+</ul>
+<hr />
+<p><em>This project provided hands-on experience with classical encryption techniques and demonstrated why modern cryptography requires significantly more complex approaches to resist sophisticated attacks.</em></p>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+  <img id="lightbox-img" src="" alt="Full size">
+</div>
+
+<script>
+document.querySelectorAll('.screenshot img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox').classList.add('active');
+  });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+});
+</script>
+
+</body>
+</html>
