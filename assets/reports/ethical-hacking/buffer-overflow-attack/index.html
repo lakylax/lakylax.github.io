@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buffer Overflow Exploitation</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a2e;
+  --text: #e0e0e0;
+  --text-secondary: #c8c8d8;
+  --text-muted: #9898a8;
+  --primary: #00d4ff;
+  --primary-dim: rgba(0, 212, 255, 0.15);
+  --accent: #7c3aed;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(0, 212, 255, 0.3);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.7; min-height: 100vh; }
+.back-link { position: fixed; top: 20px; left: 20px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; z-index: 100; background: var(--bg-card); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); transition: all 0.3s ease; }
+.back-link:hover { border-color: var(--border-glow); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+.hero { padding: 80px 40px 40px; text-align: center; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 100%); }
+.hero h1 { font-size: clamp(24px, 4vw, 36px); font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -0.5px; }
+.hero .meta { color: var(--text-muted); font-size: 14px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.hero .meta span { display: flex; align-items: center; gap: 6px; }
+.container { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+h2 { font-size: 22px; font-weight: 600; color: #fff; margin-top: 48px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); display: inline-block; }
+h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-top: 28px; margin-bottom: 10px; }
+p { margin: 12px 0; font-size: 15px; color: var(--text-secondary); }
+strong { color: var(--text); }
+ul, ol { margin: 12px 0; padding-left: 24px; }
+li { margin: 6px 0; font-size: 15px; color: var(--text-secondary); }
+code { background: var(--bg-secondary); color: var(--primary); padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--border); }
+pre { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; color: var(--text); margin: 16px 0; }
+pre code { background: none; border: none; padding: 0; color: inherit; }
+.screenshot { margin: 20px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.3s ease; }
+.screenshot:hover { border-color: var(--border-glow); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1); }
+.screenshot img { display: block; width: 100%; height: auto; cursor: pointer; }
+.screenshot-caption { font-size: 12px; color: var(--text-muted); padding: 10px 14px; background: var(--bg-secondary); border-top: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+th { text-align: left; color: var(--text-muted); font-weight: 500; padding: 10px 14px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.takeaways { background: var(--bg-secondary); border-left: 3px solid var(--primary); padding: 20px 24px; border-radius: 0 10px 10px 0; margin: 24px 0; }
+.takeaways li { color: var(--text); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tag { background: var(--primary-dim); color: var(--primary); padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; border: 1px solid rgba(0, 212, 255, 0.2); }
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 4px; }
+@media (max-width: 640px) { .hero { padding: 60px 20px 30px; } .container { padding: 24px 16px 60px; } h2 { font-size: 19px; } }
+</style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-link">&#x2190; Back to Portfolio</a>
+
+<div class="hero">
+  <h1>Buffer Overflow Exploitation</h1>
+  <div class="meta">
+    <span>&#x1F4C2; Ethical Hacking</span>
+    <span>&#x1F4C5; 2023</span>
+    <span>&#x1F393; MSIA Program</span>
+  </div>
+</div>
+
+<div class="container">
+<h1>Buffer Overflow Attack &amp; Data Protection</h1>
+<h2>Project Overview</h2>
+<p>In this project, I explored one of the most critical security vulnerabilities in modern computing: the buffer overflow attack. I demonstrated how attackers can exploit insufficient bounds checking in applications to execute arbitrary code, and conversely, how professionals protect sensitive data through encryption and secure file deletion techniques.</p>
+<p>The project comprised three practical components: developing a stack-based buffer overflow exploit in C, securing sensitive files using VeraCrypt encryption, and permanently destroying data traces using secure wiping tools. Through hands-on implementation, I gained deep understanding of memory management, exploitation techniques, and defensive security practices.</p>
+<h2>Foundational Concepts</h2>
+<h3>Understanding Buffer Overflows</h3>
+<p>A buffer overflow occurs when a program receives more data than its allocated memory buffer can hold. Without proper bounds checking, this excess data overwrites adjacent memory locations, allowing an attacker to corrupt critical program data or inject malicious code.</p>
+<p><div class="screenshot"><img src="images/image_001.png" alt="Buffer overflow attack mechanism showing how overflowed data corrupts the return address" loading="lazy"><div class="screenshot-caption">Buffer overflow attack mechanism showing how overflowed data corrupts the return address</div></div></p>
+<p><em>The attacker plants code that overflows the buffer and corrupts the return address, redirecting program execution to malicious code elsewhere in memory.</em></p>
+<p>Buffer overflows represent one of the most dangerous vulnerability classes because they grant direct control over execution flow. Unlike many modern vulnerabilities that require chaining multiple exploits, a single buffer overflow can immediately compromise system security.</p>
+<h3>Memory Architecture</h3>
+<p>I studied how program memory is organized as three distinct regions:</p>
+<p><div class="screenshot"><img src="images/image_002.png" alt="Buffer overflow diagram showing virtual address space in three states: normal execution, after function call, and during overflow" loading="lazy"><div class="screenshot-caption">Buffer overflow diagram showing virtual address space in three states: normal execution, after function call, and during overflow</div></div></p>
+<ul>
+<li><strong>Stack</strong>: Contains temporary data, function arguments, and local variables. The program allocates this memory in a fixed size, from top to bottom.</li>
+<li><strong>Heap</strong>: Holds dynamically allocated long-term data. Memory grows from bottom to top.</li>
+<li><strong>Program Code</strong>: The executable instructions themselves.</li>
+</ul>
+<p>When a program initializes, it fills the stack with temporary data while reserving heap space for dynamic allocation. If the block size is large enough, these regions never collide.</p>
+<h3>Stack vs. Heap Memory</h3>
+<p><strong>Stack memory</strong> is short-term, fixed in size, and automatically managed. It stores function arguments and local variables, making it ideal for temporary data.</p>
+<p><strong>Heap memory</strong> is long-term and dynamically sized. It accommodates data structures that grow during program execution, such as arrays or linked lists.</p>
+<h3>Intel Processor Registers</h3>
+<p>Modern exploitation techniques manipulate general-purpose CPU registers to redirect execution flow. The key registers I focused on include:</p>
+<ul>
+<li><strong>EIP</strong>: Instruction pointer — controls which instruction executes next</li>
+<li><strong>ESP</strong>: Stack pointer — tracks the current stack position</li>
+<li><strong>EBP</strong>: Base pointer — marks the stack frame boundary</li>
+<li><strong>EAX, EBX, ECX, EDX</strong>: General accumulators used for computation and data storage</li>
+<li><strong>ESI, EDI</strong>: Source and destination index registers</li>
+</ul>
+<h3>NOP Sled Technique</h3>
+<p>A NOP (no operation) is a machine instruction that performs no action. A NOP sled is a sequence of these instructions designed to "slide" the CPU's instruction pointer to target malicious code.</p>
+<p><div class="screenshot"><img src="images/image_003.png" alt="NOP sled exploit structure showing shellcode, NOP instructions, return address guess, and relative jumps" loading="lazy"><div class="screenshot-caption">NOP sled exploit structure showing shellcode, NOP instructions, return address guess, and relative jumps</div></div></p>
+<p><em>By placing a NOP sled before injected code, attackers ensure execution reaches the payload regardless of slight address variations.</em></p>
+<h2>Environment &amp; Tools</h2>
+<p><strong>Platform</strong>: Kali Linux running on VirtualBox
+<strong>Compiler</strong>: GNU C Compiler (gcc)
+<strong>Editor</strong>: Leafpad
+<strong>Additional Tools</strong>: VeraCrypt (encryption), Eraser (secure deletion)</p>
+<hr />
+<h1>Phase 1: Developing the Buffer Overflow Exploit</h1>
+<h2>Step 1: Writing the Vulnerable C Program</h2>
+<p>I opened a text editor and wrote a C program that deliberately contains a buffer overflow vulnerability. The program demonstrates how unsafe string functions can lead to memory corruption.</p>
+<p><div class="screenshot"><img src="images/image_004.png" alt="Searching for a text editor application in Kali Linux" loading="lazy"><div class="screenshot-caption">Searching for a text editor application in Kali Linux</div></div></p>
+<p>The core vulnerability lies in the use of the <code>gets()</code> function, which reads user input without validating its length:</p>
+<p><div class="screenshot"><img src="images/image_005.png" alt="Complete C source code for the buffer overflow program in Mousepad editor" loading="lazy"><div class="screenshot-caption">Complete C source code for the buffer overflow program in Mousepad editor</div></div></p>
+<p><em>The full program includes variable declarations, memory allocation, printf statements for debugging, user input via gets(), and the dangerous system() call.</em></p>
+<p>Two character pointer variables are declared — <code>place</code> and <code>systemcommand</code> — which will be used to demonstrate how overflow moves data from one variable to another:</p>
+<p><div class="screenshot"><img src="images/image_006.png" alt="Highlighted char pointer declarations for place and systemcommand variables" loading="lazy"><div class="screenshot-caption">Highlighted char pointer declarations for place and systemcommand variables</div></div></p>
+<p><em>The two variables <code>char *place</code> and <code>char *systemcommand</code> are declared as character pointers.</em></p>
+<p>I allocated memory for each variable using <code>malloc()</code>:</p>
+<p><div class="screenshot"><img src="images/image_007.png" alt="Highlighted malloc lines showing memory allocation for place (10 bytes) and systemcommand (128 bytes)" loading="lazy"><div class="screenshot-caption">Highlighted malloc lines showing memory allocation for place (10 bytes) and systemcommand (128 bytes)</div></div></p>
+<p>Next, I added debugging output to display the memory addresses of both variables:</p>
+<p><div class="screenshot"><img src="images/image_008.png" alt="Printf statements displaying memory locations and calculating the byte offset between variables" loading="lazy"><div class="screenshot-caption">Printf statements displaying memory locations and calculating the byte offset between variables</div></div></p>
+<p><em>These printf statements reveal exactly how many bytes separate the two variables—critical information for a successful overflow.</em></p>
+<p>The program then prompts the user for input and stores it in the <code>place</code> variable using <code>gets()</code>:</p>
+<p><div class="screenshot"><img src="images/image_009.png" alt="User input prompt and gets function call" loading="lazy"><div class="screenshot-caption">User input prompt and gets function call</div></div></p>
+<p>The program then prints back the user's response with a printf statement:</p>
+<p><div class="screenshot"><img src="images/image_010.png" alt="Printf statement that echoes the user response back to the screen" loading="lazy"><div class="screenshot-caption">Printf statement that echoes the user response back to the screen</div></div></p>
+<p>Finally, the program executes any system command stored in the <code>systemcommand</code> variable:</p>
+<p><div class="screenshot"><img src="images/image_011.png" alt="System execution line that runs whatever command is in the systemcommand variable" loading="lazy"><div class="screenshot-caption">System execution line that runs whatever command is in the systemcommand variable</div></div></p>
+<p>I saved this file as <code>bufferoverflow.c</code>.</p>
+<h2>Step 2: Compilation</h2>
+<p>I compiled the C source code using the GNU C Compiler:</p>
+<pre><code class="language-bash">gcc bufferoverflow.c -o bufferoverflow
+</code></pre>
+<p><div class="screenshot"><img src="images/image_012.png" alt="Compilation process showing gcc command execution" loading="lazy"><div class="screenshot-caption">Compilation process showing gcc command execution</div></div></p>
+<p>Compilation converts the human-readable C code into machine code executable by the CPU. Despite some compiler warnings, the executable was successfully created.</p>
+<h2>Step 3: Initial Program Execution</h2>
+<p>I ran the program in its normal state to observe expected behavior:</p>
+<pre><code class="language-bash">./bufferoverflow
+</code></pre>
+<p><div class="screenshot"><img src="images/image_013.png" alt="Successful program execution showing memory addresses and user input" loading="lazy"><div class="screenshot-caption">Successful program execution showing memory addresses and user input</div></div></p>
+<p><em>The program displays the memory address of <code>place</code> (0x08bca008), the memory address of <code>systemcommand</code> (0x08bca028), and calculates that exactly 32 bytes separate them. When prompted, I entered "Null Byte" and the program echoed it back correctly.</em></p>
+<h2>Step 4: Exploiting the Buffer Overflow</h2>
+<p>Now for the attack: I ran the program again but provided input exceeding 32 bytes. This would cause the buffer to overflow into the <code>systemcommand</code> variable, allowing me to execute arbitrary system commands.</p>
+<p>I crafted the input as follows:</p>
+<pre><code>nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnncat /etc/shadow
+</code></pre>
+<p>The first 32 bytes (the 'n' characters) fill the <code>place</code> buffer. The 33rd byte onwards overflow into <code>systemcommand</code>, which then contains <code>cat /etc/shadow</code>.</p>
+<p><div class="screenshot"><img src="images/image_014.png" alt="Buffer overflow attack successfully executing the system command to display /etc/shadow" loading="lazy"><div class="screenshot-caption">Buffer overflow attack successfully executing the system command to display /etc/shadow</div></div></p>
+<p><em>The overflow worked perfectly. Instead of executing nothing, the program executed <code>cat /etc/shadow</code>, displaying all system users and their password hashes. This demonstrates complete control over program execution through buffer overflow.</em></p>
+<hr />
+<h1>Phase 2: Securing Sensitive Data with VeraCrypt</h1>
+<h2>Understanding VeraCrypt</h2>
+<p>VeraCrypt is a free, open-source encryption tool that creates encrypted virtual drives. Users can drag-and-drop files into these virtual drives, then unmount them when finished. The virtual drive appears as a single large file until mounted again with the correct password.</p>
+<p>VeraCrypt supports:
+- Creating encrypted containers from files
+- Encrypting entire hard drives or USB devices
+- Hidden volumes within encrypted volumes (plausible deniability)
+- Multiple encryption algorithms (AES, TwoFish, Serpent)</p>
+<h3>Creating an Encrypted Container</h3>
+<p>I downloaded VeraCrypt and installed it on Windows. Using the Volume Creation Wizard, I created a 20 MB encrypted container based on a text file:</p>
+<p><div class="screenshot"><img src="images/image_015.png" alt="VeraCrypt Volume Creation Wizard showing file selection" loading="lazy"><div class="screenshot-caption">VeraCrypt Volume Creation Wizard showing file selection</div></div></p>
+<p><em>I selected a text file as the basis for the encrypted container. The wizard then prompts for encryption algorithm and password configuration.</em></p>
+<p>The wizard allowed me to choose the encryption algorithm (AES was used) and set a strong password. I selected <code>tiger1234</code> as the demonstration password.</p>
+<h3>Mounting and Using the Encrypted Drive</h3>
+<p>Once created, I mounted the encrypted container to drive M:</p>
+<p><div class="screenshot"><img src="images/image_016.png" alt="Windows Explorer showing the encrypted container mounted as Local Disk (M:) with 19.6 MB capacity" loading="lazy"><div class="screenshot-caption">Windows Explorer showing the encrypted container mounted as Local Disk (M:) with 19.6 MB capacity</div></div></p>
+<p><em>After mounting with the correct password, the encrypted container appears as Local Disk (M:) in Windows Explorer alongside the C: drive. The 19.6 MB capacity matches our configured container size.</em></p>
+<p>I added files to the encrypted drive by dragging them from my security folder. The files are now protected with AES encryption.</p>
+<h3>Unmounting and Verification</h3>
+<p>When I unmounted the drive, the encrypted container reverted to appearing as a single file:</p>
+<p><div class="screenshot"><img src="images/image_017.png" alt="File explorer showing the encrypted container file after unmounting, now appearing as a 20 MB file" loading="lazy"><div class="screenshot-caption">File explorer showing the encrypted container file after unmounting, now appearing as a 20 MB file</div></div></p>
+<p><em>Once unmounted, the <code>laxmanpuri.txt</code> file is now 20 MB in size—the encrypted container. Without the correct password, no software can access the data inside.</em></p>
+<hr />
+<h1>Phase 3: Permanent File Deletion with Eraser</h1>
+<h2>Understanding Secure File Deletion</h2>
+<p>Standard file deletion merely removes the file reference from the directory, leaving the actual data intact on disk. Forensic tools can easily recover these files. Eraser solves this by overwriting the physical sectors multiple times with random data, making recovery impossible.</p>
+<h3>Setting Up Eraser</h3>
+<p>I downloaded and installed Eraser, a free file shredding utility. Eraser offers multiple overwriting methods:
+- <strong>Gutmann method</strong>: 35 passes of overwriting
+- <strong>DoD 5220.22-M standard</strong>: Used by the U.S. Department of Defense
+- Multiple random passes</p>
+<h3>Running the Secure Deletion Task</h3>
+<p>I created an Eraser task to wipe all unused disk space on the D: drive (faster than the C: drive):</p>
+<p><div class="screenshot"><img src="images/image_018.png" alt="Eraser running in the background, showing progress of secure file deletion on unused disk space" loading="lazy"><div class="screenshot-caption">Eraser running in the background, showing progress of secure file deletion on unused disk space</div></div></p>
+<p><em>The secure wiping process continuously overwrites unused sectors. For large drives, this process can take many hours, as each sector must be overwritten multiple times according to the selected standard.</em></p>
+<h2>Why Secure Deletion Matters</h2>
+<p>Before using tools like Eraser, any file I deleted could be recovered by an attacker with physical access to the drive. By overwriting unused disk space, I ensured that previously deleted files are now irrecoverable, even with forensic tools.</p>
+<hr />
+<h1>Thought Questions &amp; Deepening Understanding</h1>
+<h3>What happens if you open an encrypted container file directly?</h3>
+<p><div class="screenshot"><img src="images/image_019.png" alt="Encrypted file contents showing random characters that cannot be interpreted" loading="lazy"><div class="screenshot-caption">Encrypted file contents showing random characters that cannot be interpreted</div></div></p>
+<p><em>Opening an encrypted container without mounting it first displays only random bytes—the encrypted data is completely unreadable without the correct password.</em></p>
+<h3>Hidden Volumes</h3>
+<p>VeraCrypt supports creating hidden volumes—encrypted containers nested within other encrypted volumes. A hidden volume uses a separate password, allowing users to deny knowledge of the hidden data if coerced to reveal the main password.</p>
+<h3>Keyfiles for Enhanced Security</h3>
+<p>Beyond passwords, VeraCrypt supports keyfiles: external files combined with a password to unlock encryption. An attacker must possess both the keyfile and know the password, significantly increasing security.</p>
+<h3>Eraser Overwriting Methods</h3>
+<p>Eraser implements multiple overwriting strategies to ensure data irreversibility. The Gutmann method performs 35 different passes with specific patterns, while DoD standards use fewer passes but proven effective methods. More passes equal greater security but longer processing time.</p>
+<h3>Secure File Operations</h3>
+<p>Some tools, including Eraser, allow right-clicking files to securely delete them directly. However, most Windows systems don't natively support this—dedicated tools are required.</p>
+<h3>Performance Considerations</h3>
+<p>Secure deletion is time-intensive because:
+- Each sector must be overwritten multiple times
+- Random data generation requires CPU cycles
+- Disk I/O speed limits throughput
+- Larger drives take proportionally longer</p>
+<p>More secure methods with multiple passes naturally take longer than single-pass deletion.</p>
+<h3>Why Windows Lacks Native Secure Deletion</h3>
+<p>Windows provides basic file deletion but not secure deletion because:
+- Most users don't require this level of security
+- Overwriting reduces disk lifespan
+- The functionality is specialized for security-conscious users
+- Dedicated tools offer more sophisticated options</p>
+<hr />
+<h2>Key Takeaways</h2>
+<ol>
+<li>
+<p><strong>Buffer Overflow Mechanics</strong>: I successfully demonstrated how insufficient bounds checking enables complete program compromise through memory corruption.</p>
+</li>
+<li>
+<p><strong>Memory Layout Understanding</strong>: Stack-based exploitation requires precise knowledge of memory addresses and variable positioning.</p>
+</li>
+<li>
+<p><strong>Encryption Best Practices</strong>: VeraCrypt enables practical protection of sensitive data through accessible, user-friendly encryption.</p>
+</li>
+<li>
+<p><strong>Secure Deletion Requirements</strong>: Standard file deletion leaves data recoverable; only multiple-pass overwriting ensures irrecoverable deletion.</p>
+</li>
+<li>
+<p><strong>Defense in Depth</strong>: True security requires both offensive knowledge (understanding attacks) and defensive measures (encryption and secure deletion).</p>
+</li>
+</ol>
+<hr />
+<h2>Skills Demonstrated</h2>
+<ul>
+<li><strong>Low-level Programming</strong>: C language development with memory management</li>
+<li><strong>Compiler Usage</strong>: GCC compilation and debugging</li>
+<li><strong>Assembly/Memory Concepts</strong>: Understanding stack frames, registers, and memory addresses</li>
+<li><strong>Exploitation Techniques</strong>: Buffer overflow attack development and execution</li>
+<li><strong>Cryptography</strong>: Encryption algorithms (AES) and their practical application</li>
+<li><strong>System Administration</strong>: Secure tool configuration and secure data handling</li>
+<li><strong>Forensic Awareness</strong>: Understanding data recovery and prevention techniques</li>
+</ul>
+<hr />
+<h2>Tools &amp; Technologies</h2>
+<ul>
+<li><strong>Kali Linux</strong> — Penetration testing distribution</li>
+<li><strong>VirtualBox</strong> — Virtualization platform</li>
+<li><strong>GCC (GNU C Compiler)</strong> — Code compilation</li>
+<li><strong>VeraCrypt</strong> — Full-disk and container encryption</li>
+<li><strong>Eraser</strong> — Secure file deletion and disk wiping</li>
+<li><strong>Leafpad</strong> — Text editor for code development</li>
+</ul>
+<p>This project reinforced my understanding of why security must be built into software design from the ground up, why defensive measures are essential regardless of offensive knowledge, and how attackers think about exploiting systems.</p>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+  <img id="lightbox-img" src="" alt="Full size">
+</div>
+
+<script>
+document.querySelectorAll('.screenshot img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox').classList.add('active');
+  });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+});
+</script>
+
+</body>
+</html>

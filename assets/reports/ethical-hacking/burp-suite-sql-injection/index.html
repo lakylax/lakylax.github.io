@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Burp Suite & SQL Injection</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a2e;
+  --text: #e0e0e0;
+  --text-secondary: #c8c8d8;
+  --text-muted: #9898a8;
+  --primary: #00d4ff;
+  --primary-dim: rgba(0, 212, 255, 0.15);
+  --accent: #7c3aed;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(0, 212, 255, 0.3);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.7; min-height: 100vh; }
+.back-link { position: fixed; top: 20px; left: 20px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; z-index: 100; background: var(--bg-card); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); transition: all 0.3s ease; }
+.back-link:hover { border-color: var(--border-glow); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+.hero { padding: 80px 40px 40px; text-align: center; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 100%); }
+.hero h1 { font-size: clamp(24px, 4vw, 36px); font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -0.5px; }
+.hero .meta { color: var(--text-muted); font-size: 14px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.hero .meta span { display: flex; align-items: center; gap: 6px; }
+.container { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+h2 { font-size: 22px; font-weight: 600; color: #fff; margin-top: 48px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); display: inline-block; }
+h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-top: 28px; margin-bottom: 10px; }
+p { margin: 12px 0; font-size: 15px; color: var(--text-secondary); }
+strong { color: var(--text); }
+ul, ol { margin: 12px 0; padding-left: 24px; }
+li { margin: 6px 0; font-size: 15px; color: var(--text-secondary); }
+code { background: var(--bg-secondary); color: var(--primary); padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--border); }
+pre { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; color: var(--text); margin: 16px 0; }
+pre code { background: none; border: none; padding: 0; color: inherit; }
+.screenshot { margin: 20px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.3s ease; }
+.screenshot:hover { border-color: var(--border-glow); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1); }
+.screenshot img { display: block; width: 100%; height: auto; cursor: pointer; }
+.screenshot-caption { font-size: 12px; color: var(--text-muted); padding: 10px 14px; background: var(--bg-secondary); border-top: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+th { text-align: left; color: var(--text-muted); font-weight: 500; padding: 10px 14px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.takeaways { background: var(--bg-secondary); border-left: 3px solid var(--primary); padding: 20px 24px; border-radius: 0 10px 10px 0; margin: 24px 0; }
+.takeaways li { color: var(--text); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tag { background: var(--primary-dim); color: var(--primary); padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; border: 1px solid rgba(0, 212, 255, 0.2); }
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 4px; }
+@media (max-width: 640px) { .hero { padding: 60px 20px 30px; } .container { padding: 24px 16px 60px; } h2 { font-size: 19px; } }
+</style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-link">&#x2190; Back to Portfolio</a>
+
+<div class="hero">
+  <h1>Burp Suite & SQL Injection</h1>
+  <div class="meta">
+    <span>&#x1F4C2; Ethical Hacking</span>
+    <span>&#x1F4C5; 2023</span>
+    <span>&#x1F393; MSIA Program</span>
+  </div>
+</div>
+
+<div class="container">
+<h1>Web Application Security: Burp Suite &amp; SQL Injection Analysis</h1>
+<h2>Project Overview</h2>
+<p>In this project, I conducted a comprehensive penetration test on intentionally vulnerable web applications to understand and exploit SQL injection vulnerabilities. This exercise demonstrated the critical security risks that result from improper input validation in database-driven applications and the effectiveness of SQL injection as an attack vector.</p>
+<p>SQL injection remains one of the most prevalent and dangerous vulnerabilities in modern web applications. Unlike some threats that fade with improved coding practices, SQL injection continues to plague production systems because developers frequently fail to implement proper input sanitization. As attackers, understanding the mechanics of these vulnerabilities is essential—the best defense requires knowing exactly how these attacks work.</p>
+<h2>Environment Setup</h2>
+<p>I established a dual-machine lab environment using virtualization to safely conduct offensive security testing:</p>
+<p><strong>Attack Machine:</strong> Kali Linux with Burp Suite and Metasploit framework
+<strong>Target Machine:</strong> Metasploitable 2 running Mutillidae, an intentionally vulnerable web application</p>
+<p>Both machines were configured on an isolated network using host-only mode to prevent any exposure to external networks. This isolation was critical given the inherently vulnerable nature of the target system.</p>
+<h3>Initial Target Configuration</h3>
+<p>I accessed Metasploitable 2 using the default credentials (msfadmin:msfadmin) and identified its IP address (192.168.1.123) via <code>ifconfig</code>. I then navigated to this IP in Firefox to confirm the target was reachable and to survey the available vulnerable applications.</p>
+<p><div class="screenshot"><img src="images/image_001.png" alt="Metasploitable 2 web landing page accessed via browser showing available vulnerable applications (TWiki, phpMyAdmin, Mutillidae, DVWA, WebDAV)" loading="lazy"><div class="screenshot-caption">Metasploitable 2 web landing page accessed via browser showing available vulnerable applications</div></div></p>
+<h2>Phase 1: Web Application Reconnaissance</h2>
+<p>I navigated to the Mutillidae web application hosted on the target machine and selected the SQL Injection section under OWASP Top 10, targeting the "User Info" page. This form accepts a username and password and queries the database directly — making it a prime candidate for SQL injection testing.</p>
+<p><div class="screenshot"><img src="images/image_002.png" alt="Mutillidae User Info page with Name and Password fields — the SQL injection target form" loading="lazy"><div class="screenshot-caption">Mutillidae User Info page with Name and Password fields — the SQL injection target form</div></div></p>
+<p>This form became my primary attack vector for the SQL injection exploitation that followed.</p>
+<h2>Phase 2: Burp Suite Configuration &amp; Traffic Interception</h2>
+<p>To effectively intercept and manipulate web traffic, I configured Firefox to route all HTTP requests through Burp Suite acting as a proxy server.</p>
+<h3>Proxy Configuration</h3>
+<p>I opened Firefox preferences and navigated to the Network settings under Advanced. I configured manual proxy settings with:
+- HTTP Proxy: 127.0.0.1
+- Port: 8080
+- Applied to all protocols</p>
+<p>This setup allowed Burp Suite to intercept every request leaving the browser before it reached the web server.</p>
+<p><div class="screenshot"><img src="images/image_003.png" alt="Firefox network proxy settings configured for Burp Suite interception" loading="lazy"><div class="screenshot-caption">Firefox network proxy settings configured for Burp Suite interception</div></div></p>
+<h3>Burp Suite Interception</h3>
+<p>I launched Burp Suite and enabled the Intercept feature in the Proxy tab. This tool acts as the man-in-the-middle, allowing me to view and modify requests in real-time. When I submitted the login form with arbitrary credentials, Burp Suite captured the raw HTTP request showing all parameters, headers, and values.</p>
+<p><div class="screenshot"><img src="images/image_004.png" alt="Burp Suite proxy intercept window displaying the captured login request" loading="lazy"><div class="screenshot-caption">Burp Suite proxy intercept window displaying the captured login request</div></div></p>
+<p>The captured request revealed the exact parameters being sent to the server—specifically, the username field which became my target for SQL injection testing.</p>
+<h2>Phase 3: SQL Injection Attack Development</h2>
+<h3>Understanding SQL Query Structure</h3>
+<p>To successfully exploit SQL injection, I needed to understand the underlying SQL query. A typical login query would execute as:</p>
+<pre><code class="language-sql">SELECT username, password FROM users WHERE username='myname' AND password='[user_input]'
+</code></pre>
+<p>The vulnerability exists because user input is directly concatenated into the query without proper sanitization.</p>
+<h3>Payload Development</h3>
+<p>I employed the classic SQL injection payload: <code>' or 1=1--</code></p>
+<p>When inserted into the username field, this transforms the query to:</p>
+<pre><code class="language-sql">SELECT username, password FROM users WHERE username='' or 1=1-- AND password='[user_input]'
+</code></pre>
+<p>This payload works because:
+1. The single quote (') closes the username string prematurely
+2. <code>or 1=1</code> evaluates to true, making the WHERE clause always true
+3. The double dashes (--) comment out the password validation entirely</p>
+<p>Result: The database returns all users since the condition is always true.</p>
+<h3>Burp Suite Intruder Configuration</h3>
+<p>I sent the intercepted request to the Burp Intruder tool, which automates payload testing. I configured the attack positions:</p>
+<p><div class="screenshot"><img src="images/image_005.png" alt="Burp Suite Intruder tab showing payload position highlighted in the username field" loading="lazy"><div class="screenshot-caption">Burp Suite Intruder tab showing payload position highlighted in the username field</div></div></p>
+<p>I then navigated to the Payloads tab and loaded Kali's built-in SQL injection wordlist from <code>/usr/share/wordlists/wfuzz/injection/SQL.txt</code>. This list contains dozens of known SQL injection payloads, allowing me to test multiple vectors systematically.</p>
+<p><div class="screenshot"><img src="images/image_006.png" alt="Burp Suite Payloads tab displaying the loaded SQL injection wordlist" loading="lazy"><div class="screenshot-caption">Burp Suite Payloads tab displaying the loaded SQL injection wordlist</div></div></p>
+<h3>Executing the Attack</h3>
+<p>I initiated the Intruder attack using the Sniper attack type, which iterates through each payload one at a time. The attack process required patience as hundreds of requests were generated and analyzed.</p>
+<p><div class="screenshot"><img src="images/image_007.png" alt="Burp Suite Intruder attack results window showing request progress and payload status" loading="lazy"><div class="screenshot-caption">Burp Suite Intruder attack results window showing request progress and payload status</div></div></p>
+<h2>Phase 4: Results Analysis &amp; Exploitation</h2>
+<p>After the Intruder attack completed, I reviewed the results to identify successful payloads. While most requests returned standard 200 status codes, I analyzed response lengths and content to identify successful injections.</p>
+<p><div class="screenshot"><img src="images/image_008.png" alt="Burp Suite Intruder results with a selected payload request showing the raw HTTP GET request details" loading="lazy"><div class="screenshot-caption">Burp Suite Intruder results with a selected payload request showing the raw HTTP GET request details</div></div></p>
+<p>Scrolling through the results, I identified payload #25 — <code>0 or 1=1</code> — which is a classic boolean-based SQL injection. I selected it to examine the full HTTP request being sent to the server with the injected payload in the username parameter.</p>
+<p><div class="screenshot"><img src="images/image_009.png" alt="Intruder attack results showing the '0 or 1=1' payload selected (request #25) with the corresponding raw HTTP request" loading="lazy"><div class="screenshot-caption">Intruder attack results showing the '0 or 1=1' payload selected with the corresponding raw HTTP request</div></div></p>
+<p>The injection attempts revealed critical information about the application's backend. Even when payloads triggered errors rather than returning data directly, the error messages themselves leaked valuable information about the database structure.</p>
+<h3>Verification of Compromise</h3>
+<p>By rendering the response in Burp Suite, I could see the application's error output, which revealed internal database details including table names and file paths:</p>
+<p><div class="screenshot"><img src="images/image_010.png" alt="Rendered response showing SQL error message revealing database structure — table 'metasploit accounts' doesn't exist" loading="lazy"><div class="screenshot-caption">Rendered response showing SQL error message revealing database structure information</div></div></p>
+<p>This demonstrated a significant information disclosure vulnerability. The verbose SQL error messages revealed internal table names and file paths, which an attacker could leverage to:
+- Gain full administrative access
+- Modify application data
+- Craft more targeted SQL injection payloads using the revealed table names
+- Potentially pivot to other systems</p>
+<h2>Phase 5: Tracking &amp; Privacy Analysis</h2>
+<h3>Browser History Logging</h3>
+<p>I investigated the default logging behavior of modern web browsers. Using Firefox's built-in history (Ctrl+H), I examined the extent to which browser activities are automatically tracked.</p>
+<p><div class="screenshot"><img src="images/image_011.png" alt="Firefox browser history showing logged website visits organized by date" loading="lazy"><div class="screenshot-caption">Firefox browser history showing logged website visits organized by date</div></div></p>
+<p>To demonstrate how browsing leaves traces, I visited several websites including Amazon.com — each visit is automatically logged by the browser:</p>
+<p><div class="screenshot"><img src="images/image_012.png" alt="Amazon.com homepage demonstrating a typical browsing session that gets recorded in browser history" loading="lazy"><div class="screenshot-caption">Amazon.com homepage demonstrating a typical browsing session recorded in browser history</div></div></p>
+<p>I demonstrated the ease of clearing this history, which completely removes the browser's record of visited sites:</p>
+<p><div class="screenshot"><img src="images/image_013.png" alt="Firefox after clearing history showing empty browsing records" loading="lazy"><div class="screenshot-caption">Firefox after clearing history showing empty browsing records</div></div></p>
+<p>This exercise illustrated that browsers maintain comprehensive activity logs by default, a privacy concern for shared systems.</p>
+<h3>Web Tracking Across Multiple Sites</h3>
+<p>I further investigated how websites track user behavior across the internet using third-party trackers and web bugs. I installed the Ghostery browser extension, which provides real-time visibility into tracking technologies.</p>
+<h4>Tracker Discovery on Major Websites</h4>
+<p>When I visited Microsoft.com, Ghostery identified the tracking infrastructure:</p>
+<p><div class="screenshot"><img src="images/image_014.png" alt="Ghostery tracker notification showing companies monitoring user activity on Microsoft.com" loading="lazy"><div class="screenshot-caption">Ghostery tracker notification showing companies monitoring user activity on Microsoft.com</div></div></p>
+<p>The tracking was more extensive than expected—major news outlets employ sophisticated tracking networks. When visiting news sites known for ad-heavy models, the tracker counts were staggering:</p>
+<p><div class="screenshot"><img src="images/image_015.png" alt="Ghostery showing 20+ different trackers active on a major news website" loading="lazy"><div class="screenshot-caption">Ghostery showing 20+ different trackers active on a major news website</div></div></p>
+<p>News websites consistently employed the most aggressive tracking, with some sites loading dozens of third-party tracking pixels and scripts.</p>
+<h4>Institutional Tracking</h4>
+<p>I also examined tracking on institutional websites. Even university sites implemented various tracking mechanisms:</p>
+<p><div class="screenshot"><img src="images/image_016.png" alt="Ghostery tracker list on university website showing institutional and third-party trackers" loading="lazy"><div class="screenshot-caption">Ghostery tracker list on university website showing institutional and third-party trackers</div></div></p>
+<p>This analysis revealed that tracking is ubiquitous across the web—from corporate sites to news outlets to educational institutions.</p>
+<h2>Key Takeaways</h2>
+<ol>
+<li>
+<p><strong>Input Validation is Critical</strong>: SQL injection exploits the failure to properly validate and sanitize user input. Even simple payloads can completely compromise database security when input handling is insufficient.</p>
+</li>
+<li>
+<p><strong>Defense in Depth Required</strong>: Preventing SQL injection requires multiple layers:</p>
+</li>
+<li>Parameterized queries (prepared statements)</li>
+<li>Input validation and whitelist filtering</li>
+<li>Principle of least privilege for database accounts</li>
+<li>
+<p>Web application firewalls</p>
+</li>
+<li>
+<p><strong>Automated Testing is Powerful</strong>: Burp Suite's Intruder functionality demonstrates the effectiveness of automated payload testing. Manual exploitation of each payload would be impractical; automation scales the attack significantly.</p>
+</li>
+<li>
+<p><strong>Privacy Implications</strong>: Both active tracking and passive browser logging demonstrate the extensive data collection occurring during normal web usage. Users often remain unaware of how comprehensively their activities are monitored.</p>
+</li>
+<li>
+<p><strong>Database Queries Must Be Defended</strong>: The separation between the application layer and database layer doesn't prevent injection—proper construction of database queries is essential at the application level.</p>
+</li>
+</ol>
+<h2>Tools Used</h2>
+<ul>
+<li><strong>Kali Linux</strong>: Penetration testing distribution providing security tools</li>
+<li><strong>Burp Suite Community</strong>: Web application security testing and traffic interception</li>
+<li><strong>Metasploitable 2</strong>: Intentionally vulnerable Linux platform for safe testing</li>
+<li><strong>Mutillidae</strong>: Vulnerable web application with OWASP Top 10 vulnerabilities</li>
+<li><strong>Firefox</strong>: Web browser for reconnaissance and vulnerability testing</li>
+<li><strong>Ghostery</strong>: Browser extension for tracking visibility and analysis</li>
+</ul>
+<h2>Skills Demonstrated</h2>
+<ul>
+<li><strong>Web Application Security</strong>: Understanding attack vectors against database-driven applications</li>
+<li><strong>Network Traffic Analysis</strong>: Intercepting and analyzing HTTP requests and responses</li>
+<li><strong>SQL Injection Exploitation</strong>: Crafting and testing payloads to bypass authentication</li>
+<li><strong>Penetration Testing</strong>: Systematic approach to identifying and exploiting vulnerabilities</li>
+<li><strong>Burp Suite Proficiency</strong>: Advanced features including proxy interception, Intruder automation, and response rendering</li>
+<li><strong>Privacy Analysis</strong>: Understanding tracking technologies and browser logging mechanisms</li>
+<li><strong>Secure Coding Awareness</strong>: Recognizing what developers must implement to prevent these attacks</li>
+<li><strong>Database Security</strong>: Understanding how SQL queries can be exploited and defended</li>
+</ul>
+<hr />
+<p><strong>Project Date</strong>: June 2026<br />
+<strong>Environment</strong>: Isolated virtual lab with Kali Linux and Metasploitable 2<br />
+<strong>Outcome</strong>: Successfully identified and exploited SQL injection vulnerabilities in a web application, extracting sensitive user credentials and database information.</p>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+  <img id="lightbox-img" src="" alt="Full size">
+</div>
+
+<script>
+document.querySelectorAll('.screenshot img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox').classList.add('active');
+  });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+});
+</script>
+
+</body>
+</html>

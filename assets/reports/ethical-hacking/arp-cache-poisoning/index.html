@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARP Cache Poisoning & MITM Attack</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a2e;
+  --text: #e0e0e0;
+  --text-secondary: #c8c8d8;
+  --text-muted: #9898a8;
+  --primary: #00d4ff;
+  --primary-dim: rgba(0, 212, 255, 0.15);
+  --accent: #7c3aed;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(0, 212, 255, 0.3);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.7; min-height: 100vh; }
+.back-link { position: fixed; top: 20px; left: 20px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; z-index: 100; background: var(--bg-card); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); transition: all 0.3s ease; }
+.back-link:hover { border-color: var(--border-glow); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+.hero { padding: 80px 40px 40px; text-align: center; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 100%); }
+.hero h1 { font-size: clamp(24px, 4vw, 36px); font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -0.5px; }
+.hero .meta { color: var(--text-muted); font-size: 14px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.hero .meta span { display: flex; align-items: center; gap: 6px; }
+.container { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+h2 { font-size: 22px; font-weight: 600; color: #fff; margin-top: 48px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); display: inline-block; }
+h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-top: 28px; margin-bottom: 10px; }
+p { margin: 12px 0; font-size: 15px; color: var(--text-secondary); }
+strong { color: var(--text); }
+ul, ol { margin: 12px 0; padding-left: 24px; }
+li { margin: 6px 0; font-size: 15px; color: var(--text-secondary); }
+code { background: var(--bg-secondary); color: var(--primary); padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--border); }
+pre { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; color: var(--text); margin: 16px 0; }
+pre code { background: none; border: none; padding: 0; color: inherit; }
+.screenshot { margin: 20px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.3s ease; }
+.screenshot:hover { border-color: var(--border-glow); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1); }
+.screenshot img { display: block; width: 100%; height: auto; cursor: pointer; }
+.screenshot-caption { font-size: 12px; color: var(--text-muted); padding: 10px 14px; background: var(--bg-secondary); border-top: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+th { text-align: left; color: var(--text-muted); font-weight: 500; padding: 10px 14px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.takeaways { background: var(--bg-secondary); border-left: 3px solid var(--primary); padding: 20px 24px; border-radius: 0 10px 10px 0; margin: 24px 0; }
+.takeaways li { color: var(--text); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tag { background: var(--primary-dim); color: var(--primary); padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; border: 1px solid rgba(0, 212, 255, 0.2); }
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 4px; }
+@media (max-width: 640px) { .hero { padding: 60px 20px 30px; } .container { padding: 24px 16px 60px; } h2 { font-size: 19px; } }
+</style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-link">&#x2190; Back to Portfolio</a>
+
+<div class="hero">
+  <h1>ARP Cache Poisoning & MITM Attack</h1>
+  <div class="meta">
+    <span>&#x1F4C2; Ethical Hacking</span>
+    <span>&#x1F4C5; 2023</span>
+    <span>&#x1F393; MSIA Program</span>
+  </div>
+</div>
+
+<div class="container">
+<h1>ARP Cache Poisoning using Scapy</h1>
+<h2>Project Overview</h2>
+<p>I demonstrated a comprehensive exploitation of ARP (Address Resolution Protocol) vulnerabilities to perform a Man-in-the-Middle (MITM) attack on a local area network. ARP cache poisoning is a foundational technique in network security, allowing an attacker to redirect network traffic and intercept communications between devices.</p>
+<p>In this project, I designed and executed an attack chain that involved:
+- Identifying and mapping network topology (target, gateway, and attacker)
+- Crafting malicious ARP packets using Python and Scapy
+- Executing a sustained poisoning attack with automated scripts
+- Capturing and analyzing intercepted traffic
+- Properly restoring network state to minimize detection and damage</p>
+<h2>Environment Setup</h2>
+<p>I configured a controlled lab environment using VirtualBox with Kali Linux (attacker) in Bridged Adapter mode connected to a Windows target machine over a WLAN.</p>
+<p><strong>Lab Configuration:</strong>
+- <strong>Target Machine:</strong> 192.168.1.103 (Windows)
+- <strong>Attacker Machine:</strong> 192.168.1.114 (Kali Linux)
+- <strong>Gateway:</strong> 192.168.1.1
+- <strong>Network Protocol:</strong> ARP (Layer 2)</p>
+<p>I also ensured packet forwarding was enabled on the attacker machine using:</p>
+<pre><code>echo 1 &gt; /proc/sys/net/ipv4/ip_forward
+</code></pre>
+<h2>Phase 1: Scapy Packet Crafting Fundamentals</h2>
+<p>I started by exploring Scapy—a powerful Python library for packet manipulation and network analysis. This phase involved understanding the structure of ARP packets and how to construct malicious payloads.</p>
+<h3>Initializing Scapy</h3>
+<p>I launched Scapy in the Kali terminal to begin interactive packet development:</p>
+<p><div class="screenshot"><img src="images/image_001.png" alt="Launching Scapy interactive shell:" loading="lazy"><div class="screenshot-caption">Launching Scapy interactive shell:</div></div></p>
+<p>Scapy provides functions to sniff, dissect, and forge network packets—making it ideal for constructing custom ARP exploits.</p>
+<h3>Understanding ARP Packet Structure</h3>
+<p>I used Scapy's <code>ls()</code> function to examine the available fields in each network layer:</p>
+<p><div class="screenshot"><img src="images/image_002.png" alt="Viewing Ethernet layer fields using ls(Ether):" loading="lazy"><div class="screenshot-caption">Viewing Ethernet layer fields using ls(Ether):</div></div></p>
+<p>This revealed the critical fields I would manipulate:
+- <strong>hwsrc / hwdst:</strong> MAC address of source and destination
+- <strong>psrc / pdst:</strong> IP address of source and destination</p>
+<h3>Packet Construction Technique</h3>
+<p>I learned to construct layered packets by stacking protocols using the forward-slash (<code>/</code>) operator:</p>
+<p><div class="screenshot"><img src="images/image_003.png" alt="Creating Ethernet/IP packet and viewing its structure with packet.show():" loading="lazy"><div class="screenshot-caption">Creating Ethernet/IP packet and viewing its structure with packet.show():</div></div></p>
+<p>This pattern would form the foundation of my attack.</p>
+<h2>Phase 2: Target Reconnaissance and MAC Address Discovery</h2>
+<p>Before poisoning the ARP cache, I needed to identify the MAC addresses of both the gateway and target machine. I accomplished this by sending ARP broadcast requests and analyzing responses.</p>
+<h3>Verifying Network State</h3>
+<p>I first checked the ARP table on the target machine to establish a baseline:</p>
+<p><div class="screenshot"><img src="images/image_004.png" alt="Windows ARP table showing legitimate gateway and target mappings:" loading="lazy"><div class="screenshot-caption">Windows ARP table showing legitimate gateway and target mappings:</div></div></p>
+<h3>Crafting ARP Broadcast Requests</h3>
+<p>I constructed an ARP request packet targeting the target machine (192.168.1.103) to elicit an ARP response containing its MAC address:</p>
+<p><div class="screenshot"><img src="images/image_005.png" alt="Building ARP broadcast packet targeting 192.168.1.103 (target machine):" loading="lazy"><div class="screenshot-caption">Building ARP broadcast packet targeting 192.168.1.103 (target machine):</div></div></p>
+<h3>Receiving and Analyzing Responses</h3>
+<p>I used Scapy's <code>srp()</code> function (send and receive packets) to transmit the broadcast and capture the response:</p>
+<p><div class="screenshot"><img src="images/image_006.png" alt="Sending broadcast packet and capturing response using srp():" loading="lazy"><div class="screenshot-caption">Sending broadcast packet and capturing response using srp():</div></div></p>
+<h3>Extracting Discovered MAC Addresses</h3>
+<p>The response revealed the target's MAC address, which I extracted for use in the poisoning payload:</p>
+<p><div class="screenshot"><img src="images/image_007.png" alt="Target machine MAC address (08:00:27:d8:cd:6d) extracted from response:" loading="lazy"><div class="screenshot-caption">Target machine MAC address (08:00:27:d8:cd:6d) extracted from response:</div></div></p>
+<p>I repeated this process to identify the gateway's MAC address:</p>
+<p><div class="screenshot"><img src="images/image_008.png" alt="Sending ARP broadcast to gateway (192.168.1.1):" loading="lazy"><div class="screenshot-caption">Sending ARP broadcast to gateway (192.168.1.1):</div></div></p>
+<p><div class="screenshot"><img src="images/image_009.png" alt="Receiving response from gateway:" loading="lazy"><div class="screenshot-caption">Receiving response from gateway:</div></div></p>
+<p><div class="screenshot"><img src="images/image_010.png" alt="Gateway MAC address identified (3c:37:86:b6:9d:92):" loading="lazy"><div class="screenshot-caption">Gateway MAC address identified (3c:37:86:b6:9d:92):</div></div></p>
+<h2>Phase 3: ARP Cache Poisoning Attack</h2>
+<p>With MAC addresses mapped, I proceeded to craft and execute malicious ARP packets. The attack involved sending unsolicited ARP replies to poison both the target and gateway, convincing them that my attacker machine's MAC address was associated with the other device's IP address.</p>
+<h3>Poisoning the Target Machine</h3>
+<p>I crafted a spoofed ARP reply packet falsely claiming that my MAC address (attacker) is associated with the gateway's IP (192.168.1.1):</p>
+<p><div class="screenshot"><img src="images/image_011.png" alt="Constructing spoofed ARP reply to deceive target machine:" loading="lazy"><div class="screenshot-caption">Constructing spoofed ARP reply to deceive target machine:</div></div></p>
+<p>I sent this packet using Scapy's <code>send()</code> function (no response expected):</p>
+<h3>Poisoning the Gateway</h3>
+<p>I then crafted a complementary packet spoofing the target's IP address (192.168.1.103) to the gateway:</p>
+<p><div class="screenshot"><img src="images/image_012.png" alt="Creating spoofed ARP reply targeting the gateway:" loading="lazy"><div class="screenshot-caption">Creating spoofed ARP reply targeting the gateway:</div></div></p>
+<p>This bidirectional poisoning established me as the intermediary for all traffic between the two devices.</p>
+<h3>Restoring Network State</h3>
+<p>After the attack, I restored the legitimate ARP table entries on both machines to avoid raising suspicion and to maintain network functionality.</p>
+<p><strong>Restoring target's ARP table (telling target the real gateway MAC):</strong></p>
+<p><div class="screenshot"><img src="images/image_013.png" alt="Sending legitimate ARP reply to restore target's ARP table:" loading="lazy"><div class="screenshot-caption">Sending legitimate ARP reply to restore target's ARP table:</div></div></p>
+<p><strong>Restoring gateway's ARP table (telling gateway the real target MAC):</strong></p>
+<p><div class="screenshot"><img src="images/image_014.png" alt="Sending legitimate ARP reply to restore gateway's ARP table:" loading="lazy"><div class="screenshot-caption">Sending legitimate ARP reply to restore gateway's ARP table:</div></div></p>
+<h2>Phase 4: Automated Attack Execution</h2>
+<p>To perform sustained MITM attacks without manual packet crafting for each iteration, I developed a Python script that automated the entire poisoning workflow. This script sent repeated ARP poisoning packets at regular intervals to maintain the compromised state.</p>
+<h3>Attack Script Implementation</h3>
+<p>I created a Python script incorporating error handling, timing control, and signal management:</p>
+<p><div class="screenshot"><img src="images/image_015.png" alt="Python script - function definitions for MAC discovery, ARP spoofing, and restoration:" loading="lazy"><div class="screenshot-caption">Python script - function definitions for MAC discovery, ARP spoofing, and restoration:</div></div></p>
+<p><div class="screenshot"><img src="images/image_016.png" alt="Python script continued - loop execution and cleanup routines:" loading="lazy"><div class="screenshot-caption">Python script continued - loop execution and cleanup routines:</div></div></p>
+<h3>Running the Automated Attack</h3>
+<p>I executed the script on the attacker machine, which continuously sent poisoning packets:</p>
+<p><div class="screenshot"><img src="images/image_017.png" alt="Launching automated ARP poisoning script in Kali terminal:" loading="lazy"><div class="screenshot-caption">Launching automated ARP poisoning script in Kali terminal:</div></div></p>
+<h3>Observing Attack Effects on Target</h3>
+<p>The target machine showed signs of network manipulation—traffic was being redirected through the attacker:</p>
+<p><div class="screenshot"><img src="images/image_018.png" alt="Wireshark on attacker capturing spoofed ARP replies claiming both IPs at attacker's MAC:" loading="lazy"><div class="screenshot-caption">Wireshark on attacker capturing spoofed ARP replies claiming both IPs at attacker's MAC:</div></div></p>
+<h3>Verifying ARP Table Compromise</h3>
+<p>I checked the target's ARP table and confirmed that the gateway's MAC address was now associated with the attacker's interface:</p>
+<p><div class="screenshot"><img src="images/image_019.png" alt="Target ARP table showing poisoned entry:" loading="lazy"><div class="screenshot-caption">Target ARP table showing poisoned entry:</div></div></p>
+<h3>Capturing DNS Traffic</h3>
+<p>With the MITM position established, I verified successful traffic interception by capturing DNS requests from the target machine using tshark:</p>
+<p><div class="screenshot"><img src="images/image_020.png" alt="DNS traffic from target machine being intercepted and analyzed:" loading="lazy"><div class="screenshot-caption">DNS traffic from target machine being intercepted and analyzed:</div></div></p>
+<h2>Phase 5: Traffic Analysis with Wireshark</h2>
+<p>To understand the full scope of what could be captured during a MITM attack, I employed Wireshark—a comprehensive packet analysis tool. This phase focused on capturing, filtering, and analyzing live network traffic.</p>
+<h3>Capture Configuration</h3>
+<p>I configured Wireshark to capture on the primary network interface:</p>
+<p><div class="screenshot"><img src="images/image_021.png" alt="Wireshark capture interface selection and settings:" loading="lazy"><div class="screenshot-caption">Wireshark capture interface selection and settings:</div></div></p>
+<h3>Live Traffic Capture</h3>
+<p>I initiated packet capture and generated traffic by browsing to google.com while traffic flowed through the network:</p>
+<p><div class="screenshot"><img src="images/image_022.png" alt="Wireshark capturing HTTP traffic with packet dissection showing google.com response:" loading="lazy"><div class="screenshot-caption">Wireshark capturing HTTP traffic with packet dissection showing google.com response:</div></div></p>
+<h3>Packet Inspection and Content Extraction</h3>
+<p>I navigated through captured packets to identify and extract the HTTP request data, demonstrating how an attacker can view unencrypted web requests:</p>
+<p><div class="screenshot"><img src="images/image_023.png" alt="HTTP response headers visible in cleartext showing 'Via: 1.1 google' and server details:" loading="lazy"><div class="screenshot-caption">HTTP response headers visible in cleartext showing 'Via: 1.1 google' and server details:</div></div></p>
+<p>The packet analysis revealed the cleartext contents of network communications, highlighting why HTTPS and encrypted protocols are essential for security.</p>
+<h2>Key Takeaways</h2>
+<p>Through this project, I demonstrated:</p>
+<ol>
+<li><strong>Network Protocol Vulnerabilities:</strong> ARP's lack of authentication enables spoofing and poisoning attacks</li>
+<li><strong>MITM Attack Implementation:</strong> Successfully positioned an attacker in the communication path between two devices</li>
+<li><strong>Packet Manipulation Techniques:</strong> Used Scapy to craft, send, and receive custom packets for attack execution</li>
+<li><strong>Traffic Interception and Analysis:</strong> Captured and analyzed network traffic using industry-standard tools</li>
+<li><strong>Operational Security:</strong> Properly restored network state and understood the importance of cleanup after attacks</li>
+<li><strong>Automated Exploitation:</strong> Developed Python scripts for sustained, repeatable attacks</li>
+</ol>
+<h2>Tools Used</h2>
+<ul>
+<li><strong>Scapy:</strong> Python library for packet crafting and manipulation</li>
+<li><strong>Kali Linux:</strong> Operating system with pre-installed security tools</li>
+<li><strong>Wireshark:</strong> Packet capture and analysis</li>
+<li><strong>tshark:</strong> Command-line packet analysis</li>
+<li><strong>VirtualBox:</strong> Virtualization for isolated lab environment</li>
+<li><strong>Python:</strong> Scripting language for attack automation</li>
+</ul>
+<h2>Skills Demonstrated</h2>
+<ul>
+<li>Network protocol analysis and exploitation</li>
+<li>Python scripting and automation</li>
+<li>Packet crafting and network traffic manipulation</li>
+<li>MITM (Man-in-the-Middle) attack design and execution</li>
+<li>Network forensics and traffic analysis</li>
+<li>Security testing in controlled environments</li>
+<li>Tool proficiency (Scapy, Wireshark, tshark)</li>
+<li>Network troubleshooting and ARP protocol fundamentals</li>
+</ul>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+  <img id="lightbox-img" src="" alt="Full size">
+</div>
+
+<script>
+document.querySelectorAll('.screenshot img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox').classList.add('active');
+  });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+});
+</script>
+
+</body>
+</html>
