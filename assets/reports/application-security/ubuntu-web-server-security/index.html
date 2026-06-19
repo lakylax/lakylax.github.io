@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ubuntu Web Server Hardening</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a2e;
+  --text: #e0e0e0;
+  --text-secondary: #c8c8d8;
+  --text-muted: #9898a8;
+  --primary: #00d4ff;
+  --primary-dim: rgba(0, 212, 255, 0.15);
+  --accent: #7c3aed;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(0, 212, 255, 0.3);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.7; min-height: 100vh; }
+.back-link { position: fixed; top: 20px; left: 20px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; z-index: 100; background: var(--bg-card); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); transition: all 0.3s ease; }
+.back-link:hover { border-color: var(--border-glow); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+.hero { padding: 80px 40px 40px; text-align: center; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 100%); }
+.hero h1 { font-size: clamp(24px, 4vw, 36px); font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -0.5px; }
+.hero .meta { color: var(--text-muted); font-size: 14px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.hero .meta span { display: flex; align-items: center; gap: 6px; }
+.container { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+h2 { font-size: 22px; font-weight: 600; color: #fff; margin-top: 48px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); display: inline-block; }
+h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-top: 28px; margin-bottom: 10px; }
+p { margin: 12px 0; font-size: 15px; color: var(--text-secondary); }
+strong { color: var(--text); }
+ul, ol { margin: 12px 0; padding-left: 24px; }
+li { margin: 6px 0; font-size: 15px; color: var(--text-secondary); }
+code { background: var(--bg-secondary); color: var(--primary); padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--border); }
+pre { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; color: var(--text); margin: 16px 0; }
+pre code { background: none; border: none; padding: 0; color: inherit; }
+.screenshot { margin: 20px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.3s ease; }
+.screenshot:hover { border-color: var(--border-glow); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1); }
+.screenshot img { display: block; width: 100%; height: auto; cursor: pointer; }
+.screenshot-caption { font-size: 12px; color: var(--text-muted); padding: 10px 14px; background: var(--bg-secondary); border-top: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+th { text-align: left; color: var(--text-muted); font-weight: 500; padding: 10px 14px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.takeaways { background: var(--bg-secondary); border-left: 3px solid var(--primary); padding: 20px 24px; border-radius: 0 10px 10px 0; margin: 24px 0; }
+.takeaways li { color: var(--text); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tag { background: var(--primary-dim); color: var(--primary); padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; border: 1px solid rgba(0, 212, 255, 0.2); }
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 4px; }
+@media (max-width: 640px) { .hero { padding: 60px 20px 30px; } .container { padding: 24px 16px 60px; } h2 { font-size: 19px; } }
+</style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-link">&#x2190; Back to Portfolio</a>
+
+<div class="hero">
+  <h1>Ubuntu Web Server Hardening</h1>
+  <div class="meta">
+    <span>&#x1F4C2; Application Security</span>
+    <span>&#x1F4C5; 2024</span>
+    <span>&#x1F393; MSIA Program</span>
+  </div>
+</div>
+
+<div class="container">
+<h1>Ubuntu Web Server Security: End-to-End Implementation</h1>
+<h2>Project Overview</h2>
+<p>In this project, I deployed and hardened a secure web server on Ubuntu 20.04 hosted on Microsoft Azure. I configured a fully functional Apache web server with domain management, SSL/TLS encryption, and firewall protections to ensure secure communication and defense against common web-based attacks.</p>
+<hr />
+<h2>Environment Setup</h2>
+<h3>Infrastructure &amp; Prerequisites</h3>
+<p>I provisioned a virtual machine on Azure with the following specifications:
+- <strong>Operating System</strong>: Ubuntu 20.04 LTS
+- <strong>Instance</strong>: Azure Virtual Machine
+- <strong>Public IP</strong>: 104.41.62.218</p>
+<div class="screenshot"><img src="images/image_001.png" alt="Downloads folder showing the myfirstkey.pem private key file" loading="lazy"><div class="screenshot-caption">Azure VM provisioning — the generated .pem private key file saved to the local Downloads folder</div></div>
+<h3>SSH Key Authentication</h3>
+<p>I generated an SSH key pair for secure remote access. The private key file (myfirstkey.pem) is critical for authentication—it serves as proof of identity when connecting to the Ubuntu VM via SSH. I secured this key by setting strict file permissions using <code>chmod 400</code>, which ensures only the owner can read the private key file.</p>
+<div class="screenshot"><img src="images/image_002.png" alt="Azure Native SSH connection panel showing prerequisites configured" loading="lazy"><div class="screenshot-caption">Azure Native SSH panel — Port 22 access verified and public IP 104.41.62.218 configured for connection</div></div>
+<div class="screenshot"><img src="images/image_003.png" alt="Terminal showing chmod 400 myfirstkey.pem command" loading="lazy"><div class="screenshot-caption">Setting strict file permissions on the private key using chmod 400 to restrict access to owner-only</div></div>
+<p><strong>Why this matters</strong>: The private key is confidential and must never be shared. Restricting read access to only the owner minimizes the risk of unauthorized access and intrusion. SSH is designed to refuse keys with overly permissive permissions (like 600 or 700), so the 400 setting is both a security best practice and a functional requirement.</p>
+<p>I connected to the server using:</p>
+<pre><code>ssh -i ~/.ssh/id_rsa.pem azureuser@104.41.62.218
+</code></pre>
+<div class="screenshot"><img src="images/image_004.png" alt="Terminal showing successful SSH connection to Ubuntu 20.04 VM" loading="lazy"><div class="screenshot-caption">Successful SSH connection to the Ubuntu 20.04 Azure VM — system information and welcome banner displayed</div></div>
+<h3>Port Configuration</h3>
+<p>I selected and enabled three critical ports in the Azure security group:</p>
+<p><strong>HTTP (Port 80)</strong>: Handles unencrypted web traffic for standard HTTP connections.</p>
+<p><strong>HTTPS (Port 443)</strong>: Carries encrypted web traffic using TLS/SSL, ensuring confidentiality and integrity of data transmitted between browser and server. This is essential for protecting sensitive transactions and preventing eavesdropping.</p>
+<p><strong>SSH (Port 22)</strong>: Provides encrypted remote access to the server, allowing secure command execution and administration.</p>
+<p>The firewall configuration initially allows these ports to facilitate web service accessibility while maintaining security controls.</p>
+<hr />
+<h2>Phase 1: System Preparation &amp; Apache Installation</h2>
+<h3>System Updates</h3>
+<p>I refreshed the system package index using:</p>
+<pre><code>sudo apt-get update
+</code></pre>
+<p>This ensures the system has current information about available software packages, is critical for security, and allows installation of the latest patches and updates. Regular updates prevent exploitation of known vulnerabilities.</p>
+<div class="screenshot"><img src="images/image_005.png" alt="Terminal showing apt-get update fetching package lists" loading="lazy"><div class="screenshot-caption">Running sudo apt-get update — fetching the latest package lists from Ubuntu repositories</div></div>
+<h3>Apache Web Server Installation</h3>
+<p>I installed Apache2, the primary web server that would host the website:</p>
+<pre><code>sudo systemctl install apache2
+sudo systemctl start apache2
+</code></pre>
+<p>Apache is now running and ready to serve web content. I can manage it using:</p>
+<pre><code>sudo service apache2 restart
+</code></pre>
+<p>This command applies configuration changes, ensures service availability, and refreshes server resources.</p>
+<h3>Initial Server Verification</h3>
+<p>I verified that Apache was properly serving content by visiting the server's public IP address in a browser.</p>
+<div class="screenshot"><img src="images/image_006.png" alt="Browser showing Hello Team 5 Ubuntu Virtual Webserver" loading="lazy"><div class="screenshot-caption">Initial Apache test page — basic HTML served successfully via HTTP at the server IP</div></div>
+<div class="screenshot"><img src="images/image_007.png" alt="Browser showing full deployed website at laxmanpuri.space" loading="lazy"><div class="screenshot-caption">Website deployed and accessible at laxmanpuri.space — domain configured, serving content over HTTP (not yet HTTPS-secured)</div></div>
+<hr />
+<h2>Phase 2: Web Application Deployment</h2>
+<h3>Repository Cloning</h3>
+<p>I cloned the GitHub repository containing the website code to the web server:</p>
+<pre><code>git clone [repository-url]
+</code></pre>
+<p>This pulls the necessary web application files to the server environment.</p>
+<p><em>Screenshot showing repository cloning confirmation:</em>
+<div class="screenshot"><img src="images/image_008.png" alt="Terminal showing successful git clone of website repository" loading="lazy"><div class="screenshot-caption">Repository successfully cloned to the web server — application files ready for deployment</div></div></p>
+<h3>Custom Index Page Configuration</h3>
+<p>I created a new index.html file to replace Apache's default landing page. This customization ensures the website serves the intended content with integrity and authenticity.</p>
+<p><em>Visual confirmation of the deployed website:</em>
+<div class="screenshot"><img src="images/image_009.png" alt="Deployed web application displayed in browser" loading="lazy"><div class="screenshot-caption">Web application successfully deployed and accessible from client browser</div></div></p>
+<div class="screenshot"><img src="images/image_010.png" alt="Final deployed website with graduation theme at laxmanpuri.space" loading="lazy"><div class="screenshot-caption">Final website version deployed — custom education-themed content served at the configured domain</div></div>
+<h3>Apache Configuration for Domain Management</h3>
+<p>I configured Apache to recognize my custom domain. I edited the virtual host configuration to set:</p>
+<pre><code>ServerName laxmanpuri.space
+ServerAlias www.laxmanpuri.space
+</code></pre>
+<p><em>Screenshot of Apache configuration file being edited:</em>
+<div class="screenshot"><img src="images/image_011.png" alt="Apache virtual host configuration file with ServerName and ServerAlias directives" loading="lazy"><div class="screenshot-caption">Editing the Apache virtual host configuration — setting ServerName and ServerAlias for the custom domain</div></div></p>
+<h3>Configuration Validation &amp; Reload</h3>
+<p>I validated the Apache configuration syntax to ensure no errors:</p>
+<pre><code>sudo apache2ctl configtest
+</code></pre>
+<p>Upon successful validation, I reloaded Apache to apply the changes:</p>
+<pre><code>sudo systemctl reload apache2
+</code></pre>
+<p><em>Screenshot showing successful Apache reload:</em>
+<div class="screenshot"><img src="images/image_012.png" alt="Terminal showing Apache configuration test passed and service reloaded" loading="lazy"><div class="screenshot-caption">Apache configuration validated successfully and service reloaded with new domain settings</div></div></p>
+<p>This step ensures the configuration is correctly updated, maintaining availability and integrity of the web service.</p>
+<hr />
+<h2>Phase 3: Firewall Hardening &amp; Security Implementation</h2>
+<h3>UFW Firewall Configuration</h3>
+<p>I configured Ubuntu's Uncomplicated Firewall (UFW) to control incoming traffic:</p>
+<pre><code>sudo ufw enable
+sudo ufw allow 22/tcp      # SSH
+sudo ufw allow 80/tcp      # HTTP
+sudo ufw allow 443/tcp     # HTTPS
+sudo ufw default deny incoming
+</code></pre>
+<p><em>Screenshot of UFW configuration:</em>
+<div class="screenshot"><img src="images/image_013.png" alt="Terminal showing UFW firewall rules configured and enabled" loading="lazy"><div class="screenshot-caption">UFW firewall enabled with rules allowing SSH (22), HTTP (80), and HTTPS (443) — all other incoming traffic denied</div></div></p>
+<p>This adds a critical security layer by restricting traffic to only necessary ports. The default-deny policy means all other incoming traffic is automatically blocked, reducing the attack surface.</p>
+<h3>SSL/TLS Certificate &amp; HTTPS Configuration</h3>
+<p>I implemented SSL/TLS encryption using Let's Encrypt certificates to enable HTTPS. This ensures:</p>
+<p><strong>Confidentiality</strong>: Data transmitted between client and server is encrypted using modern TLS protocols, preventing interception and eavesdropping.</p>
+<p><strong>Integrity</strong>: SSL/TLS validates the authenticity of the server certificate, preventing man-in-the-middle attacks.</p>
+<p><em>Screenshot showing certificate installation and HTTPS enabled:</em>
+<div class="screenshot"><img src="images/image_014.png" alt="Terminal showing Let's Encrypt SSL certificate installation and HTTPS configuration" loading="lazy"><div class="screenshot-caption">Let's Encrypt SSL/TLS certificate installed — HTTPS now enabled for secure encrypted communication</div></div></p>
+<p>I configured the web server to:
+1. Serve HTTPS on port 443 (encrypted)
+2. Redirect HTTP traffic to HTTPS for automatic encryption
+3. Use modern, secure protocols (TLS 1.2 or higher) and disable outdated SSLv2/SSLv3</p>
+<hr />
+<h2>Security Mapping to CIA Triad</h2>
+<p>Throughout this project, I addressed the core principles of information security:</p>
+<table>
+<thead>
+<tr>
+<th>Security Step</th>
+<th>Action</th>
+<th>CIA Objective</th>
+<th>Prevention/Detection</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Port Configuration</strong></td>
+<td>Allowed HTTP, HTTPS, SSH while restricting others</td>
+<td>Confidentiality, Integrity, Availability</td>
+<td>Prevention</td>
+</tr>
+<tr>
+<td><strong>SSH Key Permissions (chmod 400)</strong></td>
+<td>Restricted access to private key</td>
+<td>Confidentiality, Integrity</td>
+<td>Prevention</td>
+</tr>
+<tr>
+<td><strong>Apache Installation</strong></td>
+<td>Deployed web server</td>
+<td>Availability</td>
+<td>Prevention</td>
+</tr>
+<tr>
+<td><strong>Custom Web Content</strong></td>
+<td>Replaced default pages with authenticated content</td>
+<td>Integrity</td>
+<td>Prevention</td>
+</tr>
+<tr>
+<td><strong>Apache Configuration</strong></td>
+<td>Set domain and virtual hosts</td>
+<td>Integrity, Availability</td>
+<td>Prevention</td>
+</tr>
+<tr>
+<td><strong>Website Verification</strong></td>
+<td>Tested accessibility from client machine</td>
+<td>Availability</td>
+<td>Detection</td>
+</tr>
+<tr>
+<td><strong>UFW Firewall</strong></td>
+<td>Implemented layer-2 traffic control</td>
+<td>Confidentiality, Integrity, Availability</td>
+<td>Prevention</td>
+</tr>
+<tr>
+<td><strong>SSL/TLS Certificate</strong></td>
+<td>Encrypted communication channels</td>
+<td>Confidentiality, Integrity</td>
+<td>Prevention</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Key Takeaways</h2>
+<p><strong>Security is Layered</strong>: No single measure provides complete protection. I implemented multiple controls—SSH keys, firewall rules, SSL/TLS, and domain configuration—to create defense-in-depth.</p>
+<p><strong>Principle of Least Privilege</strong>: By restricting file permissions, firewall rules, and SSH access, I ensured that each component has only the access it needs.</p>
+<p><strong>Encryption is Essential</strong>: HTTPS protects data in transit, preventing eavesdropping and man-in-the-middle attacks. This should be enabled by default for all web services.</p>
+<p><strong>Configuration Validation Matters</strong>: Testing and validating configurations before deployment prevents service outages and security gaps.</p>
+<p><strong>Defense is Preventive and Detective</strong>: While I implemented preventive controls (firewall, SSL/TLS), I also verified functionality to detect any issues early.</p>
+<hr />
+<h2>Additional Security Recommendations</h2>
+<p>To further harden this infrastructure, I recommend:</p>
+<ul>
+<li><strong>Regular Updates</strong>: Maintain a patch management schedule for the OS, Apache, and all installed software.</li>
+<li><strong>Network Security Groups (NSGs)</strong>: Leverage Azure NSGs to filter traffic at the cloud provider level.</li>
+<li><strong>Web Application Firewall (WAF)</strong>: Deploy Azure Application Gateway with WAF to defend against OWASP Top 10 attacks (SQL injection, XSS, CSRF).</li>
+<li><strong>SSH Hardening</strong>: Disable root login, require key-based authentication, and restrict SSH to known IP ranges.</li>
+<li><strong>Security Headers</strong>: Configure HTTP headers (CSP, X-Frame-Options, X-XSS-Protection) to mitigate web-based attacks.</li>
+<li><strong>File System Permissions</strong>: Ensure sensitive files and directories are protected with appropriate permissions.</li>
+<li><strong>Monitoring &amp; Logging</strong>: Implement centralized logging and real-time alerts for suspicious activity.</li>
+</ul>
+<hr />
+<h2>Tools &amp; Technologies Used</h2>
+<ul>
+<li><strong>Infrastructure</strong>: Microsoft Azure Virtual Machines</li>
+<li><strong>Operating System</strong>: Ubuntu 20.04 LTS</li>
+<li><strong>Web Server</strong>: Apache 2.4</li>
+<li><strong>Security</strong>: OpenSSH, UFW Firewall, Let's Encrypt SSL/TLS</li>
+<li><strong>Domain Management</strong>: Custom domain configuration and DNS</li>
+<li><strong>Version Control</strong>: Git</li>
+</ul>
+<hr />
+<h2>Skills Demonstrated</h2>
+<ul>
+<li>Cloud infrastructure provisioning and management (Azure)</li>
+<li>SSH key generation and secure authentication</li>
+<li>Linux system administration and package management</li>
+<li>Apache web server configuration and virtual host setup</li>
+<li>Firewall configuration and port management</li>
+<li>SSL/TLS certificate installation and HTTPS enablement</li>
+<li>Network security and defense-in-depth architecture</li>
+<li>Troubleshooting and verification of security controls</li>
+<li>Security principles (CIA triad, least privilege, defense in depth)</li>
+</ul>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+  <img id="lightbox-img" src="" alt="Full size">
+</div>
+
+<script>
+document.querySelectorAll('.screenshot img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox').classList.add('active');
+  });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+});
+</script>
+
+</body>
+</html>

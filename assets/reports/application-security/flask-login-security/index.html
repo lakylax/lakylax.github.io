@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Securing Flask Application Login</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a2e;
+  --text: #e0e0e0;
+  --text-secondary: #c8c8d8;
+  --text-muted: #9898a8;
+  --primary: #00d4ff;
+  --primary-dim: rgba(0, 212, 255, 0.15);
+  --accent: #7c3aed;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(0, 212, 255, 0.3);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.7; min-height: 100vh; }
+.back-link { position: fixed; top: 20px; left: 20px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; z-index: 100; background: var(--bg-card); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); transition: all 0.3s ease; }
+.back-link:hover { border-color: var(--border-glow); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+.hero { padding: 80px 40px 40px; text-align: center; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 100%); }
+.hero h1 { font-size: clamp(24px, 4vw, 36px); font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -0.5px; }
+.hero .meta { color: var(--text-muted); font-size: 14px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.hero .meta span { display: flex; align-items: center; gap: 6px; }
+.container { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+h2 { font-size: 22px; font-weight: 600; color: #fff; margin-top: 48px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); display: inline-block; }
+h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-top: 28px; margin-bottom: 10px; }
+p { margin: 12px 0; font-size: 15px; color: var(--text-secondary); }
+strong { color: var(--text); }
+ul, ol { margin: 12px 0; padding-left: 24px; }
+li { margin: 6px 0; font-size: 15px; color: var(--text-secondary); }
+code { background: var(--bg-secondary); color: var(--primary); padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--border); }
+pre { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; color: var(--text); margin: 16px 0; }
+pre code { background: none; border: none; padding: 0; color: inherit; }
+.screenshot { margin: 20px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.3s ease; }
+.screenshot:hover { border-color: var(--border-glow); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1); }
+.screenshot img { display: block; width: 100%; height: auto; cursor: pointer; }
+.screenshot-caption { font-size: 12px; color: var(--text-muted); padding: 10px 14px; background: var(--bg-secondary); border-top: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+th { text-align: left; color: var(--text-muted); font-weight: 500; padding: 10px 14px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.takeaways { background: var(--bg-secondary); border-left: 3px solid var(--primary); padding: 20px 24px; border-radius: 0 10px 10px 0; margin: 24px 0; }
+.takeaways li { color: var(--text); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tag { background: var(--primary-dim); color: var(--primary); padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; border: 1px solid rgba(0, 212, 255, 0.2); }
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 4px; }
+@media (max-width: 640px) { .hero { padding: 60px 20px 30px; } .container { padding: 24px 16px 60px; } h2 { font-size: 19px; } }
+</style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-link">&#x2190; Back to Portfolio</a>
+
+<div class="hero">
+  <h1>Securing Flask Application Login</h1>
+  <div class="meta">
+    <span>&#x1F4C2; Application Security</span>
+    <span>&#x1F4C5; 2024</span>
+    <span>&#x1F393; MSIA Program</span>
+  </div>
+</div>
+
+<div class="container">
+<h1>Securing a Flask Registration and Login Page</h1>
+<h2>Project Overview</h2>
+<p>In this project, I secured a Flask web application by implementing a complete authentication system with password hashing and form validation. I built a registration and login interface that demonstrates industry-standard security practices, including input validation, secure password storage, and proper HTTP method handling for sensitive data.</p>
+<hr />
+<h2>Phase 1: Framework and Dependencies Setup</h2>
+<p>I established the foundation for a secure authentication system by importing and integrating several critical Flask extensions and Python libraries:</p>
+<p><strong>Flask</strong> — The core web framework providing routing, request handling, and templating capabilities.</p>
+<p><strong>Flask-Bootstrap</strong> — I integrated Bootstrap for responsive UI design, ensuring the application works seamlessly across devices without building CSS from scratch.</p>
+<p><strong>Flask-WTF</strong> — This extension allowed me to leverage WTForms for robust form handling with built-in CSRF protection.</p>
+<p><strong>WTForms</strong> — A flexible form library that I used to define structured form classes with automatic HTML rendering.</p>
+<p><strong>WTForms.validators</strong> — I implemented multiple validators (InputRequired, Email, Length) to validate user input on the server side, preventing invalid or malicious data from entering the system.</p>
+<p><strong>Flask-SQLAlchemy</strong> — I integrated SQLAlchemy ORM to manage database connections and user records in a Pythonic way.</p>
+<p><strong>Werkzeug.security</strong> — This utility module provided the password hashing functions I relied on to securely store passwords using cryptographic algorithms.</p>
+<p><strong>Flask-Login</strong> — I used this extension for session management and route protection, enabling me to control access to specific parts of the application.</p>
+<h3>Application Initialization</h3>
+<p><div class="screenshot"><img src="images/image_001.png" alt="Flask application initialization showing the SECRET_KEY configuration" loading="lazy"><div class="screenshot-caption">Flask application initialization showing the SECRET_KEY configuration</div></div></p>
+<p>The application secret key is critical for session security. I implemented a best practice by using Python's <code>secrets</code> module to generate a cryptographically secure random key:</p>
+<pre><code class="language-python">import secrets
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = secrets.token_hex(16)
+</code></pre>
+<p>Using a random secret key provides three key security benefits:</p>
+<ul>
+<li><strong>Confidentiality</strong>: Prevents attackers from guessing the key and forging session cookies</li>
+<li><strong>Integrity</strong>: Ensures session data cannot be tampered with without detection</li>
+<li><strong>Availability</strong>: Reduces the risk of session hijacking attacks</li>
+</ul>
+<hr />
+<h2>Phase 2: Form Validation and Input Handling</h2>
+<h3>Login Form Design</h3>
+<p>I created a LoginForm with specific validation rules:</p>
+<pre><code>validators=[InputRequired(), Length(min=8, max=80)]
+</code></pre>
+<p>for the password field, ensuring passwords are present and meet minimum security requirements.</p>
+<h3>Registration Form Enhancements</h3>
+<p>For the registration form, I implemented more comprehensive validation:</p>
+<ul>
+<li><strong>Username field</strong>: <code>validators=[InputRequired(), Length(min=4, max=15)]</code> — Enforces a reasonable length for usernames</li>
+<li><strong>Email field</strong>: <code>validators=[InputRequired(), Email(message='Invalid Email'), Length(max=50)]</code> — Validates email format and prevents excessively long email addresses</li>
+<li><strong>Password field</strong>: <code>validators=[InputRequired(), Length(min=8, max=80)]</code> — Maintains password security requirements</li>
+</ul>
+<h3>Form Submission Method</h3>
+<p><div class="screenshot"><img src="images/image_002.png" alt="Screenshot showing the login form structure and validation" loading="lazy"><div class="screenshot-caption">Screenshot showing the login form structure and validation</div></div></p>
+<p>I deliberately chose the POST HTTP method for form submission rather than GET. Here's why:</p>
+<ul>
+<li><strong>POST</strong> hides credentials in the request body, not visible in the URL bar</li>
+<li><strong>POST</strong> handles larger data payloads</li>
+<li><strong>POST</strong> is the security standard for sensitive data like login credentials</li>
+</ul>
+<p>GET would expose passwords in the browser's address bar and browser history—an unacceptable security risk.</p>
+<p><div class="screenshot"><img src="images/image_003.png" alt="Registration form with email and password validation" loading="lazy"><div class="screenshot-caption">Registration form with email and password validation</div></div></p>
+<hr />
+<h2>Phase 3: Template Rendering and Form Display</h2>
+<p>I used Jinja2 templating with WTForms integration to render forms securely:</p>
+<pre><code class="language-jinja2">{{ wtf.form_field(form.username) }}
+{{ wtf.form_field(form.email) }}
+{{ wtf.form_field(form.password) }}
+</code></pre>
+<p>Each <code>wtf.form_field()</code> expression renders the field with all validators and HTML attributes automatically applied. WTForms handles CSRF token generation and validation transparently.</p>
+<hr />
+<h2>Phase 4: Form Validation and Data Processing</h2>
+<h3>Server-Side Validation</h3>
+<p>I implemented the <code>validate_on_submit()</code> method to:</p>
+<ol>
+<li>Check if the form has been submitted</li>
+<li>Validate all input against the defined validators</li>
+<li>Return validated data if all checks pass</li>
+</ol>
+<p>When validation succeeds, I extracted the form data and returned it to the user:</p>
+<p><div class="screenshot"><img src="images/image_004.png" alt="Successful login form submission showing validated username and password" loading="lazy"><div class="screenshot-caption">Successful login form submission showing validated username and password</div></div></p>
+<p><div class="screenshot"><img src="images/image_005.png" alt="Successful registration form submission showing validated username, email, and password" loading="lazy"><div class="screenshot-caption">Successful registration form submission showing validated username, email, and password</div></div></p>
+<hr />
+<h2>Phase 5: Secure Password Storage</h2>
+<h3>Password Hashing Implementation</h3>
+<p>I implemented secure password hashing using Werkzeug's <code>generate_password_hash()</code> and <code>check_password_hash()</code> functions:</p>
+<p><div class="screenshot"><img src="images/image_006.png" alt="Code implementation showing password hashing functions" loading="lazy"><div class="screenshot-caption">Code implementation showing password hashing functions</div></div></p>
+<p><div class="screenshot"><img src="images/image_007.png" alt="Terminal output showing the password hashing process" loading="lazy"><div class="screenshot-caption">Terminal output showing the password hashing process</div></div></p>
+<h3>Hash Algorithm and Security</h3>
+<p>I verified the security of the implementation:</p>
+<p><div class="screenshot"><img src="images/image_008.png" alt="Database view showing stored password hashes" loading="lazy"><div class="screenshot-caption">Database view showing stored password hashes</div></div></p>
+<p><strong>Hash Algorithm Used</strong>: <code>pbkdf2:sha256</code></p>
+<p><strong>Sample Hashed Password</strong>: <code>72399361da6a7754fec986dca5b7cbaf1c810a28ded4abaf56b2106d06cb78b0</code></p>
+<p>The PBKDF2 algorithm with SHA-256 provides:
+- <strong>Salting</strong>: Protects against rainbow table attacks
+- <strong>Key stretching</strong>: Makes brute force attacks computationally expensive
+- <strong>Industry standard</strong>: Used across major web frameworks and platforms</p>
+<p><div class="screenshot"><img src="images/image_009.png" alt="Hashed password stored in the database" loading="lazy"><div class="screenshot-caption">Hashed password stored in the database</div></div></p>
+<p><div class="screenshot"><img src="images/image_010.png" alt="Verification showing the hash matches the original password" loading="lazy"><div class="screenshot-caption">Verification showing the hash matches the original password</div></div></p>
+<p><div class="screenshot"><img src="images/image_011.png" alt="Additional verification and database records" loading="lazy"><div class="screenshot-caption">Additional verification and database records</div></div></p>
+<hr />
+<h2>Phase 6: Application Error Handling</h2>
+<p>I implemented proper exception handling in the application startup:</p>
+<pre><code class="language-python">if __name__ == '__main__':
+    try:
+        # Application runs in debug mode for development
+        app.run(debug=True)
+    except Exception as e:
+        # Catch and display any errors during startup
+        print(&quot;Something is Broken!&quot;)
+        print(e)
+</code></pre>
+<p>This ensures that database connection failures or other runtime errors are caught and logged appropriately.</p>
+<p><div class="screenshot"><img src="images/image_012.png" alt="Flask application running successfully in debug mode" loading="lazy"><div class="screenshot-caption">Flask application running successfully in debug mode</div></div></p>
+<hr />
+<h2>Key Takeaways</h2>
+<p>Through this project, I demonstrated:</p>
+<ol>
+<li><strong>Security Best Practices</strong> — Implementing PBKDF2 password hashing, using POST for sensitive data, and generating random session keys</li>
+<li><strong>Input Validation</strong> — Server-side validation prevents malicious input and ensures data integrity</li>
+<li><strong>Framework Integration</strong> — Seamlessly combining multiple Flask extensions for a complete authentication system</li>
+<li><strong>CSRF Protection</strong> — Automatic CSRF token handling through Flask-WTF</li>
+<li><strong>User Experience</strong> — Combining security with clean, responsive UI using Bootstrap</li>
+</ol>
+<hr />
+<h2>Tools Used</h2>
+<ul>
+<li><strong>Flask</strong> — Web application framework</li>
+<li><strong>Flask-Bootstrap</strong> — Responsive UI components</li>
+<li><strong>Flask-WTF</strong> — Form handling with CSRF protection</li>
+<li><strong>WTForms</strong> — Form validation and rendering</li>
+<li><strong>Flask-SQLAlchemy</strong> — Database ORM</li>
+<li><strong>Werkzeug</strong> — Password hashing utilities</li>
+<li><strong>Flask-Login</strong> — User session management</li>
+<li><strong>SQLite</strong> — Database storage</li>
+</ul>
+<hr />
+<h2>Skills Demonstrated</h2>
+<ul>
+<li>Application security architecture</li>
+<li>Secure password storage and verification</li>
+<li>Form validation and input sanitization</li>
+<li>Flask extension integration</li>
+<li>Database design with SQLAlchemy</li>
+<li>HTTP security best practices</li>
+<li>Error handling and debugging</li>
+<li>CSRF protection implementation</li>
+</ul>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+  <img id="lightbox-img" src="" alt="Full size">
+</div>
+
+<script>
+document.querySelectorAll('.screenshot img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox').classList.add('active');
+  });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+});
+</script>
+
+</body>
+</html>
