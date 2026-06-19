@@ -1,129 +1,109 @@
-/**
- * Core portfolio interactions, dynamic rendering, and custom particle engine
- */
+// ═══════════════════════════════════════════════════════════════
+// MAIN.JS — Scroll animations, interactions, particles, rendering
+// ═══════════════════════════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', () => {
-  renderPortfolioData();
-  setupScrollAnimations();
-  setupCursorGlow();
-  setupCanvasParticles();
-  setupMobileNav();
-  setupContactForm();
-  setupStatCounters();
-  setupCardTilt();
+  renderSite();
+  initScrollReveal();
+  initCursorGlow();
+  initParticles();
+  initNavToggle();
+  initContactForm();
+  initCounterAnimation();
+  initTiltEffect();
+  initProjectModal();
 });
 
-// Render dynamic content blocks from data.js
-function renderPortfolioData() {
-  const data = SITE_DATA;
+// ─── Render All Sections from Data ────────────────────────────
+function renderSite() {
+  const d = SITE_DATA;
 
-  // Render About Section
-  const textContainer = document.getElementById('about-text');
-  if (textContainer) {
-    textContainer.innerHTML = data.about.summary.map(paragraph => `<p>${paragraph}</p>`).join('');
-  }
-  
-  const statsContainer = document.getElementById('about-stats');
-  if (statsContainer) {
-    statsContainer.innerHTML = data.about.stats.map(item =>
-      `<div class="stat-card reveal"><span class="stat-number">${item.number}</span><span class="stat-label">${item.label}</span></div>`
-    ).join('');
-  }
+  // About
+  document.getElementById('about-text').innerHTML = d.about.summary.map(p => `<p>${p}</p>`).join('');
+  document.getElementById('about-stats').innerHTML = d.about.stats.map(s =>
+    `<div class="stat-card reveal"><span class="stat-number">${s.number}</span><span class="stat-label">${s.label}</span></div>`
+  ).join('');
 
-  // Render Tech Skills
-  const skillsContainer = document.getElementById('skills-content');
-  if (skillsContainer) {
-    skillsContainer.innerHTML = data.skills.map(group =>
-      `<div class="skill-category reveal">
-        <h3>${group.category}</h3>
-        <div class="skill-tags">${group.items.map(tag => `<span class="skill-tag">${tag}</span>`).join('')}</div>
-      </div>`
-    ).join('');
-  }
+  // Skills
+  document.getElementById('skills-content').innerHTML = d.skills.map(cat =>
+    `<div class="skill-category reveal">
+      <h3>${cat.category}</h3>
+      <div class="skill-tags">${cat.items.map(i => `<span class="skill-tag">${i}</span>`).join('')}</div>
+    </div>`
+  ).join('');
 
-  // Render Professional Timeline
-  const experienceContainer = document.getElementById('experience-content');
-  if (experienceContainer) {
-    experienceContainer.innerHTML = data.experience.map(job =>
-      `<article class="experience-card reveal">
-        <div class="experience-meta">${job.period} · ${job.location}</div>
-        <h3>${job.role}</h3>
-        <p class="experience-company">${job.company}</p>
-        <ul>${job.highlights.map(point => `<li>${point}</li>`).join('')}</ul>
-      </article>`
-    ).join('');
-  }
+  // Experience
+  document.getElementById('experience-content').innerHTML = d.experience.map(exp =>
+    `<article class="experience-card reveal">
+      <div class="experience-meta">${exp.period} · ${exp.location}</div>
+      <h3>${exp.role}</h3>
+      <p class="experience-company">${exp.company}</p>
+      <ul>${exp.highlights.map(h => `<li>${h}</li>`).join('')}</ul>
+    </article>`
+  ).join('');
 
-  // Render Project Cards
-  const projectsContainer = document.getElementById('projects-content');
-  if (projectsContainer) {
-    projectsContainer.innerHTML = data.projects.map(proj =>
-      `<div class="project-card reveal">
-        <h3>${proj.title}</h3>
-        <p class="project-desc">${proj.description}</p>
-        <div class="project-tech">${proj.tech.map(t => `<span>${t}</span>`).join('')}</div>
-        ${proj.link ? `<a href="${proj.link}" target="_blank" rel="noopener" class="project-link">↗ GitHub</a>` : ''}
-      </div>`
-    ).join('');
-  }
+  // Projects
+  document.getElementById('projects-content').innerHTML = d.projects.map(p =>
+    `<div class="project-card reveal${p.images && p.images.length ? ' has-gallery' : ''}" ${p.images && p.images.length ? `data-images='${JSON.stringify(p.images)}'` : ''} data-title="${p.title}" data-desc="${p.description.replace(/"/g, '&quot;')}">
+      <h3>${p.title}</h3>
+      <p class="project-desc">${p.description}</p>
+      <div class="project-tech">${p.tech.map(t => `<span>${t}</span>`).join('')}</div>
+      ${p.images && p.images.length ? `<div class="project-gallery-hint"><span class="gallery-icon">⬡</span> View Project Evidence (${p.images.length})</div>` : ''}
+      ${p.link ? `<a href="${p.link}" target="_blank" rel="noopener" class="project-link">↗ GitHub</a>` : ''}
+      ${p.report ? `<a href="${p.report}" target="_blank" rel="noopener" class="project-report-link">📄 View Full Report</a>` : ''}
+    </div>`
+  ).join('');
 
-  // Render Certifications
-  const certsContainer = document.getElementById('certs-content');
-  if (certsContainer) {
-    certsContainer.innerHTML = data.certifications.map(cert =>
-      `<a href="${cert.credlyUrl}" target="_blank" rel="noopener" class="cert-card reveal">
-        <img src="${cert.image}" alt="${cert.name}" class="cert-badge" loading="lazy">
-        <div class="cert-info">
-          <h3>${cert.name}</h3>
-          <p class="cert-issuer">${cert.issuer}</p>
-          <p class="cert-date">Issued: ${cert.issued}${cert.expires ? ' · Expires: ' + cert.expires : ''}</p>
-          ${cert.expires ? '<span class="cert-status">✓ Active</span>' : ''}
-        </div>
-      </a>`
-    ).join('');
-  }
+  // Certifications
+  document.getElementById('certs-content').innerHTML = d.certifications.map(c =>
+    `<a href="${c.credlyUrl}" target="_blank" rel="noopener" class="cert-card reveal">
+      <img src="${c.image}" alt="${c.name}" class="cert-badge" loading="lazy">
+      <div class="cert-info">
+        <h3>${c.name}</h3>
+        <p class="cert-issuer">${c.issuer}</p>
+        <p class="cert-date">Issued: ${c.issued}${c.expires ? ' · Expires: ' + c.expires : ''}</p>
+        ${c.expires ? '<span class="cert-status">✓ Active</span>' : ''}
+      </div>
+    </a>`
+  ).join('');
 
-  // Render Volunteering
-  const volunteerContainer = document.getElementById('volunteer-content');
-  if (volunteerContainer) {
-    volunteerContainer.innerHTML = data.volunteering.map(vol =>
-      `<div class="volunteer-card reveal">
-        ${vol.image ? `<img src="${vol.image}" alt="${vol.title}" class="volunteer-badge" loading="lazy">` : ''}
-        <div>
-          <h3>${vol.title}</h3>
-          <p class="volunteer-org">${vol.organization}</p>
-          <p>${vol.description}</p>
-        </div>
-      </div>`
-    ).join('');
-  }
+  // Volunteering
+  document.getElementById('volunteer-content').innerHTML = d.volunteering.map(v =>
+    `<div class="volunteer-card reveal">
+      ${v.image ? `<img src="${v.image}" alt="${v.title}" class="volunteer-badge" loading="lazy">` : ''}
+      <div>
+        <h3>${v.title}</h3>
+        <p class="volunteer-org">${v.organization}</p>
+        <p>${v.description}</p>
+      </div>
+    </div>`
+  ).join('');
 
-  // Render Education
-  const educationContainer = document.getElementById('education-content');
-  if (educationContainer) {
-    educationContainer.innerHTML = data.education.map(edu =>
-      `<div class="edu-card reveal">
-        <h3>${edu.degree}</h3>
-        <p class="edu-school">${edu.school}</p>
-        <p class="edu-period">${edu.period} · ${edu.location}${edu.gpa ? ' · GPA: ' + edu.gpa : ''}${edu.concentration ? ' · Concentration: ' + edu.concentration : ''}</p>
-        <p class="edu-coursework"><strong>Coursework:</strong> ${edu.coursework}</p>
-      </div>`
-    ).join('');
-  }
+  // Education
+  document.getElementById('education-content').innerHTML = d.education.map(e =>
+    `<div class="edu-card reveal">
+      <h3>${e.degree}</h3>
+      <p class="edu-school">${e.school}</p>
+      <p class="edu-period">${e.period} · ${e.location}${e.gpa ? ' · GPA: ' + e.gpa : ''}${e.concentration ? ' · Concentration: ' + e.concentration : ''}</p>
+      <p class="edu-coursework"><strong>Coursework:</strong> ${e.coursework}</p>
+    </div>`
+  ).join('');
 
-  // Wire personal strings and forms
-  document.getElementById('contact-email').textContent = data.personal.email;
-  document.getElementById('contact-email').href = `mailto:${data.personal.email}`;
-  document.getElementById('contact-phone').textContent = data.personal.phone;
-  document.getElementById('contact-linkedin').href = data.personal.linkedin;
-  document.getElementById('contact-github').href = data.personal.github;
-  document.getElementById('contact-form').action = data.personal.formspreeEndpoint;
+  // Contact info
+  document.getElementById('contact-email').textContent = d.personal.email;
+  document.getElementById('contact-email').href = `mailto:${d.personal.email}`;
+  document.getElementById('contact-phone').textContent = d.personal.phone;
+  document.getElementById('contact-linkedin').href = d.personal.linkedin;
+  document.getElementById('contact-github').href = d.personal.github;
+
+  // Form action
+  document.getElementById('contact-form').action = d.personal.formspreeEndpoint;
 }
 
-// Fade-in on scroll configuration
-function setupScrollAnimations() {
-  const elements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
-  const scrollObserver = new IntersectionObserver((entries) => {
+// ─── Scroll Reveal (Intersection Observer) ────────────────────
+function initScrollReveal() {
+  const reveals = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
+  const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         entry.target.classList.add('visible');
@@ -131,44 +111,38 @@ function setupScrollAnimations() {
     });
   }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
 
-  elements.forEach(el => scrollObserver.observe(el));
+  reveals.forEach(el => observer.observe(el));
 }
 
-// Interactive desktop cursor spotlight
-function setupCursorGlow() {
-  const glowEl = document.getElementById('cursor-glow');
-  if (!glowEl || window.matchMedia('(max-width: 900px)').matches) return;
-  
+// ─── Cursor Glow ──────────────────────────────────────────────
+function initCursorGlow() {
+  const glow = document.getElementById('cursor-glow');
+  if (!glow || window.matchMedia('(max-width: 900px)').matches) return;
   document.addEventListener('mousemove', e => {
-    glowEl.style.left = e.clientX + 'px';
-    glowEl.style.top = e.clientY + 'px';
+    glow.style.left = e.clientX + 'px';
+    glow.style.top = e.clientY + 'px';
   });
 }
 
-// Interactive background grid and moving nodes
-function setupCanvasParticles() {
+// ─── Particle Background (Combo F: Orbs + Interactive + Grid) ──
+function initParticles() {
   const canvas = document.getElementById('particles-canvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
-  
-  let nodes = [];
-  const totalNodes = 60;
-  let mouseX = 0, mouseY = 0;
+  let particles = [];
+  const count = 60;
+  let mx = 0, my = 0;
 
-  function handleResize() {
+  function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
   }
-  handleResize();
-  window.addEventListener('resize', handleResize);
-  
-  document.addEventListener('mousemove', e => { 
-    mouseX = e.clientX; 
-    mouseY = e.clientY; 
-  });
+  resize();
+  window.addEventListener('resize', resize);
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
 
-  for (let i = 0; i < totalNodes; i++) {
-    nodes.push({
+  for (let i = 0; i < count; i++) {
+    particles.push({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
       vx: (Math.random() - 0.5) * 0.4,
@@ -177,12 +151,12 @@ function setupCanvasParticles() {
     });
   }
 
-  let gradientRotation = 0;
+  let orbAngle = 0;
 
-  function renderFrame() {
+  function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Canvas Background Tech Grid
+    // Grid
     ctx.strokeStyle = 'rgba(0,255,200,0.04)';
     ctx.lineWidth = 1;
     for (let x = 0; x < canvas.width; x += 60) {
@@ -192,158 +166,256 @@ function setupCanvasParticles() {
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
     }
 
-    // Dynamic Ambient Glows
-    gradientRotation += 0.008;
-    const coreGlow = ctx.createRadialGradient(
-      200 + Math.sin(gradientRotation) * 50, 200 + Math.cos(gradientRotation) * 40, 0,
+    // Orbs
+    orbAngle += 0.008;
+    const grd = ctx.createRadialGradient(
+      200 + Math.sin(orbAngle) * 50, 200 + Math.cos(orbAngle) * 40, 0,
       200, 200, 300
     );
-    coreGlow.addColorStop(0, 'rgba(0,255,200,0.06)');
-    coreGlow.addColorStop(1, 'transparent');
-    ctx.fillStyle = coreGlow;
+    grd.addColorStop(0, 'rgba(0,255,200,0.06)');
+    grd.addColorStop(1, 'transparent');
+    ctx.fillStyle = grd;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const accentGlow = ctx.createRadialGradient(
-      canvas.width - 200 + Math.cos(gradientRotation) * 40, canvas.height - 200 + Math.sin(gradientRotation) * 30, 0,
+    const grd2 = ctx.createRadialGradient(
+      canvas.width - 200 + Math.cos(orbAngle) * 40, canvas.height - 200 + Math.sin(orbAngle) * 30, 0,
       canvas.width - 200, canvas.height - 200, 250
     );
-    accentGlow.addColorStop(0, 'rgba(123,94,167,0.07)');
-    accentGlow.addColorStop(1, 'transparent');
-    ctx.fillStyle = accentGlow;
+    grd2.addColorStop(0, 'rgba(123,94,167,0.07)');
+    grd2.addColorStop(1, 'transparent');
+    ctx.fillStyle = grd2;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Update and draw interactive nodes
-    nodes.forEach(n => {
-      const deltaX = mouseX - n.x;
-      const deltaY = mouseY - n.y;
-      const distance = Math.hypot(deltaX, deltaY);
-      
-      if (distance < 120) { 
-        n.x -= deltaX * 0.015; 
-        n.y -= deltaY * 0.015; 
-      }
-      
-      n.x += n.vx; 
-      n.y += n.vy;
-      
-      if (n.x < 0 || n.x > canvas.width) n.vx *= -1;
-      if (n.y < 0 || n.y > canvas.height) n.vy *= -1;
-      
+    // Particles (interactive)
+    particles.forEach(p => {
+      const dx = mx - p.x, dy = my - p.y, d = Math.hypot(dx, dy);
+      if (d < 120) { p.x -= dx * 0.015; p.y -= dy * 0.015; }
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+      if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
       ctx.beginPath();
-      ctx.arc(n.x, n.y, n.size, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(0, 255, 200, 0.45)';
       ctx.fill();
     });
 
-    // Constellation lines
-    for (let i = 0; i < nodes.length; i++) {
-      for (let j = i + 1; j < nodes.length; j++) {
-        const dist = Math.hypot(nodes[i].x - nodes[j].x, nodes[i].y - nodes[j].y);
-        if (dist < 140) {
+    // Connections
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const d = Math.hypot(particles[i].x - particles[j].x, particles[i].y - particles[j].y);
+        if (d < 140) {
           ctx.beginPath();
-          ctx.moveTo(nodes[i].x, nodes[i].y);
-          ctx.lineTo(nodes[j].x, nodes[j].y);
-          ctx.strokeStyle = `rgba(0, 255, 200, ${0.12 * (1 - dist / 140)})`;
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(0, 255, 200, ${0.12 * (1 - d / 140)})`;
           ctx.stroke();
         }
       }
     }
 
-    requestAnimationFrame(renderFrame);
+    requestAnimationFrame(draw);
   }
-  renderFrame();
+  draw();
 }
 
-// Mobile responsive nav layout
-function setupMobileNav() {
-  const toggleBtn = document.getElementById('nav-toggle');
-  const linkMenu = document.getElementById('nav-links');
-  if (!toggleBtn || !linkMenu) return;
+// ─── Mobile Nav Toggle ────────────────────────────────────────
+function initNavToggle() {
+  const toggle = document.getElementById('nav-toggle');
+  const links = document.getElementById('nav-links');
+  if (!toggle || !links) return;
 
-  toggleBtn.addEventListener('click', () => {
-    linkMenu.classList.toggle('open');
-    toggleBtn.textContent = linkMenu.classList.contains('open') ? '✕' : '☰';
+  toggle.addEventListener('click', () => {
+    links.classList.toggle('open');
+    toggle.textContent = links.classList.contains('open') ? '✕' : '☰';
   });
 
-  linkMenu.querySelectorAll('a').forEach(anchor => {
-    anchor.addEventListener('click', () => {
-      linkMenu.classList.remove('open');
-      toggleBtn.textContent = '☰';
+  links.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      links.classList.remove('open');
+      toggle.textContent = '☰';
     });
   });
 }
 
-// AJAX form execution
-function setupContactForm() {
-  const contactForm = document.getElementById('contact-form');
-  const statusBanner = document.getElementById('form-status');
-  if (!contactForm) return;
+// ——— Project Modal / Lightbox ————————————————————————————
+function initProjectModal() {
+  const modal = document.createElement('div');
+  modal.id = 'project-modal';
+  modal.className = 'project-modal';
+  modal.innerHTML = `
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <button class="modal-close">&times;</button>
+      <h2 class="modal-title"></h2>
+      <p class="modal-desc"></p>
+      <div class="modal-thumbs"></div>
+    </div>
+    <div class="modal-fullview" style="display:none">
+      <button class="fullview-close">&times;</button>
+      <button class="fullview-prev">&#8249;</button>
+      <button class="fullview-next">&#8250;</button>
+      <div class="fullview-img-container">
+        <img class="fullview-img" src="" alt="">
+      </div>
+      <div class="fullview-counter"></div>
+    </div>
+  `;
+  document.body.appendChild(modal);
 
-  contactForm.addEventListener('submit', async (e) => {
+  const overlay = modal.querySelector('.modal-overlay');
+  const closeBtn = modal.querySelector('.modal-close');
+  const titleEl = modal.querySelector('.modal-title');
+  const descEl = modal.querySelector('.modal-desc');
+  const thumbsEl = modal.querySelector('.modal-thumbs');
+  const fullview = modal.querySelector('.modal-fullview');
+  const fullviewImg = modal.querySelector('.fullview-img');
+  const fullviewCounter = modal.querySelector('.fullview-counter');
+  const prevBtn = modal.querySelector('.fullview-prev');
+  const nextBtn = modal.querySelector('.fullview-next');
+  const fullviewClose = modal.querySelector('.fullview-close');
+
+  let currentImages = [];
+  let currentIndex = 0;
+
+  function openGallery(card) {
+    currentImages = JSON.parse(card.dataset.images || '[]');
+    titleEl.textContent = card.dataset.title;
+    descEl.textContent = card.dataset.desc;
+    thumbsEl.innerHTML = currentImages.map((src, i) =>
+      `<div class="modal-thumb" data-index="${i}">
+        <img src="${src}" alt="Evidence ${i + 1}" loading="lazy">
+      </div>`
+    ).join('');
+
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    // Thumb click → open full view
+    thumbsEl.querySelectorAll('.modal-thumb').forEach(thumb => {
+      thumb.addEventListener('click', () => {
+        currentIndex = parseInt(thumb.dataset.index);
+        showFullView();
+      });
+    });
+  }
+
+  function showFullView() {
+    fullviewImg.src = currentImages[currentIndex];
+    fullviewCounter.textContent = `${currentIndex + 1} / ${currentImages.length}`;
+    fullview.style.display = 'flex';
+    fullviewImg.classList.remove('zoomed');
+  }
+
+  function hideFullView() {
+    fullview.style.display = 'none';
+  }
+
+  function closeGallery() {
+    modal.classList.remove('active');
+    fullview.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  prevBtn.addEventListener('click', () => {
+    currentIndex = (currentIndex - 1 + currentImages.length) % currentImages.length;
+    showFullView();
+  });
+  nextBtn.addEventListener('click', () => {
+    currentIndex = (currentIndex + 1) % currentImages.length;
+    showFullView();
+  });
+  fullviewImg.addEventListener('click', () => {
+    fullviewImg.classList.toggle('zoomed');
+  });
+  fullviewClose.addEventListener('click', hideFullView);
+  overlay.addEventListener('click', closeGallery);
+  closeBtn.addEventListener('click', closeGallery);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      if (fullview.style.display === 'flex') hideFullView();
+      else closeGallery();
+    }
+    if (fullview.style.display === 'flex') {
+      if (e.key === 'ArrowLeft') { currentIndex = (currentIndex - 1 + currentImages.length) % currentImages.length; showFullView(); }
+      if (e.key === 'ArrowRight') { currentIndex = (currentIndex + 1) % currentImages.length; showFullView(); }
+    }
+  });
+
+  // Attach to project cards
+  document.querySelectorAll('.project-card.has-gallery').forEach(card => {
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('a')) return;
+      openGallery(card);
+    });
+  });
+}
+
+// ─── Contact Form (Formspree) ─────────────────────────────────
+function initContactForm() {
+  const form = document.getElementById('contact-form');
+  const status = document.getElementById('form-status');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const formData = new FormData(contactForm);
+    const data = new FormData(form);
 
     try {
-      const response = await fetch(contactForm.action, {
+      const res = await fetch(form.action, {
         method: 'POST',
-        body: formData,
+        body: data,
         headers: { 'Accept': 'application/json' }
       });
 
-      if (response.ok) {
-        statusBanner.textContent = "✓ Message sent successfully! I'll be in touch.";
-        statusBanner.className = 'form-status success';
-        contactForm.reset();
+      if (res.ok) {
+        status.textContent = '✓ Message sent! I\'ll get back to you soon.';
+        status.className = 'form-status success';
+        form.reset();
       } else {
-        throw new Error('Submission error');
+        throw new Error('Failed');
       }
     } catch {
-      statusBanner.textContent = '✕ Transmission failed. Please contact me directly via email.';
-      statusBanner.className = 'form-status error';
+      status.textContent = '✕ Something went wrong. Please email me directly.';
+      status.className = 'form-status error';
     }
   });
 }
 
-// Numbers rolling animations
-function setupStatCounters() {
-  const targetCounters = document.querySelectorAll('.stat-number');
-  const counterObserver = new IntersectionObserver((entries) => {
+// ─── Counter Animation ────────────────────────────────────────
+function initCounterAnimation() {
+  const counters = document.querySelectorAll('.stat-number');
+  const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting && !entry.target.dataset.counted) {
         entry.target.dataset.counted = 'true';
-        const initialText = entry.target.textContent;
-        const numberMatch = initialText.match(/(\d+)/);
-        if (!numberMatch) return;
-        
-        const finalVal = parseInt(numberMatch[1]);
-        const appendedString = initialText.replace(numberMatch[1], '');
-        let currentVal = 0;
-        const tickIncrement = Math.max(1, Math.floor(finalVal / 20));
-        
-        const rollTimer = setInterval(() => {
-          currentVal += tickIncrement;
-          if (currentVal >= finalVal) { 
-            currentVal = finalVal; 
-            clearInterval(rollTimer); 
-          }
-          entry.target.textContent = currentVal + appendedString;
+        const text = entry.target.textContent;
+        const match = text.match(/(\d+)/);
+        if (!match) return;
+        const target = parseInt(match[1]);
+        const suffix = text.replace(match[1], '');
+        let current = 0;
+        const step = Math.max(1, Math.floor(target / 20));
+        const interval = setInterval(() => {
+          current += step;
+          if (current >= target) { current = target; clearInterval(interval); }
+          entry.target.textContent = current + suffix;
         }, 60);
       }
     });
   }, { threshold: 0.5 });
-  
-  targetCounters.forEach(counter => counterObserver.observe(counter));
+  counters.forEach(el => observer.observe(el));
 }
 
-// Soft 3D tilt tracking for grid layouts
-function setupCardTilt() {
-  const targetCards = document.querySelectorAll('.project-card, .cert-card, .stat-card, .skill-category');
-  targetCards.forEach(card => {
+// ─── Hover Tilt Effect on Cards ───────────────────────────────
+function initTiltEffect() {
+  const cards = document.querySelectorAll('.project-card, .cert-card, .stat-card, .skill-category');
+  cards.forEach(card => {
     card.addEventListener('mousemove', e => {
-      const boundary = card.getBoundingClientRect();
-      const relativeX = (e.clientX - boundary.left) / boundary.width - 0.5;
-      const relativeY = (e.clientY - boundary.top) / boundary.height - 0.5;
-      card.style.transform = `perspective(600px) rotateY(${relativeX * 6}deg) rotateX(${-relativeY * 6}deg) translateY(-4px)`;
+      const rect = card.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      card.style.transform = `perspective(600px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg) translateY(-4px)`;
     });
     card.addEventListener('mouseleave', () => {
       card.style.transform = '';
