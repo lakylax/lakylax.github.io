@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Symmetric-Key Ciphers & CrypTool Analysis</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a2e;
+  --text: #e0e0e0;
+  --text-secondary: #c8c8d8;
+  --text-muted: #9898a8;
+  --primary: #00d4ff;
+  --primary-dim: rgba(0, 212, 255, 0.15);
+  --accent: #7c3aed;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(0, 212, 255, 0.3);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.7; min-height: 100vh; }
+.back-link { position: fixed; top: 20px; left: 20px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; z-index: 100; background: var(--bg-card); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); transition: all 0.3s ease; }
+.back-link:hover { border-color: var(--border-glow); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+.hero { padding: 80px 40px 40px; text-align: center; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 100%); }
+.hero h1 { font-size: clamp(24px, 4vw, 36px); font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -0.5px; }
+.hero .meta { color: var(--text-muted); font-size: 14px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.hero .meta span { display: flex; align-items: center; gap: 6px; }
+.container { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+h2 { font-size: 22px; font-weight: 600; color: #fff; margin-top: 48px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); display: inline-block; }
+h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-top: 28px; margin-bottom: 10px; }
+p { margin: 12px 0; font-size: 15px; color: var(--text-secondary); }
+strong { color: var(--text); }
+ul, ol { margin: 12px 0; padding-left: 24px; }
+li { margin: 6px 0; font-size: 15px; color: var(--text-secondary); }
+code { background: var(--bg-secondary); color: var(--primary); padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--border); }
+pre { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; color: var(--text); margin: 16px 0; }
+pre code { background: none; border: none; padding: 0; color: inherit; }
+.screenshot { margin: 20px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.3s ease; }
+.screenshot:hover { border-color: var(--border-glow); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1); }
+.screenshot img { display: block; width: 100%; height: auto; cursor: pointer; }
+.screenshot-caption { font-size: 12px; color: var(--text-muted); padding: 10px 14px; background: var(--bg-secondary); border-top: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+th { text-align: left; color: var(--text-muted); font-weight: 500; padding: 10px 14px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.takeaways { background: var(--bg-secondary); border-left: 3px solid var(--primary); padding: 20px 24px; border-radius: 0 10px 10px 0; margin: 24px 0; }
+.takeaways li { color: var(--text); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tag { background: var(--primary-dim); color: var(--primary); padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; border: 1px solid rgba(0, 212, 255, 0.2); }
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 4px; }
+@media (max-width: 640px) { .hero { padding: 60px 20px 30px; } .container { padding: 24px 16px 60px; } h2 { font-size: 19px; } }
+</style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-link">&#x2190; Back to Portfolio</a>
+
+<div class="hero">
+  <h1>Symmetric-Key Ciphers & CrypTool Analysis</h1>
+  <div class="meta">
+    <span>&#x1F4C2; Cryptography</span>
+    <span>&#x1F4C5; 2024</span>
+    <span>&#x1F393; MSIA Program</span>
+  </div>
+</div>
+
+<div class="container">
+<h1>Symmetric-Key Ciphers Analysis with CrypTool-1</h1>
+<h2>Project Overview</h2>
+<p>In this project, I analyzed and broke multiple symmetric-key ciphers using CrypTool-1, a cryptanalysis platform. I worked with both known and unknown plaintext scenarios, applying various cryptographic techniques including frequency analysis, known plaintext attacks, and brute-force methodology. The project deepened my understanding of classical cipher mechanisms and modern encryption vulnerabilities.</p>
+<hr />
+<h2>Environment Setup</h2>
+<p>I utilized <strong>CrypTool-1</strong> as my primary analysis platform. This tool provides a comprehensive suite of cryptanalysis features including:
+- Symmetric cipher encryption/decryption
+- Frequency analysis and N-gram tools
+- Known plaintext attack capabilities
+- Manual substitution analysis
+- Brute-force key estimation</p>
+<hr />
+<h2>Phase 1: Recognizing &amp; Breaking Ciphers for the Same Text Encrypted with Different Methods</h2>
+<h3>Identifying the Baseline Cipher</h3>
+<p>I began by identifying which ciphertexts corresponded to the same plaintext. Given that the Caesar cipher uses k = 3, I created a new file containing all ciphertexts and applied Caesar decryption through CrypTool's menu:</p>
+<p><strong>Encryption/Decryption → Symmetric (classic) → Caesar</strong></p>
+<p>I configured the key entry to use a numeric value of 3:</p>
+<p><strong>CrypTool Caesar cipher configuration with key = 3</strong>
+<div class="screenshot"><img src="images/image_001.png" alt="" loading="lazy"></div></p>
+<p>After decryption, I successfully identified Ciphertext 5:</p>
+<p><strong>Decrypted output revealing Ciphertext 5</strong>
+<div class="screenshot"><img src="images/image_002.png" alt="" loading="lazy"></div></p>
+<p>The plaintext read: <em>"IF YOU REVEAL YOUR SECRETS TO THE WIND, YOU SHOULD NOT BLAME THE WIND FOR REVEALING THEM TO THE TREES"</em></p>
+<h3>Cipher Classification</h3>
+<p>Based on my analysis, I identified the following cipher methods for each ciphertext:</p>
+<ul>
+<li><strong>Cipher 1:</strong> Vigenere, Hill</li>
+<li><strong>Cipher 2:</strong> Vigenere, Hill</li>
+<li><strong>Cipher 3:</strong> Affine</li>
+<li><strong>Cipher 4:</strong> Permutation</li>
+<li><strong>Cipher 6:</strong> Playfair</li>
+</ul>
+<h3>Extracting the Hill Cipher Key</h3>
+<p>I employed a <strong>known plaintext attack</strong> on Cipher 2. I navigated to:</p>
+<p><strong>Analysis → Symmetric Encryption (classic) → Known Plaintext → Hill</strong></p>
+<p><strong>Accessing the Hill cipher known plaintext attack feature</strong>
+<div class="screenshot"><img src="images/image_003.png" alt="" loading="lazy"></div></p>
+<p>I specified the discovered plaintext and Cipher 2 as the ciphertext, setting the dimension to 3×3 as required:</p>
+<p><strong>Configuring the known plaintext attack parameters</strong>
+<div class="screenshot"><img src="images/image_004.png" alt="" loading="lazy"></div></p>
+<p>The analysis yielded the key matrix:</p>
+<p><strong>Hill cipher key matrix extraction</strong>
+<div class="screenshot"><img src="images/image_005.png" alt="" loading="lazy"></div></p>
+<h3>Manual Substitution Analysis</h3>
+<p>For Cipher 3 (Affine), I used CrypTool's manual substitution analysis:</p>
+<p><strong>Analysis → Symmetric Encryption (classic) → Manual Analysis → Substitution</strong></p>
+<p><strong>Accessing the manual substitution analysis tool</strong>
+<div class="screenshot"><img src="images/image_006.png" alt="" loading="lazy"></div></p>
+<p>By comparing letter correspondence between the plaintext and ciphertext, I determined the affine function:</p>
+<p><strong>Manual substitution analysis results</strong>
+<div class="screenshot"><img src="images/image_007.png" alt="" loading="lazy"></div></p>
+<p><strong>Affine Key:</strong> f(x) = (9x + 18) mod 26</p>
+<h3>Frequency Analysis for Transposition Detection</h3>
+<p>To identify Cipher 4 as a permutation cipher, I compared letter frequency distributions. I used:</p>
+<p><strong>Analysis → Tools for Analysis → N-Gram</strong></p>
+<p><strong>N-Gram analysis tool interface</strong>
+<div class="screenshot"><img src="images/image_008.png" alt="" loading="lazy"></div></p>
+<p>The plaintext frequency distribution:</p>
+<p><strong>Plaintext letter frequency analysis</strong>
+<div class="screenshot"><img src="images/image_009.png" alt="" loading="lazy"></div></p>
+<p>Cipher 4's frequency distribution showed identical character frequencies:</p>
+<p><strong>Ciphertext 4 letter frequency analysis</strong>
+<div class="screenshot"><img src="images/image_010.png" alt="" loading="lazy"></div></p>
+<p>This matching frequency profile confirmed that Cipher 4 was a <strong>transposition cipher</strong> rather than a substitution cipher.</p>
+<h3>Playfair Cipher Identification</h3>
+<p>Cipher 6 exhibited a characteristic of Playfair encryption—an extra character beyond the original plaintext length. This occurs when the plaintext contains duplicate letters in a pair. In the word "TREES," the pair "EE" (at positions 79-80) requires a filler character, confirming this as a <strong>Playfair cipher</strong>.</p>
+<h3>Extracting the Vigenere Key</h3>
+<p>For Cipher 1, I applied a known plaintext attack using the Vigenere square. By comparing plaintext, ciphertext, and their correspondence on the Vigenere table, I extracted the key:</p>
+<p><strong>Vigenere square (tabula recta) used for key derivation</strong>
+<div class="screenshot"><img src="images/image_011.png" alt="" loading="lazy"></div></p>
+<table>
+<thead>
+<tr>
+<th>I</th>
+<th>F</th>
+<th>Y</th>
+<th>O</th>
+<th>U</th>
+<th>R</th>
+<th>E</th>
+<th>V</th>
+<th>E</th>
+<th>A</th>
+<th>L</th>
+<th>Y</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E</td>
+<td>N</td>
+<td>L</td>
+<td>R</td>
+<td>Q</td>
+<td>Z</td>
+<td>R</td>
+<td>Y</td>
+<td>A</td>
+<td>I</td>
+<td>Y</td>
+<td>B</td>
+</tr>
+<tr>
+<td><strong>W</strong></td>
+<td><strong>I</strong></td>
+<td><strong>N</strong></td>
+<td><strong>D</strong></td>
+<td>W</td>
+<td>I</td>
+<td>N</td>
+<td>D</td>
+<td><strong>W</strong></td>
+<td><strong>I</strong></td>
+<td><strong>N</strong></td>
+<td><strong>D</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Vigenere Key:</strong> WIND (repeated throughout the plaintext)</p>
+<hr />
+<h2>Phase 2: Breaking Ciphers for Different Texts with Unknown Methods</h2>
+<p>In this phase, I faced 6 different ciphertexts encrypted with unknown algorithms and no known plaintext.</p>
+<h3>Initial Caesar Decryption</h3>
+<p>I attempted Caesar decryption with k = 3 on all ciphertexts. This successfully decrypted Cipher 6:</p>
+<p><strong>Caesar decryption of Cipher 6</strong>
+<div class="screenshot"><img src="images/image_012.png" alt="" loading="lazy"></div></p>
+<p><strong>Decrypted plaintext:</strong> <em>"Anyone who attempts to generate random numbers by deterministic means is of course living in a state of sin"</em></p>
+<h3>Cipher Classification (Unknown Plaintext)</h3>
+<p>Based on frequency analysis and cipher characteristics, I classified the remaining ciphers:</p>
+<ul>
+<li><strong>Cipher 1:</strong> Affine, Hill, Vigenere, Playfair</li>
+<li><strong>Cipher 2:</strong> Affine, Hill, Vigenere, Playfair</li>
+<li><strong>Cipher 3:</strong> Permutation (character frequency matches English language distribution)</li>
+<li><strong>Cipher 4:</strong> Affine, Hill, Vigenere, Playfair</li>
+<li><strong>Cipher 5:</strong> Affine, Hill, Vigenere, Playfair</li>
+</ul>
+<hr />
+<h2>Phase 3: Demonstrations of Cipher Operations</h2>
+<h3>Rijndael Inspector (AES Visualization)</h3>
+<p>I explored CrypTool's advanced features to visualize cipher operations. I navigated to the Rijndael Inspector:</p>
+<p><strong>Accessing Rijndael Inspector through CrypTool menu</strong>
+<div class="screenshot"><img src="images/image_013.png" alt="" loading="lazy"></div></p>
+<p>Due to Flash Player discontinuation, I referenced the demonstration from the sample report. The analysis involved setting input and cipher key values to zeros:</p>
+<p><strong>Rijndael Inspector application window</strong>
+<div class="screenshot"><img src="images/image_014.png" alt="" loading="lazy"></div></p>
+<p><strong>Lab assignment instructions alongside Rijndael Inspector with all-zero input and key</strong>
+<div class="screenshot"><img src="images/image_015.png" alt="" loading="lazy"></div></p>
+<p><strong>Rijndael Inspector encryption result: all-zero plaintext with all-zero key producing ciphertext 66ef88ca...</strong>
+<div class="screenshot"><img src="images/image_016.png" alt="" loading="lazy"></div></p>
+<h3>Avalanche Effect Analysis</h3>
+<p>I then demonstrated the <strong>avalanche effect</strong> in encryption—how a single-bit key change produces dramatically different ciphertext:</p>
+<p><strong>Ciphertext with key modified by one bit</strong>
+<div class="screenshot"><img src="images/image_017.png" alt="" loading="lazy"></div></p>
+<p>The analysis revealed that changing just one bit in the key resulted in changes across every byte of the ciphertext, demonstrating the strong diffusion properties of AES.</p>
+<h3>Decryption Verification</h3>
+<p>I decrypted a ciphertext block using a known key:</p>
+<p><strong>Ciphertext:</strong> 68ccd2d7 27de2bf6 4e55efc6 d0c19813</p>
+<p><strong>Key:</strong> 01234567 89abcdef fedcba98 76543210</p>
+<p><strong>Decryption result</strong>
+<div class="screenshot"><img src="images/image_018.png" alt="" loading="lazy"></div></p>
+<hr />
+<h2>Phase 4: Brute-Force Attack Analysis</h2>
+<h3>DES Encryption with Partial Known Key</h3>
+<p>I encrypted the plaintext "I am laxman puri" using DES (ECB) with the key:</p>
+<p><strong>Key:</strong> 00 00 00 00 00 ff ff ff</p>
+<p><strong>DES encrypted output</strong>
+<div class="screenshot"><img src="images/image_019.png" alt="" loading="lazy"></div></p>
+<p>I then performed a brute-force attack, constraining the first 10 hexadecimal digits to zeros. CrypTool performed a 21-bit brute-force search with estimated key recovery in approximately <strong>14 seconds</strong>:</p>
+<p><strong>DES (ECB) brute-force analysis — 21-bit search, ~14 seconds remaining</strong>
+<div class="screenshot"><img src="images/image_020.png" alt="" loading="lazy"></div></p>
+<h3>Increasing Constraint Difficulty</h3>
+<p>I modified the key to <strong>00 00 00 00 0f ff ff ff</strong> and repeated the attack. CrypTool performed a 24-bit brute-force search with estimated time of approximately <strong>2 minutes</strong>:</p>
+<p><strong>DES (ECB) brute-force analysis — 24-bit search, ~1:54 remaining</strong>
+<div class="screenshot"><img src="images/image_021.png" alt="" loading="lazy"></div></p>
+<h3>Scaling the Search Space</h3>
+<p>With the key <strong>00 00 00 00 ff ff ff ff</strong>, providing one fewer hexadecimal digit to constrain, the estimated attack time jumped to approximately <strong>29 minutes</strong>—demonstrating the exponential growth of the search space.</p>
+<p><strong>DES (ECB) brute-force analysis — 28-bit search, ~29 minutes remaining</strong>
+<div class="screenshot"><img src="images/image_022.png" alt="" loading="lazy"></div></p>
+<p>Each additional unknown bit exponentially increases the search time, clearly demonstrating how key length provides security against brute-force attacks.</p>
+<h3>Comparative Algorithm Analysis</h3>
+<p>I evaluated brute-force attack times across different encryption algorithms:</p>
+<p><strong>Triple DES (ECB)</strong> with key ending in <strong>ff ff ff ff ff:</strong>
+Expected attack time: <strong>47 minutes</strong></p>
+<p><strong>Triple DES (ECB) brute-force analysis — 28-bit search, ~47 minutes remaining</strong>
+<div class="screenshot"><img src="images/image_023.png" alt="" loading="lazy"></div></p>
+<p><strong>DES (CBC) mode:</strong>
+Expected attack time: <strong>53 minutes</strong></p>
+<p><strong>DES (CBC) brute-force analysis — 28-bit search, ~53 minutes remaining</strong>
+<div class="screenshot"><img src="images/image_024.png" alt="" loading="lazy"></div></p>
+<p><strong>Rijndael (AES) mode:</strong>
+Expected attack time: <strong>1 hour 10 minutes</strong></p>
+<p><strong>Rijndael (AES) brute-force analysis — 32-bit search, ~1 hour 10 minutes remaining</strong>
+<div class="screenshot"><img src="images/image_025.png" alt="" loading="lazy"></div></p>
+<hr />
+<h2>Key Takeaways</h2>
+<ol>
+<li>
+<p><strong>Frequency Analysis Effectiveness:</strong> Classical ciphers like Caesar, Affine, and Vigenere remain vulnerable to frequency analysis and known plaintext attacks—demonstrating why modern algorithms are essential.</p>
+</li>
+<li>
+<p><strong>Cipher Identification:</strong> Each cipher type leaves distinctive fingerprints—frequency patterns for substitution, matching frequencies for transposition, and length anomalies for Playfair.</p>
+</li>
+<li>
+<p><strong>Avalanche Effect:</strong> Modern block ciphers like AES exhibit strong avalanche properties, where minimal key changes produce drastically different ciphertexts, enhancing security.</p>
+</li>
+<li>
+<p><strong>Exponential Key Space Growth:</strong> Each additional unknown bit approximately doubles the brute-force attack time, underscoring the exponential nature of cryptographic key spaces.</p>
+</li>
+<li>
+<p><strong>Algorithm Comparison:</strong> Across tested algorithms, attack times scale from seconds to days with similar constraints, reflecting differences in cipher complexity and key schedules.</p>
+</li>
+</ol>
+<hr />
+<h2>Tools Used</h2>
+<ul>
+<li><strong>CrypTool-1:</strong> Cryptanalysis platform featuring symmetric cipher tools, frequency analysis, known plaintext attacks, and brute-force estimation</li>
+<li><strong>Rijndael Inspector:</strong> AES visualization tool (legacy, Flash-based)</li>
+<li><strong>N-Gram Analysis:</strong> Statistical character frequency tools</li>
+</ul>
+<hr />
+<h2>Skills Demonstrated</h2>
+<ul>
+<li><strong>Cryptanalysis:</strong> Applied multiple attack vectors including known plaintext, frequency analysis, and brute-force techniques</li>
+<li><strong>Classical Cipher Recognition:</strong> Identified and classified Caesar, Vigenere, Affine, Hill, Playfair, and Permutation ciphers</li>
+<li><strong>Statistical Analysis:</strong> Leveraged character frequency distributions to distinguish cipher types</li>
+<li><strong>Modern Encryption:</strong> Explored AES and DES properties, avalanche effects, and computational security</li>
+<li><strong>Key Space Analysis:</strong> Calculated and compared brute-force attack complexity across algorithms and key constraints</li>
+<li><strong>Security Evaluation:</strong> Assessed relative strengths of classical versus modern encryption methods</li>
+</ul>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+  <img id="lightbox-img" src="" alt="Full size">
+</div>
+
+<script>
+document.querySelectorAll('.screenshot img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox').classList.add('active');
+  });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hash Functions & Digital Signatures</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a2e;
+  --text: #e0e0e0;
+  --text-secondary: #c8c8d8;
+  --text-muted: #9898a8;
+  --primary: #00d4ff;
+  --primary-dim: rgba(0, 212, 255, 0.15);
+  --accent: #7c3aed;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(0, 212, 255, 0.3);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.7; min-height: 100vh; }
+.back-link { position: fixed; top: 20px; left: 20px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; z-index: 100; background: var(--bg-card); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); transition: all 0.3s ease; }
+.back-link:hover { border-color: var(--border-glow); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+.hero { padding: 80px 40px 40px; text-align: center; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 100%); }
+.hero h1 { font-size: clamp(24px, 4vw, 36px); font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -0.5px; }
+.hero .meta { color: var(--text-muted); font-size: 14px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.hero .meta span { display: flex; align-items: center; gap: 6px; }
+.container { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+h2 { font-size: 22px; font-weight: 600; color: #fff; margin-top: 48px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); display: inline-block; }
+h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-top: 28px; margin-bottom: 10px; }
+p { margin: 12px 0; font-size: 15px; color: var(--text-secondary); }
+strong { color: var(--text); }
+ul, ol { margin: 12px 0; padding-left: 24px; }
+li { margin: 6px 0; font-size: 15px; color: var(--text-secondary); }
+code { background: var(--bg-secondary); color: var(--primary); padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--border); }
+pre { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; color: var(--text); margin: 16px 0; }
+pre code { background: none; border: none; padding: 0; color: inherit; }
+.screenshot { margin: 20px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.3s ease; }
+.screenshot:hover { border-color: var(--border-glow); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1); }
+.screenshot img { display: block; width: 100%; height: auto; cursor: pointer; }
+.screenshot-caption { font-size: 12px; color: var(--text-muted); padding: 10px 14px; background: var(--bg-secondary); border-top: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+th { text-align: left; color: var(--text-muted); font-weight: 500; padding: 10px 14px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.takeaways { background: var(--bg-secondary); border-left: 3px solid var(--primary); padding: 20px 24px; border-radius: 0 10px 10px 0; margin: 24px 0; }
+.takeaways li { color: var(--text); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tag { background: var(--primary-dim); color: var(--primary); padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; border: 1px solid rgba(0, 212, 255, 0.2); }
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 4px; }
+@media (max-width: 640px) { .hero { padding: 60px 20px 30px; } .container { padding: 24px 16px 60px; } h2 { font-size: 19px; } }
+</style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-link">&#x2190; Back to Portfolio</a>
+
+<div class="hero">
+  <h1>Hash Functions & Digital Signatures</h1>
+  <div class="meta">
+    <span>&#x1F4C2; Cryptography</span>
+    <span>&#x1F4C5; 2024</span>
+    <span>&#x1F393; MSIA Program</span>
+  </div>
+</div>
+
+<div class="container">
+<h1>Cryptographic Hash Functions and Digital Signatures</h1>
+<h2>Project Overview</h2>
+<p>In this project, I explored the practical implementation of cryptographic hash functions and digital signatures using CrypTool-1. I gained hands-on experience with HMAC generation, hash function sensitivity, digital signature workflows, RSA encryption, and vulnerability testing through hash collision attacks. This work deepened my understanding of how modern cryptography protects message integrity and authentication in real-world systems.</p>
+<hr />
+<h2>Phase 1: Hash Generation and Sensitivity Analysis</h2>
+<h3>Understanding HMAC and Hash Function Properties</h3>
+<p>I began by implementing Keyed-Hash Message Authentication Code (HMAC), which combines a secret key with a message to ensure both message integrity and sender authentication. This approach requires both the sender and recipient to share a common key.</p>
+<p>I opened the CrypTool example file and navigated to the HMAC generation utility.</p>
+<p><div class="screenshot"><img src="images/image_001.png" alt="" loading="lazy"></div>
+<em>CrypTool HMAC utility dialog showing message input and parameter fields</em></p>
+<p>I configured the system to use SHA-1 as the hash function with double hashing as the HMAC variant. Using the key "chattanooga", I generated the HMAC code from the plaintext message:</p>
+<p><strong>Result:</strong> <code>C0 82 0F 6F 36 27 5E D7 B2 8C 6A 06 E4 FC 99 67 A1 AF 03 2E</code></p>
+<p><div class="screenshot"><img src="images/image_002.png" alt="" loading="lazy"></div>
+<em>Generated HMAC output showing the 20-byte SHA-1 hash result</em></p>
+<h3>Testing the Avalanche Effect</h3>
+<p>Next, I investigated one of the most critical properties of cryptographic hash functions: sensitivity to even minimal plaintext changes. This phenomenon is known as the "avalanche effect."</p>
+<p>I accessed the Hash Demonstration tool to measure this behavior.</p>
+<p><div class="screenshot"><img src="images/image_003.png" alt="" loading="lazy"></div>
+<em>Hash Demonstration utility for analyzing hash function sensitivity</em></p>
+<p>I performed a controlled test by adding a single space character after "CrypTool" in the plaintext. The result was striking:</p>
+<p><strong>Result:</strong> 57.03% of the hash bits differed (73 out of 128 bits)</p>
+<p><div class="screenshot"><img src="images/image_004.png" alt="" loading="lazy"></div>
+<em>Hash comparison showing 57.03% bit divergence from a single character addition (MD2, 128 bits)</em></p>
+<p>This demonstrates that a well-designed cryptographic hash function exhibits the avalanche effect—a small change in input produces a dramatically different output. This property is essential for preventing attackers from creating fraudulent messages that produce the same hash as legitimate ones.</p>
+<hr />
+<h2>Phase 2: Digital Signature Visualization and Generation</h2>
+<h3>Setting Up the Signature Environment</h3>
+<p>I explored the complete digital signature workflow by generating a certificate and creating cryptographic signatures. I started by accessing the Signature Demonstration tool.</p>
+<p><div class="screenshot"><img src="images/image_005.png" alt="" loading="lazy"></div>
+<em>Step-by-Step Signature Generation flowchart showing the complete digital signature workflow</em></p>
+<p>I selected MD5 as the hash function for this demonstration (though I later noted that stronger algorithms are recommended for production use).</p>
+<p><div class="screenshot"><img src="images/image_006.png" alt="" loading="lazy"></div>
+<em>Hash function selection dialog</em></p>
+<h3>Generating Cryptographic Keys and Prime Numbers</h3>
+<p>The RSA signature process begins with generating a key pair. I initiated the key generation process and then generated large prime numbers for the RSA modulus.</p>
+<p><div class="screenshot"><img src="images/image_007.png" alt="" loading="lazy"></div>
+<em>Key generation interface showing prime number generation options</em></p>
+<p>I specified the search parameters for the prime numbers:
+- <strong>Lower limit:</strong> 2^150
+- <strong>Upper limit:</strong> 2^151</p>
+<p>Then I applied these constraints to generate suitable primes for the RSA encryption system.</p>
+<p><div class="screenshot"><img src="images/image_008.png" alt="" loading="lazy"></div>
+<em>RSA key generation dialog showing computed prime numbers and resulting key parameters (304-bit)</em></p>
+<p>I stored the generated key pair for later use in signing operations.</p>
+<p><div class="screenshot"><img src="images/image_009.png" alt="" loading="lazy"></div>
+<em>Step-by-Step Signature Generation wizard with the "Generate key" step completed</em></p>
+<h3>Creating a Digital Certificate</h3>
+<p>To complete the public key infrastructure setup, I generated a digital certificate. I entered the following information:</p>
+<ul>
+<li><strong>Name:</strong> Smith</li>
+<li><strong>First Name:</strong> Mary</li>
+<li><strong>Key Identifier:</strong> Mary key</li>
+<li><strong>PIN:</strong> cryptool</li>
+</ul>
+<p><div class="screenshot"><img src="images/image_010.png" alt="" loading="lazy"></div>
+<em>Certificate information entry form</em></p>
+<p>The system then created the certificate and Personal Security Environment (PSE).</p>
+<p><div class="screenshot"><img src="images/image_011.png" alt="" loading="lazy"></div>
+<em>Step-by-Step Signature Generation wizard with the "Provide certificate" step completed</em></p>
+<h3>Computing and Encrypting the Hash</h3>
+<p>The digital signature workflow involves several sequential steps. First, I computed the hash value of the message I wanted to sign.</p>
+<p><div class="screenshot"><img src="images/image_012.png" alt="" loading="lazy"></div>
+<em>Signature generation flowchart with hash computation and encryption steps completed, "Generate signature" now active</em></p>
+<p>Next, I encrypted this hash value using the private key—this is the core operation that creates the digital signature.</p>
+<p><div class="screenshot"><img src="images/image_013.png" alt="" loading="lazy"></div>
+<em>Signature generation flowchart showing encrypted hash value completed, proceeding to generate signature</em></p>
+<p>I then generated the complete signature, which combines the encrypted hash with the necessary metadata.</p>
+<p><div class="screenshot"><img src="images/image_014.png" alt="" loading="lazy"></div>
+<em>Signature generation flowchart with all steps completed, "Store signature" now active</em></p>
+<p>Finally, I stored the signature for later verification and demonstration purposes.</p>
+<p><div class="screenshot"><img src="images/image_015.png" alt="" loading="lazy"></div>
+<em>CrypTool confirmation: RSA signature successfully created and stored in PSE file [Smith][Mary][RSA-304] using MD5</em></p>
+<p>The complete RSA digital signature was successfully created for the test document.</p>
+<p><div class="screenshot"><img src="images/image_016.png" alt="" loading="lazy"></div>
+<em>Completed RSA (MD5) signature result showing signature attachment to the message</em></p>
+<hr />
+<h2>Phase 3: RSA Signature Implementation and Verification</h2>
+<h3>Loading and Preparing the Document</h3>
+<p>I opened the CrypTool example document for the RSA signature demonstration.</p>
+<p><div class="screenshot"><img src="images/image_017.png" alt="" loading="lazy"></div>
+<em>Document selection for RSA signature operation</em></p>
+<h3>Generating RSA Key Pair</h3>
+<p>I accessed the key generation utility to create a new RSA key pair for signing operations.</p>
+<p><div class="screenshot"><img src="images/image_018.png" alt="" loading="lazy"></div>
+<em>PKI key generation menu selection</em></p>
+<p>I entered the following key information:</p>
+<ul>
+<li><strong>Last Name:</strong> Smith</li>
+<li><strong>First Name:</strong> John</li>
+<li><strong>Key Identifier:</strong> Smith Key</li>
+<li><strong>PIN:</strong> cryptool</li>
+</ul>
+<p><div class="screenshot"><img src="images/image_019.png" alt="" loading="lazy"></div>
+<em>RSA key pair generation parameters</em></p>
+<p>The system confirmed the key generation success.</p>
+<p><div class="screenshot"><img src="images/image_020.png" alt="" loading="lazy"></div>
+<em>Key generation completion confirmation</em></p>
+<p>I examined the generated key pair to understand its structure.</p>
+<p><div class="screenshot"><img src="images/image_021.png" alt="" loading="lazy"></div>
+<em>Available Asymmetric Key Pairs list showing all stored keys including Smith John RSA-1024</em></p>
+<p>I also reviewed the associated certificate that was automatically generated with the key pair.</p>
+<p><div class="screenshot"><img src="images/image_022.png" alt="" loading="lazy"></div>
+<em>Digital certificate display with key information</em></p>
+<h3>Signing the Message</h3>
+<p>With the key infrastructure in place, I signed the CrypTool document using the following parameters:</p>
+<ul>
+<li><strong>Hash Function:</strong> RIPEMD-160 (stronger than MD5)</li>
+<li><strong>Signature Algorithm:</strong> RSA</li>
+<li><strong>Signing Key:</strong> Smith John</li>
+<li><strong>PIN:</strong> cryptool</li>
+</ul>
+<p><div class="screenshot"><img src="images/image_023.png" alt="" loading="lazy"></div>
+<em>Message signing dialog with algorithm selection</em></p>
+<p>The signature was successfully generated and attached to the document.</p>
+<p><div class="screenshot"><img src="images/image_024.png" alt="" loading="lazy"></div>
+<em>Signed document showing integrated signature and message</em></p>
+<h3>Extracting and Verifying Signatures</h3>
+<p>For clarity and verification purposes, I extracted the signature separately from the document using the Extract Signature function.</p>
+<p><div class="screenshot"><img src="images/image_025.png" alt="" loading="lazy"></div>
+<em>Signature extraction interface for independent verification</em></p>
+<p>I then verified that the signature was valid and that the document had not been altered.</p>
+<p><div class="screenshot"><img src="images/image_026.png" alt="" loading="lazy"></div>
+<em>Signature verification utility interface</em></p>
+<p>I selected John Smith's signature from the available list and performed the verification.</p>
+<p><div class="screenshot"><img src="images/image_027.png" alt="" loading="lazy"></div>
+<em>Successful signature verification confirming document authenticity</em></p>
+<h3>Testing Signature Sensitivity</h3>
+<p>To demonstrate the security of digital signatures, I intentionally modified the document by removing the word "What" and then attempted to verify the signature again.</p>
+<p><div class="screenshot"><img src="images/image_028.png" alt="" loading="lazy"></div>
+<em>Verification failure after document modification—signature validation failed</em></p>
+<p>This confirmed that any alteration to a signed document causes signature verification to fail, providing tamper-proof evidence of authenticity.</p>
+<hr />
+<h2>Phase 4: Hash Collision Attack Analysis</h2>
+<h3>Understanding Hash Vulnerabilities</h3>
+<p>In this phase, I investigated how weaker hash functions become vulnerable to collision attacks—scenarios where two different messages produce the same hash value. This is a critical cryptographic weakness.</p>
+<p>I accessed the hash collision attack utility.</p>
+<p><div class="screenshot"><img src="images/image_029.png" alt="" loading="lazy"></div>
+<em>Hash collision attack analysis tool selection</em></p>
+<p>I configured the attack parameters in the Options dialog.</p>
+<p><div class="screenshot"><img src="images/image_030.png" alt="" loading="lazy"></div>
+<em>Attack options dialog showing hash function and significant bit length configuration</em></p>
+<p>I configured the attack options, selecting the hash function and specifying the significant bit length to make the attack computationally feasible within a reasonable timeframe. The final attack used MD5 with a 40-bit match target.</p>
+<h3>Launching the Collision Search</h3>
+<p>I initiated the hash collision search algorithm to find two different messages that produce the same hash value.</p>
+<p><div class="screenshot"><img src="images/image_031.png" alt="" loading="lazy"></div>
+<em>Successful attack result: two messages found with equal hash values for the first 40 bits</em></p>
+<p>The system executed the search and generated statistics on the collision discovery process.</p>
+<p><div class="screenshot"><img src="images/image_032.png" alt="" loading="lazy"></div>
+<em>Collision search results and statistical analysis</em></p>
+<p>The algorithm successfully found two distinct messages that produce identical hash values.</p>
+<p><div class="screenshot"><img src="images/image_033.png" alt="" loading="lazy"></div>
+<em>Collision found: two different messages with the same hash</em></p>
+<h3>Key Findings on Hash Security</h3>
+<p>The experiment demonstrated that a 72-bit partial collision (where the first 72 bits of hash values are identical) was discoverable within days using a single personal computer. This finding has significant implications for cryptographic security:</p>
+<p><strong>Important Conclusion:</strong> Hash functions with bit lengths of 128 bits or fewer are vulnerable to practical attacks using parallel computing resources. For secure applications, hash functions with at least 160-bit outputs are recommended to resist modern computational capabilities.</p>
+<hr />
+<h2>Key Takeaways</h2>
+<ol>
+<li>
+<p><strong>Cryptographic Hash Properties:</strong> Well-designed hash functions must exhibit extreme sensitivity to input changes (avalanche effect) while being computationally irreversible.</p>
+</li>
+<li>
+<p><strong>HMAC for Authentication:</strong> Using keyed hash functions provides both message integrity verification and sender authentication through shared secret keys.</p>
+</li>
+<li>
+<p><strong>Digital Signature Workflow:</strong> The complete signature process involves key generation, hash computation, private key encryption, and reversible verification using public keys.</p>
+</li>
+<li>
+<p><strong>RSA Implementation:</strong> Modern digital signatures rely on asymmetric cryptography where only the message hash is encrypted, not the entire message, for efficiency.</p>
+</li>
+<li>
+<p><strong>Tamper Detection:</strong> Digital signatures provide cryptographic proof that documents have not been modified—any change causes verification to fail.</p>
+</li>
+<li>
+<p><strong>Hash Function Strength Matters:</strong> Cryptographic security depends critically on hash function bit length; legacy algorithms like MD5 are now considered broken and vulnerable to practical attacks.</p>
+</li>
+</ol>
+<hr />
+<h2>Tools Used</h2>
+<ul>
+<li><strong>CrypTool-1</strong> – Comprehensive cryptography education and analysis platform</li>
+<li><strong>SHA-1</strong> – Secure Hash Algorithm for HMAC generation</li>
+<li><strong>MD2</strong> – Message Digest algorithm used in hash demonstration and collision analysis</li>
+<li><strong>MD5</strong> – Message Digest algorithm (for demonstration purposes)</li>
+<li><strong>RIPEMD-160</strong> – RACE Integrity Primitive Evaluation Message Digest for production signatures</li>
+<li><strong>RSA</strong> – Asymmetric encryption for digital signature generation and verification</li>
+</ul>
+<hr />
+<h2>Skills Demonstrated</h2>
+<ul>
+<li>Cryptographic hash function implementation and analysis</li>
+<li>HMAC generation and validation</li>
+<li>Digital certificate creation and management</li>
+<li>RSA key pair generation and management</li>
+<li>Message signing and signature verification workflows</li>
+<li>Hash collision vulnerability testing</li>
+<li>Cryptographic security analysis and recommendations</li>
+<li>Practical understanding of public key infrastructure (PKI)</li>
+<li>Document authentication and tamper detection mechanisms</li>
+</ul>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+  <img id="lightbox-img" src="" alt="Full size">
+</div>
+
+<script>
+document.querySelectorAll('.screenshot img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox').classList.add('active');
+  });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+});
+</script>
+
+</body>
+</html>

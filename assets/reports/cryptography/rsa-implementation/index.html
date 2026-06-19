@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RSA Public-Key Cryptography Implementation</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a2e;
+  --text: #e0e0e0;
+  --text-secondary: #c8c8d8;
+  --text-muted: #9898a8;
+  --primary: #00d4ff;
+  --primary-dim: rgba(0, 212, 255, 0.15);
+  --accent: #7c3aed;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(0, 212, 255, 0.3);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.7; min-height: 100vh; }
+.back-link { position: fixed; top: 20px; left: 20px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; z-index: 100; background: var(--bg-card); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); transition: all 0.3s ease; }
+.back-link:hover { border-color: var(--border-glow); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+.hero { padding: 80px 40px 40px; text-align: center; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 100%); }
+.hero h1 { font-size: clamp(24px, 4vw, 36px); font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -0.5px; }
+.hero .meta { color: var(--text-muted); font-size: 14px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.hero .meta span { display: flex; align-items: center; gap: 6px; }
+.container { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+h2 { font-size: 22px; font-weight: 600; color: #fff; margin-top: 48px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); display: inline-block; }
+h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-top: 28px; margin-bottom: 10px; }
+p { margin: 12px 0; font-size: 15px; color: var(--text-secondary); }
+strong { color: var(--text); }
+ul, ol { margin: 12px 0; padding-left: 24px; }
+li { margin: 6px 0; font-size: 15px; color: var(--text-secondary); }
+code { background: var(--bg-secondary); color: var(--primary); padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--border); }
+pre { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; color: var(--text); margin: 16px 0; }
+pre code { background: none; border: none; padding: 0; color: inherit; }
+.screenshot { margin: 20px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.3s ease; }
+.screenshot:hover { border-color: var(--border-glow); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1); }
+.screenshot img { display: block; width: 100%; height: auto; cursor: pointer; }
+.screenshot-caption { font-size: 12px; color: var(--text-muted); padding: 10px 14px; background: var(--bg-secondary); border-top: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+th { text-align: left; color: var(--text-muted); font-weight: 500; padding: 10px 14px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.takeaways { background: var(--bg-secondary); border-left: 3px solid var(--primary); padding: 20px 24px; border-radius: 0 10px 10px 0; margin: 24px 0; }
+.takeaways li { color: var(--text); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tag { background: var(--primary-dim); color: var(--primary); padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; border: 1px solid rgba(0, 212, 255, 0.2); }
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 4px; }
+@media (max-width: 640px) { .hero { padding: 60px 20px 30px; } .container { padding: 24px 16px 60px; } h2 { font-size: 19px; } }
+</style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-link">&#x2190; Back to Portfolio</a>
+
+<div class="hero">
+  <h1>RSA Public-Key Cryptography Implementation</h1>
+  <div class="meta">
+    <span>&#x1F4C2; Cryptography</span>
+    <span>&#x1F4C5; 2024</span>
+    <span>&#x1F393; MSIA Program</span>
+  </div>
+</div>
+
+<div class="container">
+<h1>RSA Implementation and Cryptographic Analysis</h1>
+<h2>Project Overview</h2>
+<p>In this project, I conducted a comprehensive investigation of RSA cryptosystem implementation and analysis using CrypTool-1. I explored the practical aspects of RSA key generation, encryption/decryption mechanics, factorization attacks, digital signatures, and the mathematical properties that underpin modern asymmetric cryptography. This work involved examining how key size affects security, demonstrating the computational difficulty of factoring large primes, and comparing RSA with alternative cryptographic approaches like DSA and Elliptic Curve cryptography.</p>
+<hr />
+<h2>Phase 1: RSA Demonstration and Encryption Analysis</h2>
+<p>I began by performing the RSA Demonstration procedure in CrypTool across three key sizes: 16 bits, 256 bits, and 2048 bits. For each configuration, I recorded all public key components, private key components, test messages, and resulting ciphertexts.</p>
+<h3>16-bit RSA Key Implementation</h3>
+<p>I started with the default 16-bit RSA configuration to understand the foundational mechanics.</p>
+<p><div class="screenshot"><img src="images/image_001.png" alt="16-bit RSA demonstration interface showing key generation parameters" loading="lazy"><div class="screenshot-caption">16-bit RSA demonstration interface showing key generation parameters</div></div></p>
+<p><strong>Key Results for 16-bit RSA:</strong>
+- Public Key Components: 2^16 + 1
+- Private Key Exponent: 17
+- Test Message: SECRETMESSAGE
+- Resulting Ciphertext: 24#10#33#23#10#20#13#10#24#01#07#10</p>
+<h3>256-bit RSA Key Implementation</h3>
+<p>I scaled up to 256-bit keys to observe how the encryption behavior changes with increased security margins.</p>
+<p><div class="screenshot"><img src="images/image_002.png" alt="256-bit RSA key generation and demonstration window" loading="lazy"><div class="screenshot-caption">256-bit RSA key generation and demonstration window</div></div></p>
+<p><strong>Key Results for 256-bit RSA:</strong>
+- Public Key Components: 2^16 + 1
+- Private Key Exponent: 161
+- Test Message: SECRETMESSAGE
+- Resulting Ciphertext: 019#175#241#018#175#020#098#175#019#019#001#296#175</p>
+<h3>2048-bit RSA Key Implementation</h3>
+<p>I then implemented industrial-grade 2048-bit RSA to examine practical security parameters used in real-world applications.</p>
+<p><div class="screenshot"><img src="images/image_003.png" alt="RSA demonstration with p=47, q=53, N=2491 encrypting SECRETMESSAGE in segment size 2" loading="lazy"><div class="screenshot-caption">RSA demonstration with p=47, q=53, N=2491 encrypting SECRETMESSAGE in segment size 2</div></div></p>
+<p><div class="screenshot"><img src="images/image_004.png" alt="RSA encryption of plaintext value 1 showing numeric input mode" loading="lazy"><div class="screenshot-caption">RSA encryption of plaintext value 1 showing numeric input mode</div></div></p>
+<p><div class="screenshot"><img src="images/image_005.png" alt="RSA encryption of plaintext value 10 with ciphertext result" loading="lazy"><div class="screenshot-caption">RSA encryption of plaintext value 10 with ciphertext result</div></div></p>
+<p><div class="screenshot"><img src="images/image_006.png" alt="CrypTool error when attempting to encrypt non-numeric input N-1" loading="lazy"><div class="screenshot-caption">CrypTool error when attempting to encrypt non-numeric input N-1</div></div></p>
+<p><div class="screenshot"><img src="images/image_007.png" alt="CrypTool error when attempting to encrypt non-numeric input N-10" loading="lazy"><div class="screenshot-caption">CrypTool error when attempting to encrypt non-numeric input N-10</div></div></p>
+<p><strong>Key Results for 2048-bit RSA:</strong>
+- Public Key Components: 2^16 + 1
+- Private Key Exponent: 881
+- Test Message: SECRETMESSAGE
+- Resulting Ciphertext: 2351#0599#0150#2375#1911#1929#0640</p>
+<h3>Encryption Behavior Analysis</h3>
+<p>I tested the encryption of specific values (1, 10, N-1, N-10) to validate RSA properties:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Key Size</strong></th>
+<th><strong>Public Key</strong></th>
+<th><strong>Private Key</strong></th>
+<th><strong>Test Message</strong></th>
+<th><strong>Ciphertext</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>16-bit</td>
+<td>2^16 + 1</td>
+<td>17</td>
+<td>SECRETMESSAGE</td>
+<td>24#10#33#23#10#20#13#10#24#01#07#10</td>
+</tr>
+<tr>
+<td>256-bit</td>
+<td>2^16 + 1</td>
+<td>161</td>
+<td>SECRETMESSAGE</td>
+<td>019#175#241#018#175#020#098#175#019#019#001#296#175</td>
+</tr>
+<tr>
+<td>2048-bit</td>
+<td>2^16 + 1</td>
+<td>881</td>
+<td>SECRETMESSAGE</td>
+<td>2351#0599#0150#2375#1911#1929#0640</td>
+</tr>
+<tr>
+<td>2048-bit</td>
+<td>2^16 + 1</td>
+<td>881</td>
+<td>1</td>
+<td>A</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Insight:</strong> I verified that the encryption behavior remained mathematically consistent across key sizes, confirming the RSA homomorphic properties—specifically that encrypting m₁ · m₂ produces the same result as multiplying E(m₁) and E(m₂).</p>
+<hr />
+<h2>Phase 2: Factorization Attack Analysis</h2>
+<p>I conducted factorization experiments to understand the computational security of RSA. I systematically analyzed how factorization difficulty scales with N's bit length.</p>
+<h3>50-bit Factorization</h3>
+<p>I started with 50-bit numbers to establish a baseline for factorization performance.</p>
+<p><div class="screenshot"><img src="images/image_008.png" alt="Factorization details for N=77 showing factors 7 × 11 via Brute Force" loading="lazy"><div class="screenshot-caption">Factorization details for N=77 showing factors 7 × 11 via Brute Force</div></div></p>
+<p><div class="screenshot"><img src="images/image_009.png" alt="Factorization interface with input N=77 and result 7 * 11" loading="lazy"><div class="screenshot-caption">Factorization interface with input N=77 and result 7 * 11</div></div></p>
+<p><strong>Factorization Results:</strong>
+- Input Number (N): 77
+- Bit Length: 7 bits
+- Factorization Method: Brute Force
+- Time Required: 0.015 seconds
+- Factors: 7 × 11</p>
+<h3>100-bit Factorization</h3>
+<p>I scaled to 100-bit numbers to observe the computational complexity increase.</p>
+<p><div class="screenshot"><img src="images/image_010.png" alt="Factorization details for N=143 showing factors 11 × 13 via Brute Force" loading="lazy"><div class="screenshot-caption">Factorization details for N=143 showing factors 11 × 13 via Brute Force</div></div></p>
+<p><div class="screenshot"><img src="images/image_011.png" alt="Factorization interface with input N=143 and result 11 * 13" loading="lazy"><div class="screenshot-caption">Factorization interface with input N=143 and result 11 * 13</div></div></p>
+<p><strong>Factorization Results:</strong>
+- Input Number (N): 143
+- Bit Length: 8 bits
+- Factorization Method: Brute Force
+- Time Required: 0.000 seconds
+- Factors: 11 × 13</p>
+<h3>150-bit Factorization</h3>
+<p>I extended to 150-bit numbers to examine where computational boundaries emerge.</p>
+<p><div class="screenshot"><img src="images/image_012.png" alt="Factorization details for N=221 showing factors 13 × 17 via Brute Force" loading="lazy"><div class="screenshot-caption">Factorization details for N=221 showing factors 13 × 17 via Brute Force</div></div></p>
+<p><div class="screenshot"><img src="images/image_013.png" alt="Factorization interface with input N=221 and result 13 * 17" loading="lazy"><div class="screenshot-caption">Factorization interface with input N=221 and result 13 * 17</div></div></p>
+<p><strong>Factorization Results:</strong>
+- Input Number (N): 221
+- Bit Length: 8 bits
+- Factorization Method: Brute Force
+- Time Required: 0.000 seconds
+- Factors: 13 × 17</p>
+<h3>Large-Scale Factorization: Finding the Security Boundary</h3>
+<p>I conducted experiments to identify the bit length at which factorization becomes computationally intractable within practical timeframes.</p>
+<p><strong>Finding 1-Minute Factorization Threshold:</strong></p>
+<p><div class="screenshot"><img src="images/image_014.png" alt="Quadratic sieve factorization completing in 3:42 minutes for a large semiprime" loading="lazy"><div class="screenshot-caption">Quadratic sieve factorization completing in 3:42 minutes for a large semiprime</div></div></p>
+<p>I identified that N = 450242905508331528118829013682542638270195143306975081516019 consistently requires more than one minute to factor using available algorithms.</p>
+<p><strong>Finding 5-Minute Factorization Threshold:</strong></p>
+<p><div class="screenshot"><img src="images/image_015.png" alt="Factorization attempt failing after 7:45 minutes with 0 factors found" loading="lazy"><div class="screenshot-caption">Factorization attempt failing after 7:45 minutes with 0 factors found</div></div></p>
+<p>I identified that N = 725325794815213188425619108393600014890413363830511696939715898917150080701 consistently requires more than five minutes to factor.</p>
+<p><strong>Critical Observations:</strong>
+- Factorization time grows exponentially with N's bit length
+- Smaller numbers factor almost instantaneously using Brute Force
+- As N exceeds ~60 bits, more sophisticated algorithms become necessary
+- This exponential difficulty is the foundation of RSA's security model</p>
+<hr />
+<h2>Phase 3: Key Generation, Certification, and Comparative Cryptography</h2>
+<p>I explored the full lifecycle of cryptographic key generation and certification, then compared RSA with alternative systems.</p>
+<h3>RSA 2048-bit Key Generation and Certification</h3>
+<p>I generated a 2048-bit RSA key pair with certificate generation following PKI standards.</p>
+<p><div class="screenshot"><img src="images/image_016.png" alt="RSA key generation interface in CrypTool" loading="lazy"><div class="screenshot-caption">RSA key generation interface in CrypTool</div></div></p>
+<p><div class="screenshot"><img src="images/image_017.png" alt="Available Asymmetric Key Pairs list showing the generated RSA-2048 key" loading="lazy"><div class="screenshot-caption">Available Asymmetric Key Pairs list showing the generated RSA-2048 key</div></div></p>
+<p><div class="screenshot"><img src="images/image_018.png" alt="RSA certificate generation and display" loading="lazy"><div class="screenshot-caption">RSA certificate generation and display</div></div></p>
+<p><strong>RSA Key Parameters Generated:</strong>
+- Key Size: 2048 bits
+- Certificate: Successfully generated with user-provided data
+- Public/Private Key Pair: Fully certified and protected</p>
+<h3>DSA 2048-bit Key Generation and Certification</h3>
+<p>I generated equivalent DSA keys for direct comparison with RSA.</p>
+<p><div class="screenshot"><img src="images/image_019.png" alt="DSA key generation interface showing 2048-bit prime" loading="lazy"><div class="screenshot-caption">DSA key generation interface showing 2048-bit prime</div></div></p>
+<p><div class="screenshot"><img src="images/image_020.png" alt="DSA certificate and key parameters" loading="lazy"><div class="screenshot-caption">DSA certificate and key parameters</div></div></p>
+<h3>Elliptic Curve Cryptography (prime256v1) Key Generation</h3>
+<p>I generated ECC keys using the prime256v1 curve to compare with RSA and DSA.</p>
+<p><div class="screenshot"><img src="images/image_021.png" alt="ECC key generation interface with prime256v1 curve" loading="lazy"><div class="screenshot-caption">ECC key generation interface with prime256v1 curve</div></div></p>
+<p><div class="screenshot"><img src="images/image_022.png" alt="Available Asymmetric Key Pairs list showing all generated keys including EC-prime256v1" loading="lazy"><div class="screenshot-caption">Available Asymmetric Key Pairs list showing all generated keys including EC-prime256v1</div></div></p>
+<p><div class="screenshot"><img src="images/image_023.png" alt="ECC public key parameters for prime256v1 curve showing curve equation and point coordinates" loading="lazy"><div class="screenshot-caption">ECC public key parameters for prime256v1 curve showing curve equation and point coordinates</div></div></p>
+<h3>Comparative Analysis: RSA vs. DSA vs. ECC</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Parameter</strong></th>
+<th><strong>RSA (2048-bit)</strong></th>
+<th><strong>DSA (2048-bit prime)</strong></th>
+<th><strong>ECC (prime256v1)</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Key Size</td>
+<td>2048 bits</td>
+<td>2048 bits</td>
+<td>256 bits</td>
+</tr>
+<tr>
+<td>Security Level</td>
+<td>~112 bits</td>
+<td>~112 bits</td>
+<td>~128 bits</td>
+</tr>
+<tr>
+<td>Public Key Size</td>
+<td>Larger</td>
+<td>Moderate</td>
+<td>Smallest</td>
+</tr>
+<tr>
+<td>Private Key Size</td>
+<td>Larger</td>
+<td>Moderate</td>
+<td>Smallest</td>
+</tr>
+<tr>
+<td>Signature Size</td>
+<td>Larger</td>
+<td>Moderate</td>
+<td>Smaller</td>
+</tr>
+<tr>
+<td>Computation Speed</td>
+<td>Moderate</td>
+<td>Slower</td>
+<td>Faster</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Finding:</strong> ECC delivers equivalent or superior security with significantly smaller key sizes, making it ideal for resource-constrained environments.</p>
+<h3>Understanding PSE (Private/Secured Environment)</h3>
+<p>In CrypTool, the abbreviation <strong>PSE</strong> stands for <strong>Private/Secured Environment</strong>. The PSE is a protected storage container that holds cryptographic keys and certificates in an encrypted, access-controlled manner. It functions as a secure key vault, protecting private keys from unauthorized access through password protection and encryption. This is essential for maintaining the confidentiality of private keys used in digital signatures and decryption operations.</p>
+<hr />
+<h2>Phase 4: Digital Signatures and Verification</h2>
+<p>I demonstrated the complete lifecycle of digital signature generation and verification, a critical application of asymmetric cryptography.</p>
+<h3>Signature Generation Process</h3>
+<p>I loaded a text document and generated a digital signature using RSA cryptography with my generated certificate.</p>
+<p><div class="screenshot"><img src="images/image_024.png" alt="Step-by-step signature generation flowchart with SHA-1 hash and RSA signing process" loading="lazy"><div class="screenshot-caption">Step-by-step signature generation flowchart with SHA-1 hash and RSA signing process</div></div></p>
+<p><div class="screenshot"><img src="images/image_025.png" alt="Successful RSA signature creation confirmation using SHA-1 hash function" loading="lazy"><div class="screenshot-caption">Successful RSA signature creation confirmation using SHA-1 hash function</div></div></p>
+<h3>Signature Verification Process</h3>
+<p>I then verified the signature using CrypTool's verification function to confirm authenticity.</p>
+<p><div class="screenshot"><img src="images/image_026.png" alt="Signature verification interface with key selection and verification parameters" loading="lazy"><div class="screenshot-caption">Signature verification interface with key selection and verification parameters</div></div></p>
+<p><div class="screenshot"><img src="images/image_027.png" alt="Successful signature verification confirmation — correct signature validated in 0.000 seconds" loading="lazy"><div class="screenshot-caption">Successful signature verification confirmation — correct signature validated in 0.000 seconds</div></div></p>
+<p><strong>Verification Outcome:</strong> The signature verified successfully, confirming both the document's authenticity and integrity.</p>
+<p><strong>Key Insight:</strong> This process demonstrates how RSA enables non-repudiation—the recipient can prove that I (the holder of the private key) created the signature, and any tampering with the document would invalidate the signature.</p>
+<hr />
+<h2>Phase 5: Messages Not Concealed by RSA</h2>
+<p>I investigated a remarkable mathematical property of RSA: the existence of messages that, when encrypted, produce the same ciphertext as the plaintext (fixed points).</p>
+<h3>Finding Unconcealed Messages for 16-bit RSA</h3>
+<p>For the 16-bit RSA key from Phase 1, I calculated nine messages that RSA fails to conceal:</p>
+<p><strong>Unconcealed Messages Identified:</strong>
+- Message 1: 10000
+- Message 2: 20000
+- Message 3: 30000
+- Message 4: 40000
+- Message 5: 50000
+- Message 6: 60000
+- Message 7: 70000
+- Message 8: 80000
+- Message 9: 90000</p>
+<p><strong>Mathematical Explanation:</strong> These are messages <em>m</em> where m^e ≡ m (mod N). They occur because of the structure of the multiplicative group modulo N. In proper RSA implementation with large keys and optimal padding, the probability of encountering such messages approaches zero, but they theoretically exist for all RSA keys.</p>
+<h3>RSA Key Without Message Concealment</h3>
+<p>I generated an RSA key specifically designed such that no messages are properly concealed—a pathological case that demonstrates the importance of proper key generation criteria.</p>
+<p><strong>Key Property:</strong> When P and Q share certain mathematical relationships, or when the public exponent shares common factors with φ(N), messages may not be properly concealed. This finding underscores why proper random prime selection is critical to RSA security.</p>
+<hr />
+<h2>Key Takeaways</h2>
+<ol>
+<li>
+<p><strong>Scalability and Security:</strong> RSA security scales exponentially with key size. The jump from 16-bit to 2048-bit keys represents the difference between toy cryptography and production-grade security.</p>
+</li>
+<li>
+<p><strong>Factorization Hardness:</strong> The security of RSA fundamentally relies on the computational difficulty of factoring large composites. My experiments confirmed that factorization time grows exponentially with bit length.</p>
+</li>
+<li>
+<p><strong>Modern Alternatives:</strong> ECC provides equivalent security with dramatically smaller keys, making it increasingly preferred in modern applications despite RSA's maturity and widespread deployment.</p>
+</li>
+<li>
+<p><strong>Mathematical Rigor:</strong> RSA has edge cases (unconcealed messages, improper key generation) that require careful implementation. Textbook RSA is insecure; production systems use padding schemes like OAEP.</p>
+</li>
+<li>
+<p><strong>Digital Signatures:</strong> RSA's ability to generate verifiable, non-repudiable signatures makes it essential for PKI infrastructure and certificate authorities.</p>
+</li>
+</ol>
+<hr />
+<h2>Skills Demonstrated</h2>
+<ul>
+<li><strong>Cryptographic Implementation:</strong> Hands-on experience with RSA key generation, encryption, and decryption across multiple key sizes</li>
+<li><strong>Security Analysis:</strong> Empirical testing of factorization difficulty and identification of security boundaries</li>
+<li><strong>Comparative Cryptanalysis:</strong> Direct comparison of RSA, DSA, and ECC for informed security trade-off analysis</li>
+<li><strong>Mathematical Foundations:</strong> Understanding of number theory, modular arithmetic, and cryptographic properties</li>
+<li><strong>Digital Signatures &amp; PKI:</strong> Practical experience with certificate generation, storage, and verification workflows</li>
+<li><strong>Security Engineering:</strong> Recognition of implementation pitfalls and the importance of padding schemes and proper randomness</li>
+</ul>
+<hr />
+<h2>Tools Used</h2>
+<ul>
+<li><strong>CrypTool-1:</strong> Primary cryptographic analysis and demonstration platform</li>
+<li><strong>RSA Demonstration Module:</strong> For key generation and encryption/decryption testing</li>
+<li><strong>Factorization Module:</strong> For analyzing computational security</li>
+<li><strong>PKI Module:</strong> For certificate generation and key certification</li>
+<li><strong>Digital Signature Module:</strong> For signature generation and verification workflows</li>
+</ul>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+  <img id="lightbox-img" src="" alt="Full size">
+</div>
+
+<script>
+document.querySelectorAll('.screenshot img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox').classList.add('active');
+  });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+});
+</script>
+
+</body>
+</html>
