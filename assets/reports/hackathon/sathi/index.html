@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sathi — AI Mental Health Companion</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a2e;
+  --text: #e0e0e0;
+  --text-secondary: #c8c8d8;
+  --text-muted: #9898a8;
+  --primary: #00d4ff;
+  --primary-dim: rgba(0, 212, 255, 0.15);
+  --accent: #7c3aed;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(0, 212, 255, 0.3);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.7; min-height: 100vh; }
+.back-link { position: fixed; top: 20px; left: 20px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; z-index: 100; background: var(--bg-card); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); transition: all 0.3s ease; }
+.back-link:hover { border-color: var(--border-glow); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+.hero { padding: 80px 40px 40px; text-align: center; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 100%); }
+.hero h1 { font-size: clamp(24px, 4vw, 36px); font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -0.5px; }
+.hero .meta { color: var(--text-muted); font-size: 14px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.hero .meta span { display: flex; align-items: center; gap: 6px; }
+.container { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+h2 { font-size: 22px; font-weight: 600; color: #fff; margin-top: 48px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); display: inline-block; }
+h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-top: 28px; margin-bottom: 10px; }
+p { margin: 12px 0; font-size: 15px; color: var(--text-secondary); }
+strong { color: var(--text); }
+ul, ol { margin: 12px 0; padding-left: 24px; }
+li { margin: 6px 0; font-size: 15px; color: var(--text-secondary); }
+code { background: var(--bg-secondary); color: var(--primary); padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--border); }
+pre { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; color: var(--text); margin: 16px 0; }
+pre code { background: none; border: none; padding: 0; color: inherit; }
+.screenshot { margin: 20px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.3s ease; }
+.screenshot:hover { border-color: var(--border-glow); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1); }
+.screenshot img { display: block; width: 100%; height: auto; cursor: pointer; }
+.screenshot-caption { font-size: 12px; color: var(--text-muted); padding: 10px 14px; background: var(--bg-secondary); border-top: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+th { text-align: left; color: var(--text-muted); font-weight: 500; padding: 10px 14px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.takeaways { background: var(--bg-secondary); border-left: 3px solid var(--primary); padding: 20px 24px; border-radius: 0 10px 10px 0; margin: 24px 0; }
+.takeaways li { color: var(--text); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tag { background: var(--primary-dim); color: var(--primary); padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; border: 1px solid rgba(0, 212, 255, 0.2); }
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 4px; }
+@media (max-width: 640px) { .hero { padding: 60px 20px 30px; } .container { padding: 24px 16px 60px; } h2 { font-size: 19px; } }
+</style>
+</head>
+<body>
+
+<a href="../../index.html" class="back-link">&#x2190; Back to Portfolio</a>
+
+<div class="hero">
+  <h1>Sathi — AI Mental Health Companion</h1>
+  <div class="meta">
+    <span>&#x1F4C2; AI/ML & Hackathon</span>
+    <span>&#x1F3C6; Nepal-US Hackathon 2026</span>
+    <span>&#x1F517; <a href="https://github.com/lakylax/sathi" style="color: var(--primary); text-decoration: none;">GitHub Repository</a></span>
+  </div>
+</div>
+
+<div class="container">
+<h1>Sathi — AI Mental Health Companion</h1>
+<h2>Project Overview</h2>
+<p>I developed the AI integration for <strong>Sathi</strong>, a Flutter-based wellbeing app designed for Nepalese students living abroad. Built during the Nepal-US Hackathon 2026, Sathi combines voice reflection, photo sharing, weekly mental health check-ins, a private social feed, and an Android home-screen widget into one supportive experience.</p>
+<p>My role focused on integrating Google's Gemini API for AI-powered mood analysis, voice transcription feedback, and personalized mental health suggestions.</p>
+<hr />
+<h2>My Role: AI Integration (Gemini API)</h2>
+<p>As the AI Integration lead, I was responsible for:</p>
+<ul>
+<li>Connecting the Python transcription backend with Google Gemini API</li>
+<li>Building the mood analysis pipeline that processes voice journals</li>
+<li>Generating supportive, culturally-aware feedback from transcribed audio</li>
+<li>Creating the insight scoring system that combines weekly check-in data with voice sentiment signals</li>
+<li>Designing prompts that produce Flutter-ready payloads including mood, energy levels, summaries, and suggestions</li>
+</ul>
+<hr />
+<h2>Architecture &amp; Technical Design</h2>
+<h3>System Overview</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Technology</th>
+<th>My Contribution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Frontend</td>
+<td>Flutter / Dart</td>
+<td>Consumed AI-generated insights</td>
+</tr>
+<tr>
+<td>Backend</td>
+<td>Python + Whisper + Gemini</td>
+<td>Built transcription + analysis pipeline</td>
+</tr>
+<tr>
+<td>Database</td>
+<td>Cloud Firestore</td>
+<td>Structured mood/insight data models</td>
+</tr>
+<tr>
+<td>Auth</td>
+<td>Firebase Anonymous Auth</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Storage</td>
+<td>Firebase Storage</td>
+<td>Voice file upload handling</td>
+</tr>
+<tr>
+<td>Widget</td>
+<td>Android AppWidgetProvider</td>
+<td>Wellbeing score surfacing</td>
+</tr>
+</tbody>
+</table>
+<h3>AI Pipeline (My Work)</h3>
+<pre><code>Voice Recording → Upload → Whisper Transcription → Gemini Analysis → Flutter Payload
+                                                         ↓
+                                              • Transcription text
+                                              • Mood classification
+                                              • Energy level
+                                              • Summary
+                                              • Supportive suggestion
+                                              • Safety flags
+                                              • Share card fields
+</code></pre>
+<hr />
+<h2>Key Features I Enabled</h2>
+<h3>Voice Journal AI Feedback</h3>
+<p>Users record voice journals; the backend transcribes with Whisper, then Gemini analyzes the content to provide:
+- Mood classification and energy level assessment
+- Supportive, non-judgmental summary of what was expressed
+- Culturally-aware suggestions for South Asian users
+- Safety detection for crisis situations</p>
+<h3>Weekly Wellbeing Insights</h3>
+<p>The Insights tab combines structured weekly check-in responses with recent voice journal sentiment signals to produce a composite mental health score — powered by my Gemini integration.</p>
+<h3>Mobile Widget Intelligence</h3>
+<p>The home-screen widget surfaces a quick wellbeing snapshot with:
+- Mood keywords extracted from recent activity
+- A brief support suggestion
+- Photo context from shared posts</p>
+<hr />
+<h2>Team</h2>
+<table>
+<thead>
+<tr>
+<th>Member</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Precious Nyaupane</td>
+<td>Team Lead &amp; Flutter Engineering</td>
+</tr>
+<tr>
+<td>Shavya Shrestha</td>
+<td>UX &amp; UI Design</td>
+</tr>
+<tr>
+<td><strong>Laxman Puri</strong></td>
+<td><strong>AI Integration (Gemini)</strong></td>
+</tr>
+<tr>
+<td>Aarjan Khatiwada</td>
+<td>Backend &amp; Data</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Tech Stack</h2>
+<h3>Frontend</h3>
+<ul>
+<li>Flutter, Dart</li>
+</ul>
+<h3>Backend &amp; Services</h3>
+<ul>
+<li>Python transcription backend</li>
+<li>OpenAI Whisper (speech-to-text)</li>
+<li>Google Gemini API (mood analysis &amp; feedback generation)</li>
+<li>Firebase Auth, Cloud Firestore, Firebase Storage</li>
+</ul>
+<h3>Key Packages</h3>
+<ul>
+<li><code>firebase_core</code>, <code>firebase_auth</code>, <code>cloud_firestore</code>, <code>firebase_storage</code></li>
+<li><code>record</code>, <code>audioplayers</code>, <code>image_picker</code></li>
+<li><code>home_widget</code>, <code>share_plus</code>, <code>http</code></li>
+</ul>
+<hr />
+<h2>Key Takeaways</h2>
+<ul>
+<li>Gemini API excels at generating empathetic, culturally-sensitive mental health responses when properly prompted</li>
+<li>Voice-to-insight pipelines require careful handling of transcription errors before sentiment analysis</li>
+<li>Safety/crisis detection must be a first-class concern in any mental health AI application</li>
+<li>Flutter's cross-platform capability allowed rapid prototyping across mobile and web</li>
+</ul>
+<hr />
+<p><strong>Source Code:</strong> <a href="https://github.com/lakylax/sathi">github.com/lakylax/sathi</a></p>
+<p><strong>Event:</strong> Nepal-US Hackathon 2026</p>
+<p><strong>Skills Demonstrated:</strong> AI/ML Integration, Prompt Engineering, Gemini API, Voice Processing, Mobile Development, Mental Health Tech</p>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+  <img id="lightbox-img" src="" alt="Full size">
+</div>
+
+<script>
+document.querySelectorAll('.screenshot img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox').classList.add('active');
+  });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+});
+</script>
+
+</body>
+</html>
