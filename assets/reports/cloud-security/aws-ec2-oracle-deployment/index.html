@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS EC2 — Oracle Database Deployment & Security</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a2e;
+  --text: #e0e0e0;
+  --text-secondary: #c8c8d8;
+  --text-muted: #9898a8;
+  --primary: #00d4ff;
+  --primary-dim: rgba(0, 212, 255, 0.15);
+  --accent: #7c3aed;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(0, 212, 255, 0.3);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.7; min-height: 100vh; }
+.back-link { position: fixed; top: 20px; left: 20px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; z-index: 100; background: var(--bg-card); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); transition: all 0.3s ease; }
+.back-link:hover { border-color: var(--border-glow); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+.hero { padding: 80px 40px 40px; text-align: center; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 100%); }
+.hero h1 { font-size: clamp(24px, 4vw, 36px); font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -0.5px; }
+.hero .meta { color: var(--text-muted); font-size: 14px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.hero .meta span { display: flex; align-items: center; gap: 6px; }
+.container { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+h2 { font-size: 22px; font-weight: 600; color: #fff; margin-top: 48px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); display: inline-block; }
+h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-top: 28px; margin-bottom: 10px; }
+p { margin: 12px 0; font-size: 15px; color: var(--text-secondary); }
+strong { color: var(--text); }
+ul, ol { margin: 12px 0; padding-left: 24px; }
+li { margin: 6px 0; font-size: 15px; color: var(--text-secondary); }
+code { background: var(--bg-secondary); color: var(--primary); padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--border); }
+pre { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; color: var(--text); margin: 16px 0; }
+pre code { background: none; border: none; padding: 0; color: inherit; }
+.screenshot { margin: 20px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.3s ease; }
+.screenshot:hover { border-color: var(--border-glow); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1); }
+.screenshot img { display: block; width: 100%; height: auto; cursor: pointer; }
+.screenshot-caption { font-size: 12px; color: var(--text-muted); padding: 10px 14px; background: var(--bg-secondary); border-top: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+th { text-align: left; color: var(--text-muted); font-weight: 500; padding: 10px 14px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.takeaways { background: var(--bg-secondary); border-left: 3px solid var(--primary); padding: 20px 24px; border-radius: 0 10px 10px 0; margin: 24px 0; }
+.takeaways li { color: var(--text); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tag { background: var(--primary-dim); color: var(--primary); padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; border: 1px solid rgba(0, 212, 255, 0.2); }
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 4px; }
+@media (max-width: 640px) { .hero { padding: 60px 20px 30px; } .container { padding: 24px 16px 60px; } h2 { font-size: 19px; } }
+</style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-link">&#x2190; Back to Portfolio</a>
+
+<div class="hero">
+  <h1>AWS EC2 — Oracle Database Deployment & Security</h1>
+  <div class="meta">
+    <span>&#x1F4C2; Cloud & Infrastructure Security</span>
+    <span>&#x1F4C5; 2023</span>
+    <span>📚 Cloud Security</span>
+    <span>&#x1F393; MSIA Program</span>
+  </div>
+</div>
+
+<div class="container">
+<h1>AWS EC2 + Oracle Database Deployment &amp; Security</h1>
+<h2>Project Overview</h2>
+<p>In this project, I successfully deployed and configured an Oracle database on an AWS EC2 instance running Windows Server 2022. The objective was to build a secure, production-ready database environment in the cloud, implementing proper security configurations including firewall rules, network access controls, and connection validation. This hands-on deployment demonstrated my proficiency with AWS cloud infrastructure, Windows server administration, and Oracle database setup.</p>
+<hr />
+<h2>Environment Setup</h2>
+<h3>AWS EC2 Instance Provisioning</h3>
+<p>I began by launching an EC2 instance through the AWS Management Console. I configured the instance with the following specifications:</p>
+<ul>
+<li><strong>Operating System</strong>: Windows Server 2022 Base (Free Tier eligible)</li>
+<li><strong>AMI Selection</strong>: Microsoft Windows Server 2022 Base from the quick-start options</li>
+</ul>
+<p><strong>Initial Configuration Screen</strong>
+<div class="screenshot"><img src="images/image_001.png" alt="" loading="lazy"></div></p>
+<h3>Key Pair Creation &amp; SSH Access</h3>
+<p>To secure remote access to the instance, I created a dedicated RSA key pair for authentication:</p>
+<ul>
+<li><strong>Key Pair Name</strong>: Key_[Username] (following organizational naming conventions)</li>
+<li><strong>File Format</strong>: Downloaded the private key for Remote Desktop Protocol access</li>
+<li><strong>Storage</strong>: Securely stored the key for future connections</li>
+</ul>
+<p><strong>RSA Key Pair Generation &amp; Download</strong>
+<div class="screenshot"><img src="images/image_002.png" alt="" loading="lazy"></div></p>
+<hr />
+<h2>Phase 1: Remote Desktop Connection &amp; Instance Access</h2>
+<h3>Establishing Remote Desktop Session</h3>
+<p>I utilized the Remote Desktop Protocol (RDP) to establish a secure connection to the Windows Server instance:</p>
+<ul>
+<li><strong>Authentication</strong>: Administrator account with the instance password from EC2 console</li>
+<li><strong>Connection Method</strong>: Downloaded .rdp file executed locally</li>
+<li><strong>Network Setup</strong>: Connected through the AWS-provided security group</li>
+</ul>
+<p><strong>Remote Desktop Session to Windows Server Instance</strong>
+<div class="screenshot"><img src="images/image_003.png" alt="" loading="lazy"></div></p>
+<h3>System Configuration &amp; Command Execution</h3>
+<p>After establishing the remote session, I executed critical system configuration commands on the Windows Server instance to prepare the environment for Oracle database installation. These commands configured network settings, system parameters, and prerequisite services.</p>
+<p><strong>Command Execution Results on Windows Server</strong>
+<div class="screenshot"><img src="images/image_004.png" alt="" loading="lazy"></div></p>
+<hr />
+<h2>Phase 2: Network Security Configuration</h2>
+<h3>Security Group Configuration</h3>
+<p>I configured the AWS EC2 security group to enable database connectivity by modifying inbound traffic rules:</p>
+<ul>
+<li><strong>Access Level</strong>: Configured Oracle database port (1521) for access from any IP address</li>
+<li><strong>Rule Type</strong>: Oracle-RDS protocol specification</li>
+<li><strong>Security Group</strong>: Applied to the launch-wizard-1 security group</li>
+</ul>
+<p><strong>Security Group Inbound Rules Configuration Interface</strong>
+<div class="screenshot"><img src="images/image_005.png" alt="" loading="lazy"></div></p>
+<h3>Inbound Rule Implementation</h3>
+<p>I created a new inbound rule with appropriate naming conventions to document the database access configuration:</p>
+<ul>
+<li><strong>Rule Description</strong>: "[Full Name] Oracle SQL 1521 Inbound"</li>
+<li><strong>Port Range</strong>: 1521 (Oracle listener port)</li>
+<li><strong>Source</strong>: 0.0.0.0/0 (accessible from all IPs)</li>
+</ul>
+<p><strong>Oracle Database Inbound Rule Added to Security Group</strong>
+<div class="screenshot"><img src="images/image_006.png" alt="" loading="lazy"></div></p>
+<hr />
+<h2>Phase 3: Database Connectivity Validation</h2>
+<h3>Connection Testing - Primary Database Instance</h3>
+<p>I validated connectivity to the primary Oracle database instance using the configured security rules. The test confirmed successful network routing through the security group.</p>
+<p><strong>Database Connection Test - Successful Validation</strong>
+<div class="screenshot"><img src="images/image_007.png" alt="" loading="lazy"></div></p>
+<h3>Connection Testing - Secondary Validation</h3>
+<p>I performed additional connection tests to ensure redundancy and consistent connectivity to the database environment.</p>
+<p><strong>Secondary Database Connection Test - Confirmed Success</strong>
+<div class="screenshot"><img src="images/image_008.png" alt="" loading="lazy"></div></p>
+<h3>Connection Testing - Tertiary Verification</h3>
+<p>I completed a final round of connectivity testing to verify all database instances were responding correctly to connection requests.</p>
+<p><strong>Final Connection Test - All Systems Operational</strong>
+<div class="screenshot"><img src="images/image_009.png" alt="" loading="lazy"></div></p>
+<hr />
+<h2>Key Takeaways</h2>
+<p>Through this project, I gained practical experience in several critical cloud infrastructure and database administration areas:</p>
+<ol>
+<li><strong>AWS EC2 Management</strong>: Successfully provisioned, configured, and accessed Windows Server instances in the AWS cloud environment</li>
+<li><strong>Security Best Practices</strong>: Implemented proper security group rules and firewall configurations to enable secure database access</li>
+<li><strong>Remote Administration</strong>: Utilized Remote Desktop Protocol to manage cloud instances remotely</li>
+<li><strong>Network Configuration</strong>: Configured inbound rules and port access for database connectivity</li>
+<li><strong>Connectivity Validation</strong>: Performed comprehensive testing to ensure database availability and proper network routing</li>
+</ol>
+<hr />
+<h2>Tools &amp; Technologies Used</h2>
+<ul>
+<li><strong>Amazon Web Services (AWS)</strong>: EC2 instance provisioning and management</li>
+<li><strong>AWS Management Console</strong>: Infrastructure configuration and security settings</li>
+<li><strong>Windows Server 2022</strong>: Operating system for database hosting</li>
+<li><strong>Remote Desktop Protocol (RDP)</strong>: Secure remote access to instances</li>
+<li><strong>Oracle Database</strong>: Enterprise-grade relational database system</li>
+<li><strong>Security Groups</strong>: Network access control and firewall rules</li>
+</ul>
+<hr />
+<h2>Skills Demonstrated</h2>
+<ul>
+<li>Cloud Infrastructure Deployment (AWS EC2)</li>
+<li>Windows Server Administration</li>
+<li>Network Security Configuration</li>
+<li>Database Connectivity &amp; Firewall Management</li>
+<li>Remote System Access &amp; Management</li>
+<li>AWS Best Practices for Production Environments</li>
+<li>Infrastructure Troubleshooting &amp; Validation</li>
+</ul>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+  <img id="lightbox-img" src="" alt="Full size">
+</div>
+
+<script>
+document.querySelectorAll('.screenshot img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox').classList.add('active');
+  });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+});
+</script>
+
+</body>
+</html>
